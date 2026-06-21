@@ -14,15 +14,4 @@ public static class ObjectExtension
     {
         return go.TryGetComponent(out T component) ? component : go.AddComponent<T>();
     }
-
-    /// <summary>
-    /// 자식 오브젝트를 모두 파괴합니다.
-    /// </summary>
-    public static void DestroyChildren(this Transform parent)
-    {
-        int length = parent.childCount;
-        for (int i = length - 1; i >= 0; --i) {
-            UnityEngine.Object.Destroy(parent.GetChild(i).gameObject);
-        }
-    }
 }

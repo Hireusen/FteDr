@@ -1,10 +1,9 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 싱글톤 클래스의 설계 의도입니다.
 /// </summary>
-    #ROOTNAMESPACEBEGIN#
-public class #SCRIPTNAME# : ASingleton<#SCRIPTNAME#>
+public class NewSingleton : ASingleton<NewSingleton>
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     //[Header("주제")]
@@ -12,11 +11,11 @@ public class #SCRIPTNAME# : ASingleton<#SCRIPTNAME#>
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    
+
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    public override bool IsGlobal => true;
+
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -26,4 +25,3 @@ public class #SCRIPTNAME# : ASingleton<#SCRIPTNAME#>
     }
     #endregion
 }
-#ROOTNAMESPACEEND#

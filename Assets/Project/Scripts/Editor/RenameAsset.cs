@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using System.IO;
 
@@ -13,7 +13,10 @@ public class CRenameAsset : EditorWindow
     [MenuItem("Tools/파일 이름 도구")]
     public static void ShowWindow()
     {
-        GetWindow<CRenameAsset>("접두사 일괄 적용").Show();
+        CRenameAsset window = GetWindow<CRenameAsset>("접두사 일괄 적용");
+        window.minSize = new Vector2(240f, 90f);
+        window.maxSize = new Vector2(240f, 90f);
+        window.Show();
     }
 
     private void ExecuteRename()
@@ -70,9 +73,6 @@ public class CRenameAsset : EditorWindow
 
     private void OnGUI()
     {
-        GUILayout.Label("에셋 접두사 일괄 적용기", EditorStyles.boldLabel);
-        EditorGUILayout.Space();
-
         _prefix = EditorGUILayout.TextField("적용할 접두사", _prefix);
         _replaceBlank = EditorGUILayout.Toggle("공백을 언더바로 변환합니다.", _replaceBlank);
         EditorGUILayout.Space();
