@@ -50,6 +50,8 @@ public sealed class CBootManager : MonoBehaviour
 
     private void ManagerSpawner(GameObject root)
     {
+        var inputManager = root.GetOrAddComponent<CInputManager>();
+        inputManager.EntryInitialize();
         var frameManager = root.GetOrAddComponent<CFrameManager>();
         frameManager.EntryInitialize();
         var gameManager = root.GetOrAddComponent<CGameManager>();

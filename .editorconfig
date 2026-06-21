@@ -1,0 +1,202 @@
+root = true
+
+[*.cs]
+# ────────────────────────────────
+# 기본 포맷
+# ────────────────────────────────
+indent_style = space
+indent_size = 4
+end_of_line = crlf
+charset = utf-8-bom
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# ────────────────────────────────
+# 0. IDE 경고
+# ────────────────────────────────
+
+# 불필요한 형변환
+dotnet_diagnostic.IDE0004.severity = suggestion
+
+# 사용하지 않는 using 지시문
+dotnet_diagnostic.IDE0005.severity = warning
+
+# 접근 제한자 명시 강제
+dotnet_diagnostic.IDE0040.severity = warning
+
+# 사용하지 않는 private 메서드
+dotnet_diagnostic.IDE0051.severity = warning
+
+# 값을 읽지 않는 private 멤버
+dotnet_diagnostic.IDE0052.severity = warning
+
+# 사용하지 않는 파라미터
+dotnet_diagnostic.IDE0060.severity = warning
+
+# 단순화된 new 식 사용 권장
+dotnet_diagnostic.IDE0090.severity = suggestion
+
+# 실수로 new로 숨김
+dotnet_diagnostic.CS0108.severity = warning
+
+# 부모 숨김 시 override/new 누락
+dotnet_diagnostic.CS0114.severity = warning
+
+# 도달할 수 없는 코드
+dotnet_diagnostic.CS0162.severity = warning
+
+# 선언만 하고 미사용 
+dotnet_diagnostic.CS0168.severity = warning
+
+# 사용하지 않는 지역 변수 (현재 CS0219)
+dotnet_diagnostic.CS0219.severity = warning
+
+# await 빠뜨림
+dotnet_diagnostic.CS4014.severity = warning
+
+# null 체크 없이 사용 (NullReferenceException 방지)
+dotnet_diagnostic.CS8600.severity = suggestion # 잠재적 null을 대입
+dotnet_diagnostic.CS8602.severity = suggestion # null 방어 코드 없는 접근
+dotnet_diagnostic.CS8618.severity = suggestion # 초기화 누락
+dotnet_diagnostic.CS8625.severity = suggestion # 명시적 null 대입
+
+# ────────────────────────────────
+# 1. 인터페이스
+# ────────────────────────────────
+dotnet_naming_rule.interface_naming.symbols = interface_symbols
+dotnet_naming_rule.interface_naming.style = interface_style
+dotnet_naming_rule.interface_naming.severity = warning
+
+dotnet_naming_symbols.interface_symbols.applicable_kinds = interface
+dotnet_naming_symbols.interface_symbols.applicable_accessibilities = *
+
+dotnet_naming_style.interface_style.required_prefix = I
+dotnet_naming_style.interface_style.capitalization  = pascal_case
+
+# ────────────────────────────────
+# 2. 열거형
+# ────────────────────────────────
+dotnet_naming_rule.enum_naming.symbols   = enum_symbols
+dotnet_naming_rule.enum_naming.style     = enum_style
+dotnet_naming_rule.enum_naming.severity  = warning
+
+dotnet_naming_symbols.enum_symbols.applicable_kinds            = enum
+dotnet_naming_symbols.enum_symbols.applicable_accessibilities  = *
+
+dotnet_naming_style.enum_style.required_prefix = E
+dotnet_naming_style.enum_style.capitalization  = pascal_case
+
+# ────────────────────────────────
+# 3. 열거형 요소
+# ────────────────────────────────
+dotnet_naming_rule.enum_member_naming.symbols   = enum_member_symbols
+dotnet_naming_rule.enum_member_naming.style     = pascal_case_style
+dotnet_naming_rule.enum_member_naming.severity  = warning
+
+dotnet_naming_symbols.enum_member_symbols.applicable_kinds            = enum_member
+dotnet_naming_symbols.enum_member_symbols.applicable_accessibilities  = *
+
+# ────────────────────────────────
+# 4. 클래스
+# ────────────────────────────────
+dotnet_naming_rule.class_naming.symbols   = class_symbols
+dotnet_naming_rule.class_naming.style     = pascal_case_style
+dotnet_naming_rule.class_naming.severity  = warning
+
+dotnet_naming_symbols.class_symbols.applicable_kinds            = class
+dotnet_naming_symbols.class_symbols.applicable_accessibilities  = *
+
+# ────────────────────────────────
+# 5. 클래스 내부 멤버
+# ────────────────────────────────
+dotnet_naming_rule.class_private_field_naming.symbols   = class_private_field_symbols
+dotnet_naming_rule.class_private_field_naming.style     = underscore_camel_style
+dotnet_naming_rule.class_private_field_naming.severity  = warning
+
+dotnet_naming_symbols.class_private_field_symbols.applicable_kinds            = field
+dotnet_naming_symbols.class_private_field_symbols.applicable_accessibilities  = private, protected, protected_internal, private_protected
+
+# ────────────────────────────────
+# 6. 클래스 외부 공개 멤버
+# ────────────────────────────────
+dotnet_naming_rule.class_public_field_naming.symbols   = class_public_field_symbols
+dotnet_naming_rule.class_public_field_naming.style     = camel_case_style
+dotnet_naming_rule.class_public_field_naming.severity  = warning
+
+dotnet_naming_symbols.class_public_field_symbols.applicable_kinds            = field
+dotnet_naming_symbols.class_public_field_symbols.applicable_accessibilities  = public, internal
+
+# ────────────────────────────────
+# 7. 메서드
+# ────────────────────────────────
+dotnet_naming_rule.method_naming.symbols   = method_symbols
+dotnet_naming_rule.method_naming.style     = pascal_case_style
+dotnet_naming_rule.method_naming.severity  = warning
+
+dotnet_naming_symbols.method_symbols.applicable_kinds            = method
+dotnet_naming_symbols.method_symbols.applicable_accessibilities  = *
+
+# ────────────────────────────────
+# 8. 프로퍼티
+# ────────────────────────────────
+dotnet_naming_rule.property_naming.symbols   = property_symbols
+dotnet_naming_rule.property_naming.style     = pascal_case_style
+dotnet_naming_rule.property_naming.severity  = warning
+
+dotnet_naming_symbols.property_symbols.applicable_kinds            = property
+dotnet_naming_symbols.property_symbols.applicable_accessibilities  = *
+
+# ────────────────────────────────
+# 9. 구조체
+# ────────────────────────────────
+dotnet_naming_rule.struct_naming.symbols   = struct_symbols
+dotnet_naming_rule.struct_naming.style     = pascal_case_style
+dotnet_naming_rule.struct_naming.severity  = warning
+
+dotnet_naming_symbols.struct_symbols.applicable_kinds            = struct
+dotnet_naming_symbols.struct_symbols.applicable_accessibilities  = *
+
+# ────────────────────────────────
+# 10. 델리게이트
+# ────────────────────────────────
+dotnet_naming_rule.delegate_naming.symbols   = delegate_symbols
+dotnet_naming_rule.delegate_naming.style     = pascal_case_style
+dotnet_naming_rule.delegate_naming.severity  = warning
+
+dotnet_naming_symbols.delegate_symbols.applicable_kinds            = delegate
+dotnet_naming_symbols.delegate_symbols.applicable_accessibilities  = *
+
+# ────────────────────────────────
+# 11. const 상수
+# ────────────────────────────────
+dotnet_naming_rule.const_naming.symbols   = const_symbols
+dotnet_naming_rule.const_naming.style     = macro_snake_style
+dotnet_naming_rule.const_naming.severity  = warning
+
+dotnet_naming_symbols.const_symbols.applicable_kinds            = field, local
+dotnet_naming_symbols.const_symbols.applicable_accessibilities  = *
+dotnet_naming_symbols.const_symbols.required_modifiers          = const
+
+dotnet_naming_style.macro_snake_style.capitalization = all_upper
+dotnet_naming_style.macro_snake_style.word_separator = _
+
+# ────────────────────────────────
+# 12. 지역 변수 & 파라미터
+# ────────────────────────────────
+dotnet_naming_rule.local_var_naming.symbols   = local_var_symbols
+dotnet_naming_rule.local_var_naming.style     = camel_case_style
+dotnet_naming_rule.local_var_naming.severity  = warning
+
+dotnet_naming_symbols.local_var_symbols.applicable_kinds            = local, parameter
+dotnet_naming_symbols.local_var_symbols.applicable_accessibilities  = *
+
+
+# ────────────────────────────────
+# 공통 스타일
+# ────────────────────────────────
+dotnet_naming_style.pascal_case_style.capitalization  = pascal_case
+
+dotnet_naming_style.camel_case_style.capitalization   = camel_case
+
+dotnet_naming_style.underscore_camel_style.required_prefix = _
+dotnet_naming_style.underscore_camel_style.capitalization  = camel_case
