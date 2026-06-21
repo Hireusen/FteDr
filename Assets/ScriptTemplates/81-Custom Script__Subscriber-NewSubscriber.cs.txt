@@ -1,0 +1,68 @@
+using UnityEngine;
+
+/// <summary>
+/// 구독자 클래스의 설계 의도입니다.
+/// </summary>
+    #ROOTNAMESPACEBEGIN#
+public class #SCRIPTNAME# : AMono
+{
+    #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
+    //[Header("주제")]
+    //[SerializeField] private Class _class;
+    #endregion
+
+    #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
+
+    #endregion
+
+    #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+
+    #endregion
+
+    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    private void HandleMove(OnInputMove ctx)
+    {
+
+    }
+    private void HandleJump(OnInputJump ctx)
+    {
+        
+    }
+    private void HandleAction(OnInputAction ctx)
+    {
+
+    }
+    private void HandleThrow(OnInputThrow ctx)
+    {
+
+    }
+    private void HandleSkill(OnInputSkill ctx)
+    {
+
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
+    private void OnEnable()
+    {
+        EventBus<OnInputMove>.Subscribe(HandleMove);
+        EventBus<OnInputJump>.Subscribe(HandleJump);
+        EventBus<OnInputAction>.Subscribe(HandleAction);
+        EventBus<OnInputThrow>.Subscribe(HandleThrow);
+        EventBus<OnInputSkill>.Subscribe(HandleSkill);
+    }
+    private void OnDisable()
+    {
+        EventBus<OnInputMove>.Unsubscribe(HandleMove);
+        EventBus<OnInputJump>.Unsubscribe(HandleJump);
+        EventBus<OnInputAction>.Unsubscribe(HandleAction);
+        EventBus<OnInputThrow>.Unsubscribe(HandleThrow);
+        EventBus<OnInputSkill>.Unsubscribe(HandleSkill);
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
+
+    #endregion
+}
+#ROOTNAMESPACEEND#

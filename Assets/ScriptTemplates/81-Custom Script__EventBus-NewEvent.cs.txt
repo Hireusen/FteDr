@@ -1,0 +1,20 @@
+/// <summary>
+/// 정적 이벤트 버스의 구조체입니다.
+/// </summary>
+    #ROOTNAMESPACEBEGIN#
+public readonly struct #SCRIPTNAME#
+{
+    public readonly int number;
+
+    public #SCRIPTNAME#(int number)
+    {
+        this.number = number;
+    }
+
+    /// <param name="number">숫자</param>
+    public static void Publish(int number)
+    {
+        EventBus<#SCRIPTNAME#>.Publish(new #SCRIPTNAME#(number));
+    }
+}
+#ROOTNAMESPACEEND#
