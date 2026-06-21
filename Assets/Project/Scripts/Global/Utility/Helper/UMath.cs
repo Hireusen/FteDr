@@ -26,7 +26,7 @@ public class UMath : MonoBehaviour
     }
 
     /// <summary>
-    /// 지수 보간한 값(0 ~ 1)을 반환합니다.
+    /// 지수 보간한 값(0~1)을 반환합니다.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static float GetSmoothT(float sharpness, float deltatime)

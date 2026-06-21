@@ -20,23 +20,23 @@ public class #SCRIPTNAME# : AMono
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private void HandleMove(OnInputMove ctx)
+    private void MoveHandler(OnInputMove ctx)
     {
 
     }
-    private void HandleJump(OnInputJump ctx)
+    private void JumpHandler(OnInputJump ctx)
     {
         
     }
-    private void HandleAction(OnInputAction ctx)
+    private void EscHandler(OnInputEsc ctx)
     {
 
     }
-    private void HandleThrow(OnInputThrow ctx)
+    private void LookHandler(OnInputLook ctx)
     {
 
     }
-    private void HandleSkill(OnInputSkill ctx)
+    private void GrapHandler(OnInputGrap ctx)
     {
 
     }
@@ -45,19 +45,19 @@ public class #SCRIPTNAME# : AMono
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void OnEnable()
     {
-        EventBus<OnInputMove>.Subscribe(HandleMove);
-        EventBus<OnInputJump>.Subscribe(HandleJump);
-        EventBus<OnInputAction>.Subscribe(HandleAction);
-        EventBus<OnInputThrow>.Subscribe(HandleThrow);
-        EventBus<OnInputSkill>.Subscribe(HandleSkill);
+        CEventBus<OnInputMove>.Subscribe(MoveHandler);
+        CEventBus<OnInputJump>.Subscribe(JumpHandler);
+        CEventBus<OnInputEsc>.Subscribe(EscHandler);
+        CEventBus<OnInputLook>.Subscribe(LookHandler);
+        CEventBus<OnInputGrap>.Subscribe(GrapHandler);
     }
     private void OnDisable()
     {
-        EventBus<OnInputMove>.Unsubscribe(HandleMove);
-        EventBus<OnInputJump>.Unsubscribe(HandleJump);
-        EventBus<OnInputAction>.Unsubscribe(HandleAction);
-        EventBus<OnInputThrow>.Unsubscribe(HandleThrow);
-        EventBus<OnInputSkill>.Unsubscribe(HandleSkill);
+        CEventBus<OnInputMove>.Unsubscribe(MoveHandler);
+        CEventBus<OnInputJump>.Unsubscribe(JumpHandler);
+        CEventBus<OnInputEsc>.Unsubscribe(EscHandler);
+        CEventBus<OnInputLook>.Unsubscribe(LookHandler);
+        CEventBus<OnInputGrap>.Unsubscribe(GrapHandler);
     }
     #endregion
 
