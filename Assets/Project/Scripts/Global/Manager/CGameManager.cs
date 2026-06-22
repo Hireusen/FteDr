@@ -27,22 +27,6 @@ public sealed class CGameManager : ASingleton<CGameManager>
     public static Transform NormalObjectRoot => RootProvider(_normalObjectRoot, K.NAME_NORMAL_OBJECT_ROOT);
     public static Transform PoolingObjectRoot => RootProvider(_enableObjectRoot, K.NAME_POOLING_OBJECT_ROOT);
 
-    // 초기화 메서드
-    protected override void Initialize()
-    {
-        // 생성 및 초기화
-        _curScene = (EScene)SceneManager.GetActiveScene().buildIndex;
-        // 초기 부팅 시 씬 전환 이벤트 뿌리기
-        if (_bootCo == null)
-        {
-            _bootCo = StartCoroutine(FirstLoadCo(EScene.Boot, _curScene));
-        }
-        else
-        {
-            UDebug.Print($"부트 코루틴이 중복 호출되었습니다.", LogType.Assert);
-        }
-    }
-
     /// <summary>
     /// 해당 씬을 동기 로드합니다.
     /// 동일한 이름을 가지는 씬도 있을 수 있기 때문에 표준적으로는 인덱스 사용이 권장됩니다.
@@ -162,6 +146,22 @@ public sealed class CGameManager : ASingleton<CGameManager>
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    // 초기화 메서드
+    protected override void Initialize()
+    {
+        // 생성 및 초기화
+        _curScene = (EScene)SceneManager.GetActiveScene().buildIndex;
+        // 초기 부팅 시 씬 전환 이벤트 뿌리기
+        if (_bootCo == null)
+        {
+            _bootCo = StartCoroutine(FirstLoadCo(EScene.Boot, _curScene));
+        }
+        else
+        {
+            UDebug.Print($"부트 코루틴이 중복 호출되었습니다.", LogType.Assert);
+        }
+    }
+
     // 루트 오브젝트를 안전하게 가져오고 없으면 새로 생성
     private static Transform RootProvider(Transform root, string name)
     {
