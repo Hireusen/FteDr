@@ -3,5 +3,6 @@
 /// </summary>
 public static partial class K
 {
-    
+    // 리소스 폴더 경로
+    public const string RESOURCE_SO_PATH = "ScriptableObjects";
 }

@@ -10,14 +10,14 @@ public abstract class ABaseSO : ScriptableObject
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("기본 정보")]
     [SerializeField] protected string _id = null;
-    [SerializeField] protected EDataType _type = EDataType.None;
     [SerializeField] protected string _name = "이름";
+    [SerializeField] protected EDataType _type = EDataType.None;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public string Id => _id;
-    public EDataType Type => _type;
     public string Name => _name;
+    public EDataType Type => _type;
 
     // 값 유효성 검사
     protected virtual void CollectErrorMessage(List<string> errorList)
@@ -26,13 +26,13 @@ public abstract class ABaseSO : ScriptableObject
         {
             errorList.Add($"{errorList.Count + 1}. ID가 비어있습니다.");
         }
-        if (_type == EDataType.None)
-        {
-            errorList.Add($"{errorList.Count + 1}. 타입이 비어있습니다.");
-        }
         if (_name.IsBlank())
         {
             errorList.Add($"{errorList.Count + 1}. 이름이 비어있습니다.");
+        }
+        if (_type == EDataType.None)
+        {
+            errorList.Add($"{errorList.Count + 1}. 타입이 비어있습니다.");
         }
     }
     #endregion

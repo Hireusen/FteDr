@@ -4,8 +4,8 @@
 public static partial class K
 {
     // 핵심 오브젝트
-    public const string MAIN_CAMERA = "Main Camera";
-    public const string DIRECTIONAL_LIGHT = "Directional Light";
+    public const string NAME_MAIN_CAMERA = "Main Camera";
+    public const string NAME_DIRECTIONAL_LIGHT = "Directional Light";
 
     // 루트 오브젝트
     public const string NAME_NORMAL_OBJECT_ROOT = "@NormalObjects";
