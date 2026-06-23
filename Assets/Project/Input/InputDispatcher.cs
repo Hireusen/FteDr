@@ -129,7 +129,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""Grap"",
+                    ""name"": ""Grab"",
                     ""type"": ""Button"",
                     ""id"": ""e08090c7-43e9-4267-bee5-b33929774e3a"",
                     ""expectedControlType"": """",
@@ -212,7 +212,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Grap"",
+                    ""action"": ""Grab"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
@@ -249,7 +249,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         m_GameMap_Jump = m_GameMap.FindAction("Jump", throwIfNotFound: true);
         m_GameMap_Esc = m_GameMap.FindAction("Esc", throwIfNotFound: true);
         m_GameMap_Look = m_GameMap.FindAction("Look", throwIfNotFound: true);
-        m_GameMap_Grap = m_GameMap.FindAction("Grap", throwIfNotFound: true);
+        m_GameMap_Grab = m_GameMap.FindAction("Grab", throwIfNotFound: true);
     }
 
     ~@InputDispatcher()
@@ -334,7 +334,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
     private readonly InputAction m_GameMap_Jump;
     private readonly InputAction m_GameMap_Esc;
     private readonly InputAction m_GameMap_Look;
-    private readonly InputAction m_GameMap_Grap;
+    private readonly InputAction m_GameMap_Grab;
     /// <summary>
     /// Provides access to input actions defined in input action map "GameMap".
     /// </summary>
@@ -363,9 +363,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Look => m_Wrapper.m_GameMap_Look;
         /// <summary>
-        /// Provides access to the underlying input action "GameMap/Grap".
+        /// Provides access to the underlying input action "GameMap/Grab".
         /// </summary>
-        public InputAction @Grap => m_Wrapper.m_GameMap_Grap;
+        public InputAction @Grab => m_Wrapper.m_GameMap_Grab;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -404,9 +404,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Look.started += instance.OnLook;
             @Look.performed += instance.OnLook;
             @Look.canceled += instance.OnLook;
-            @Grap.started += instance.OnGrap;
-            @Grap.performed += instance.OnGrap;
-            @Grap.canceled += instance.OnGrap;
+            @Grab.started += instance.OnGrab;
+            @Grab.performed += instance.OnGrab;
+            @Grab.canceled += instance.OnGrab;
         }
 
         /// <summary>
@@ -430,9 +430,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Look.started -= instance.OnLook;
             @Look.performed -= instance.OnLook;
             @Look.canceled -= instance.OnLook;
-            @Grap.started -= instance.OnGrap;
-            @Grap.performed -= instance.OnGrap;
-            @Grap.canceled -= instance.OnGrap;
+            @Grab.started -= instance.OnGrab;
+            @Grab.performed -= instance.OnGrab;
+            @Grab.canceled -= instance.OnGrab;
         }
 
         /// <summary>
@@ -502,11 +502,11 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnLook(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "Grap" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Grab" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnGrap(InputAction.CallbackContext context);
+        void OnGrab(InputAction.CallbackContext context);
     }
 }
