@@ -9,9 +9,9 @@ public class COxygenSO : AGearSO
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("기본 정보")]
-    [SerializeField] protected string _id = null;
-    [SerializeField] protected EDataType _type = EDataType.None;
-    [SerializeField] protected string _name = "";
+    [SerializeField] protected float[] _maxOxygen;
+    [SerializeField] protected float[] _;
+    
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
