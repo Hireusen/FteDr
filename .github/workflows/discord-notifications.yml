@@ -67,13 +67,13 @@ jobs:
                   MENTIONS="$MENTIONS <@1427571238716575856>"
                   ;;
                 "FteDr")
-                  MENTIONS="$MENTIONS <@328431682480766977>"
+                  MENTIONS="$MENTIONS <@844965927958478848 >"
                   ;;
                 "JiRungYeeOwO")
-                  MENTIONS="$MENTIONS <@551035957621686272>"
+                  MENTIONS="$MENTIONS <@328431682480766977>"
                   ;;
                 "kimchaeho1998-prog")
-                  MENTIONS="$MENTIONS <@844965927958478848>"
+                  MENTIONS="$MENTIONS <@551035957621686272>"
                   ;;
                 *)
                   MENTIONS="$MENTIONS @$login"
@@ -85,9 +85,9 @@ jobs:
             if [ -z "$MENTIONS" ]; then
               case "$CURRENT_REVIEWER" in
                 "Hireusen") MENTIONS="<@1427571238716575856>" ;;
-                "FteDr") MENTIONS="<@328431682480766977>" ;;
-                "JiRungYeeOwO") MENTIONS="<@551035957621686272>" ;;
-                "kimchaeho1998-prog") MENTIONS="<@844965927958478848>" ;;
+                "FteDr") MENTIONS="<@844965927958478848 >" ;;
+                "JiRungYeeOwO") MENTIONS="<@328431682480766977>" ;;
+                "kimchaeho1998-prog") MENTIONS="<@551035957621686272>" ;;
                 *) MENTIONS="@$CURRENT_REVIEWER" ;;
               esac
             fi
@@ -167,13 +167,13 @@ jobs:
               AUTHOR_MENTION="<@1427571238716575856>"
               ;;
             "FteDr")
-              AUTHOR_MENTION="<@328431682480766977>"
+              AUTHOR_MENTION="<@844965927958478848 >"
               ;;
             "JiRungYeeOwO")
-              AUTHOR_MENTION="<@551035957621686272>"
+              AUTHOR_MENTION="<@328431682480766977>"
               ;;
             "kimchaeho1998-prog")
-              AUTHOR_MENTION="<@844965927958478848>"
+              AUTHOR_MENTION="<@551035957621686272>"
               ;;
             *)
               AUTHOR_MENTION="@${{ github.event.pull_request.user.login }}"
@@ -217,13 +217,13 @@ jobs:
               AUTHOR_MENTION="<@1427571238716575856>"
               ;;
             "FteDr")
-              AUTHOR_MENTION="<@328431682480766977>"
+              AUTHOR_MENTION="<@844965927958478848 >"
               ;;
             "JiRungYeeOwO")
-              AUTHOR_MENTION="<@551035957621686272>"
+              AUTHOR_MENTION="<@328431682480766977>"
               ;;
             "kimchaeho1998-prog")
-              AUTHOR_MENTION="<@844965927958478848>"
+              AUTHOR_MENTION="<@551035957621686272>"
               ;;
             *)
               AUTHOR_MENTION="@${{ github.event.pull_request.user.login }}"
