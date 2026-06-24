@@ -5,4 +5,5 @@ public enum EPlayerState
 {
     OnGround = 0,
     Swimming = 1,
+    WaterGround = 2,
 }

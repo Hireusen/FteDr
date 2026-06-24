@@ -11,8 +11,17 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     [SerializeField] private float _jumpForce;
     [SerializeField] private float _ascendForce;
 
+    [Header("수중 물리 세팅")]
+    [SerializeField] private float _waterGravity;
+    [SerializeField] private float _waterDrag;
+    [SerializeField] private float _groundDrag;
+
     [Header("회전 설정")]
     [SerializeField] private float _lookSensitivity = 0.5f;
+
+    [Header("바닥 감지 설정")]
+    [SerializeField] private float _groundCheckDistance;
+    [SerializeField] private LayerMask _groundLayer;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -20,9 +29,11 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     private Vector2 _currentMoveInput;
     private Vector2 _currentLookInput;
 
-    private EPlayerState _currentState = EPlayerState.Swimming;
+    private float _playerYaw;
 
-    private bool _isJumpActionRequired = false;
+    private EPlayerState _currentState = EPlayerState.OnGround;
+
+    private bool _isJumpPressed = false;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -35,39 +46,86 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     {
         if (_rb == null) return;
 
-        Vector3 moveDirection = (transform.right * _currentMoveInput.x + transform.forward * _currentMoveInput.y).normalized;
+        if (_currentState == EPlayerState.Swimming || _currentState == EPlayerState.WaterGround)
+        {
+            CheckWaterGround();
+        }
+
+        Vector3 moveDirection = (transform.right * _currentMoveInput.x + transform.forward * _currentMoveInput.y);
+        moveDirection.y = 0f;
+        moveDirection.Normalize();
 
         _rb.AddForce(moveDirection * _moveSpeed, ForceMode.Force);
 
-        if (_isJumpActionRequired)
+        if (_currentState == EPlayerState.Swimming)
         {
-            ApplyJumpOrAscendForce();
-            _isJumpActionRequired = false;
+            _rb.AddForce(Vector3.down * _waterGravity, ForceMode.Acceleration);
+
+            if (_isJumpPressed)
+            {
+                _rb.AddForce(Vector3.up * _ascendForce, ForceMode.Force);
+            }
+        }
+        else
+        {
+            if (_isJumpPressed)
+            {
+                if (_rb.velocity.y <= 0.1f && Physics.Raycast(transform.position, Vector3.down, _groundCheckDistance, _groundLayer))
+                {
+                    _rb.velocity = new Vector3(_rb.velocity.x, 0f, _rb.velocity.z);
+                    _rb.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
+                }
+            }
         }
     }
 
     public void ExecuteUpdateFrame()
     {
-        if (_currentLookInput.x != 0)
+        transform.rotation = Quaternion.Euler(0f, _playerYaw, 0f);
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 상태 제어 ◀─────────────────────────
+    /// <summary>
+    /// 플레이어의 상태를 변경합니다.
+    /// </summary>
+    /// <param name="newState"></param>
+    public void SetState(EPlayerState newState)
+    {
+        if (_currentState == newState) return;
+
+        _currentState = newState;
+        UDebug.Print($"플레이어 상태 변경됨 : {_currentState}");
+
+        if (_currentState == EPlayerState.Swimming || _currentState == EPlayerState.WaterGround)
         {
-            transform.Rotate(Vector3.up, _currentLookInput.x * _lookSensitivity);
+            _rb.useGravity = false;
+            _rb.drag = _waterDrag;
+        }
+        else if (_currentState == EPlayerState.OnGround)
+        {
+            _rb.useGravity = true;
+            _rb.drag = _groundDrag;
+        }
+    }
+
+    private void CheckWaterGround()
+    {
+        bool isGround = Physics.Raycast(transform.position, Vector3.down, _groundCheckDistance, _groundLayer);
+
+        if (isGround && _currentState == EPlayerState.Swimming)
+        {
+            SetState(EPlayerState.WaterGround);
+        }
+        else if (!isGround && _currentState == EPlayerState.WaterGround)
+        {
+            SetState(EPlayerState.Swimming);
         }
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private void ApplyJumpOrAscendForce()
-    {
-        switch (_currentState)
-        {
-            case EPlayerState.OnGround:
-                _rb.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
-                break;
-            case EPlayerState.Swimming:
-                _rb.AddForce(Vector3.up * _ascendForce, ForceMode.Force);
-                break;
-        }
-    }
+
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -78,7 +136,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
         CEventBus<OnInputMove>.Unsubscribe(MoveHandler);
         CEventBus<OnInputLook>.Unsubscribe(LookHandler);
         CEventBus<OnInputJump>.Unsubscribe(JumpHandler);
-        CEventBus<OnInputGrab>.Unsubscribe(GrabHandler);
         CEventBus<OnInputEsc>.Unsubscribe(EscHandler);
     }
 
@@ -88,11 +145,34 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
 
         _rb = GetComponent<Rigidbody>();
 
+        _rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        _playerYaw = transform.eulerAngles.y;
+
+        EPlayerState startState = _currentState;
+        _currentState = EPlayerState.OnGround;
+        SetState(startState);
+
         CEventBus<OnInputMove>.Subscribe(MoveHandler);
         CEventBus<OnInputLook>.Subscribe(LookHandler);
         CEventBus<OnInputJump>.Subscribe(JumpHandler);
-        CEventBus<OnInputGrab>.Subscribe(GrabHandler);
         CEventBus<OnInputEsc>.Subscribe(EscHandler);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Submarine"))
+        {
+            SetState(EPlayerState.OnGround);
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Submarine"))
+        {
+            SetState(EPlayerState.Swimming);
+        }
     }
     #endregion
 
@@ -105,18 +185,13 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     private void LookHandler(OnInputLook data)
     {
         _currentLookInput = data.delta;
+
+        _playerYaw += _currentLookInput.x * _lookSensitivity;
     }
 
     private void JumpHandler(OnInputJump data)
     {
-        if (!data.jumpPressed) return;
-
-        _isJumpActionRequired = true;
-    }
-
-    private void GrabHandler(OnInputGrab data)
-    {
-        UDebug.Print("수집품 줍기 / 상호작용 시도!");
+        _isJumpPressed = data.jumpPressed;
     }
 
     private void EscHandler(OnInputEsc data)

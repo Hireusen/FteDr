@@ -63,11 +63,11 @@ public class CTPPCamera : AFrameable, ILateUpdateFrameable
         return 1f - Mathf.Exp(-sharpness * Time.deltaTime);
     }
 
-    private void BuildCamPose(out Vector3 desiredPos, out Quaternion desiredRot, bool snap)
+    private void BuildCamPose(out Vector3 desiredPos)
     {
         if (_useOrbit)
         {
-            _orbitYaw += _currentLookInput.x * _orbitSensitivity;
+            _orbitYaw = _player.eulerAngles.y;
             _orbitPitch -= _currentLookInput.y * _orbitSensitivity;
 
             float currentMin = _groundOrbitPitchMin;
@@ -83,55 +83,48 @@ public class CTPPCamera : AFrameable, ILateUpdateFrameable
 
             Quaternion orbitRot = Quaternion.Euler(_orbitPitch, _orbitYaw, 0f);
             desiredPos = _player.position + (orbitRot * _offset);
-
-            Vector3 lookPos = _player.position + Vector3.up * _lookAtHeight;
-            desiredRot = Quaternion.LookRotation(lookPos - desiredPos, Vector3.up);
         }
         else
         {
             desiredPos = _player.position + (_player.rotation * _offset);
-            Vector3 lookPos = _player.position + Vector3.up * _lookAtHeight;
-            desiredRot = Quaternion.LookRotation(lookPos - desiredPos, Vector3.up);
         }
     }
 
-    private void ApplyPose(Vector3 desiredPos, Quaternion desiredRot, float sharpness, bool snap)
+    private void ApplyPose(Vector3 desiredPos, float sharpness, bool snap)
     {
         if (snap)
         {
             _camTransform.position = desiredPos;
-            _camTransform.rotation = desiredRot;
-            return;
+        }
+        else
+        {
+            float t = GetSmoothT(sharpness);
+            _camTransform.position = Vector3.Lerp(_camTransform.position, desiredPos, t);
         }
 
-        float t = GetSmoothT(sharpness);
-
-        _camTransform.position = Vector3.Lerp(_camTransform.position, desiredPos, t);
-
-        _camTransform.rotation = Quaternion.Slerp(_camTransform.rotation, desiredRot, t);
+        Vector3 lookPos = _player.position + Vector3.up * _lookAtHeight;
+        _camTransform.rotation = Quaternion.LookRotation(lookPos - _camTransform.position, Vector3.up);
     }
 
-    private void InitCam(bool snap)
+    private void InitCam()
     {
         _orbitYaw = _player.eulerAngles.y;
         _orbitPitch = 12.0f;
 
         Vector3 desiredPos;
-        Quaternion desiredRot;
 
-        BuildCamPose(out desiredPos, out desiredRot, true);
+        BuildCamPose(out desiredPos);
 
-        ApplyPose(desiredPos, desiredRot, _sharpness, true);
+        ApplyPose(desiredPos, _sharpness, true);
     }
 
     private void TickCam()
     {
         Vector3 desiredPos;
-        Quaternion desiredRot;
 
-        BuildCamPose(out desiredPos, out desiredRot, false);
+        BuildCamPose(out desiredPos);
 
-        ApplyPose(desiredPos, desiredRot, _sharpness, false);
+        ApplyPose(desiredPos, _sharpness, false);
     }
     #endregion
 
@@ -176,7 +169,7 @@ public class CTPPCamera : AFrameable, ILateUpdateFrameable
         }
 
         _camTransform = _camera.transform;
-        InitCam(true);
+        InitCam();
     }
     #endregion
 

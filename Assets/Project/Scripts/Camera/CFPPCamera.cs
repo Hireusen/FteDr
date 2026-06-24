@@ -88,10 +88,10 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
         _camTransform.position = Vector3.Lerp(_camTransform.position, desiredPos, t);
 
-        _camTransform.rotation = Quaternion.Slerp(_camTransform.rotation, desiredRot, t);
+        _camTransform.rotation = desiredRot;
     }
 
-    private void InitCam(bool snap)
+    private void InitCam()
     {
         _pitch = 0f;
 
@@ -156,7 +156,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
         _camTransform = _camera.transform;
 
-        InitCam(true);
+        InitCam();
     }
     #endregion
 
