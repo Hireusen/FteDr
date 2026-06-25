@@ -42,6 +42,7 @@ public class CRenameAsset : EditorWindow
 
             string oldName = obj.name;
             string newName = oldName;
+            newName = char.ToUpper(newName[0]) + newName.Substring(1); // 첫 문자 대문자
             // 공백 변환
             if (_replaceBlank)
             {
