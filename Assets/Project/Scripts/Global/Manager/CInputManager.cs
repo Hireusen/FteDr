@@ -41,11 +41,11 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
             OnInputLook.Publish(lookInput);
         }
     }
-    public void OnGrap(InputAction.CallbackContext ctx)
+    public void OnGrab(InputAction.CallbackContext ctx)
     {
         if (ctx.performed)
         {
-            OnInputGrap.Publish();
+            OnInputGrab.Publish();
         }
     }
     #endregion
