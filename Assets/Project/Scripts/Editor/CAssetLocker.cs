@@ -28,7 +28,14 @@ public class CAssetLocker : AssetPostprocessor
     private static void ScanAndLockLargeAssets()
     {
         string path = Path.Combine(Application.dataPath, K.LARGE_ASSETS_FOLDER_NAME); // 절대 경로 반환
-        if (!Directory.Exists(path)) return; // 폴더 없을 시 종료
+
+        // 폴더 없을 시 종료
+        if (!Directory.Exists(path))
+        {
+            UDebug.Print($"현재 대용량 에셋을 담을 폴더가 존재하지 않습니다!" +
+                $"\nLargeCapacityAssets 폴더를 Assets 폴더 안에 생성해주세요!", LogType.Error);
+            return;
+        }
 
         int lockedCount = LockDirectory(path);
         if(lockedCount > 0)
