@@ -78,9 +78,9 @@ public static class UFade
     }
 
     /// <summary>
-    /// 페이드 비주얼을 기본값(검정 단색)으로 되돌립니다.
+    /// 페이드 색상과 스프라이트를 초기화합니다.
     /// </summary>
-    public static void ResetColor()
+    public static void ResetVisual()
     {
         EnsureInitialized();
         _fadeImage.sprite = null;
@@ -95,7 +95,7 @@ public static class UFade
     {
         if (!_isInitialize) return;
         _coroutineRunner.StopAllCoroutines();
-        ResetColor();
+        ResetVisual();
         IsFading = false;
     }
     #endregion
