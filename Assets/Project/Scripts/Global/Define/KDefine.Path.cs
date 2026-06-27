@@ -3,6 +3,8 @@
 /// </summary>
 public static partial class K
 {
+    // 문자열 ID 폴더 경로
+    public const string STRING_ID_EXPORT_PATH = "Assets/Project/Scripts/Global/Define";
     // 리소스 폴더 경로
     public const string RESOURCE_SO_PATH = "ScriptableObjects";
 
