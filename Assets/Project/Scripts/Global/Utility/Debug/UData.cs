@@ -52,8 +52,8 @@ public static class UData
     /// </summary>
     /// <param name="id">산소 ID</param>
     /// <returns></returns>
-    public static COxygenSO Oxygen(string id)
-        => Address.Get<COxygenSO>(id);
+    public static COxygenTankSO Oxygen(string id)
+        => Address.Get<COxygenTankSO>(id);
 
     /// <summary>
     /// 문자열 ID로 레이더 SO를 반환받습니다.

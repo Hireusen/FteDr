@@ -4,8 +4,8 @@ using UnityEngine;
 /// <summary>
 /// 플레이어의 레벨별 산소통 정보를 담는 SO 클래스입니다.
 /// </summary>
-[CreateAssetMenu(fileName = "COxygenSO_", menuName = "ScriptableObjects/OxygenSO", order = 1)]
-public class COxygenSO : AGearSO
+[CreateAssetMenu(fileName = "COxygenTankSO_", menuName = "ScriptableObjects/OxygenTankSO", order = 1)]
+public class COxygenTankSO : AGearSO
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("기본 정보")]

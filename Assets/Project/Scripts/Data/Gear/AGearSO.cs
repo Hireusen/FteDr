@@ -10,6 +10,7 @@ public abstract class AGearSO : ABaseSO
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("기본 정보")]
     [SerializeField] protected Sprite _shopIcon;
+    [Tooltip("(index) 레벨에서 (index + 1)레벨이 되기 위한 경험치")]
     [SerializeField] protected int[] _upgradeCosts;
     #endregion
 
