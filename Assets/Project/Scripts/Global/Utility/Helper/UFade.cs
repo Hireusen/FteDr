@@ -1,9 +1,11 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
 /// 화면 페이드 효과를 전담하는 정적 유틸리티 클래스입니다.
+/// 색상 및 스프라이트(이미지) 페이드를 지원합니다.
 /// </summary>
 public static class UFade
 {
@@ -11,68 +13,123 @@ public static class UFade
     private static bool _isInitialize;
     private static Image _fadeImage;
     private static CanvasGroup _canvasGroup;
-    private static MonoBehaviour _coroutineRunner; // 코루틴 실행자
+    private static MonoBehaviour _coroutineRunner;
+
+    private static readonly Color _defaultColor = Color.black;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    /// <summary>
-    /// 현재 페이드 연출 진행 여부를 반환합니다.
-    /// </summary>
+    /// <summary>현재 페이드 연출 진행 여부를 반환합니다.</summary>
     public static bool IsFading { get; private set; }
 
     /// <summary>
-    /// 페이드 아웃 효과를 실행합니다.
+    /// 페이드 아웃(화면 덮기) 효과를 실행합니다.
     /// </summary>
     /// <param name="duration">연출 시간</param>
-    public static void FadeOut
-        (float duration, bool blockRaycasts = false, float startAlpha = 0f, float endAlpha = 1f)
+    /// <param name="blockRaycasts">페이드 진행 중 입력 차단 여부</param>
+    /// <param name="onComplete">페이드 완료 콜백</param>
+    public static void FadeOut(
+        float duration,
+        bool blockRaycasts = false,
+        float startAlpha = 0f,
+        float endAlpha = 1f,
+        Action onComplete = null)
     {
-        if (!_isInitialize)
-        {
-            Initialize();
-        }
-        ExecuteFade(startAlpha, endAlpha, duration, blockRaycasts);
+        EnsureInitialized();
+        ExecuteFade(startAlpha, endAlpha, duration, blockRaycasts, onComplete);
     }
 
     /// <summary>
-    /// 페이드 인 효과를 실행합니다.
+    /// 페이드 인(화면 드러내기) 효과를 실행합니다.
     /// </summary>
-    /// <param name="duration">연출 시간</param>
-    public static void FadeIn
-        (float duration, bool blockRaycasts = false, float startAlpha = 1f, float endAlpha = 0f)
+    public static void FadeIn(
+        float duration,
+        bool blockRaycasts = false,
+        float startAlpha = 1f,
+        float endAlpha = 0f,
+        Action onComplete = null)
     {
-        if (!_isInitialize)
-        {
-            Initialize();
-        }
-        ExecuteFade(startAlpha, endAlpha, duration, blockRaycasts);
+        EnsureInitialized();
+        ExecuteFade(startAlpha, endAlpha, duration, blockRaycasts, onComplete);
+    }
+
+    /// <summary>
+    /// 페이드에 사용할 색상을 설정합니다.
+    /// </summary>
+    public static void SetColor(Color color)
+    {
+        EnsureInitialized();
+        _fadeImage.sprite = null;
+        _fadeImage.color = new Color(color.r, color.g, color.b, 1f);
+    }
+
+    /// <summary>
+    /// 페이드에 사용할 스프라이트(이미지)를 설정합니다.
+    /// </summary>
+    /// <param name="sprite">표시할 스프라이트</param>
+    /// <param name="tint">스프라이트에 곱해질 색상 틴트 (기본 흰색 = 원본 색)</param>
+    /// <param name="preserveAspect">종횡비 유지 여부</param>
+    public static void SetSprite(Sprite sprite, Color? tint = null, bool preserveAspect = false)
+    {
+        EnsureInitialized();
+        _fadeImage.sprite = sprite;
+        _fadeImage.color = tint ?? Color.white;
+        _fadeImage.preserveAspect = preserveAspect;
+    }
+
+    /// <summary>
+    /// 페이드 비주얼을 기본값(검정 단색)으로 되돌립니다.
+    /// </summary>
+    public static void ResetColor()
+    {
+        EnsureInitialized();
+        _fadeImage.sprite = null;
+        _fadeImage.preserveAspect = false;
+        _fadeImage.color = _defaultColor;
+    }
+
+    /// <summary>
+    /// 현재 진행 중인 페이드를 즉시 중단합니다.
+    /// </summary>
+    public static void StopFade()
+    {
+        if (!_isInitialize) return;
+        _coroutineRunner.StopAllCoroutines();
+        ResetColor();
+        IsFading = false;
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private static void ExecuteFade(float startAlpha, float targetAlpha, float duration, bool blockRaycasts)
+    private static void ExecuteFade(
+        float startAlpha, float targetAlpha, float duration, bool blockRaycasts, Action onComplete)
     {
-        _coroutineRunner.StopAllCoroutines(); // 기존 페이드 효과 종료
-        _canvasGroup.blocksRaycasts = blockRaycasts; // 레이캐스트 차단 설정
+        _coroutineRunner.StopAllCoroutines();
+        _canvasGroup.blocksRaycasts = blockRaycasts;
 
         // 지속시간 0 방어
         if (duration <= 0f)
         {
             _canvasGroup.alpha = targetAlpha;
+            _canvasGroup.blocksRaycasts = false;
             IsFading = false;
+            onComplete?.Invoke();
             return;
         }
 
-        // 페이드 코루틴 시작
-        _coroutineRunner.StartCoroutine(DoFade(startAlpha, targetAlpha, duration));
+        // 플리커 방지: 시작 alpha를 먼저 적용
+        _canvasGroup.alpha = startAlpha;
+        IsFading = true; // 호출 직후 동기적으로 true 보장
+
+        _coroutineRunner.StartCoroutine(
+            DoFade(startAlpha, targetAlpha, duration, onComplete));
     }
 
-    private static IEnumerator DoFade(float startAlpha, float targetAlpha, float duration)
+    private static IEnumerator DoFade(
+        float startAlpha, float targetAlpha, float duration, Action onComplete)
     {
-        IsFading = true; // 대기 플래그 ON
         float time = 0f;
 
-        // 투명도 보간
         while (time < duration)
         {
             time += Time.unscaledDeltaTime; // 일시정지 상태 무관
@@ -83,21 +140,21 @@ public static class UFade
         // 페이드 완료
         _canvasGroup.alpha = targetAlpha;
         _canvasGroup.blocksRaycasts = false;
-        IsFading = false; // 대기 플래그 OFF
+        IsFading = false;
+        onComplete?.Invoke();
     }
 
-    private static void Initialize()
+    private static void EnsureInitialized()
     {
         if (_isInitialize) return;
 
         // 캔버스 생성 및 파괴 방지
         GameObject root = new GameObject("FadeCanvas");
-        Object.DontDestroyOnLoad(root);
+        UnityEngine.Object.DontDestroyOnLoad(root);
         Canvas canvas = root.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay; // 화면 덮기
-        canvas.sortingOrder = 9999; // 최상단 노출
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 9999;
 
-        // 캔버스에 컴포넌트 추가
         root.AddComponent<CanvasScaler>().uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         root.AddComponent<GraphicRaycaster>();
 
@@ -105,9 +162,8 @@ public static class UFade
         GameObject imageObj = new GameObject("FadeImage");
         imageObj.transform.SetParent(root.transform, false);
         _fadeImage = imageObj.AddComponent<Image>();
+        _fadeImage.color = _defaultColor;
 
-        // 페이드 이미지 컴포넌트 설정
-        _fadeImage.color = Color.black;
         RectTransform rect = _fadeImage.rectTransform;
         rect.anchorMin = Vector2.zero;
         rect.anchorMax = Vector2.one;
@@ -118,23 +174,22 @@ public static class UFade
         _canvasGroup.alpha = 0f;
         _canvasGroup.blocksRaycasts = false;
 
-        // 정적 클래스이므로 코루틴을 돌리기 위한 컴포넌트 추가
         _coroutineRunner = root.AddComponent<FadeRunner>();
 
         _isInitialize = true;
     }
 
-    // 플레이 모드가 시작될 때 자동으로 로그 기록을 초기화합니다.
+    // 플레이 모드 시작 시(도메인 리로드 비활성화 대응) 정적 상태를 초기화합니다.
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-    private static void ResetVariable()
+    private static void ResetStatics()
     {
         _isInitialize = false;
         _fadeImage = null;
         _canvasGroup = null;
         _coroutineRunner = null;
+        IsFading = false;
     }
 
-    // 코루틴 실행용 은닉 클래스
     private class FadeRunner : MonoBehaviour { }
     #endregion
 }
