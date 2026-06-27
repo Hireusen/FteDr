@@ -4,10 +4,14 @@
 public enum EDataType
 {
     None = 0,
+    // 엔티티
     Enemy = 1,
-    Item = 2,
+    Player = 7,
+    // 수집품
+    Collectible = 2,
+    // 플레이어 도구
     GrabTool = 3,
-    Oxygen = 4,
+    OxygenTank = 4,
     Thruster = 5,
     Radar = 6,
 }

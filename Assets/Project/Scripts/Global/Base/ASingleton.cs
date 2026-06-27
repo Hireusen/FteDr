@@ -12,6 +12,7 @@ public abstract class ASingleton<T> : AMono where T : AMono
 
     public bool IsInitialized => _isInitialized;
     public virtual bool IsGlobal { get; } = true;
+    public static bool IsQuitting => _isQuitting;
 
     public static T Ins
     {
@@ -67,8 +68,8 @@ public abstract class ASingleton<T> : AMono where T : AMono
     {
         if (_isInitialized) return;
 
-        _isInitialized = true;
         Initialize();
+        _isInitialized = true;
         UDebug.Print($"싱글톤({gameObject.name}<{typeof(T).ToString()}>)의 초기화 메서드를 실행 완료했습니다.");
     }
 
@@ -84,14 +85,16 @@ public abstract class ASingleton<T> : AMono where T : AMono
             UDebug.Print($"중복 싱글톤({gameObject.name}<{typeof(T).ToString()}>)을 삭제했습니다.");
             return;
         }
+
         // 싱글톤 오브젝트 생성
         _instance = this as T;
         if (IsGlobal)
         {
             DontDestroyOnLoad(gameObject);
         }
-        UDebug.Print($"새로운 싱글톤({gameObject.name}<{typeof(T).ToString()}>)을 생성했습니다.");
         EntryInitialize();
+
+        UDebug.Print($"새로운 싱글톤({gameObject.name}<{typeof(T).ToString()}>)을 생성했습니다.");
     }
 
     /// <summary>
