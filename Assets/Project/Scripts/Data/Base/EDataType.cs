@@ -14,4 +14,6 @@ public enum EDataType
     OxygenTank = 4,
     Thruster = 5,
     Radar = 6,
+    // 시스템
+    Sound = 8,
 }
