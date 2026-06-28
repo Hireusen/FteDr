@@ -9,6 +9,8 @@ public class CTestFade : AMono
     [Header("키")]
     [SerializeField] private KeyCode _startKey = KeyCode.O;
     [SerializeField] private KeyCode _endKey = KeyCode.P;
+    [SerializeField] private Sprite _image;
+    [SerializeField] private Color _color;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -16,11 +18,13 @@ public class CTestFade : AMono
     {
         if (Input.GetKeyDown(_startKey))
         {
+            UFade.SetColor(_color);
             UFade.FadeOut(1.1f, true);
             UDebug.Print("페이드 인 실행");
         }
         if (Input.GetKeyDown(_endKey))
         {
+            UFade.SetColor(_color);
             UFade.FadeIn(1.1f, true);
             UDebug.Print("페이드 아웃 실행");
         }
