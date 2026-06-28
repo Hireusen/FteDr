@@ -2,7 +2,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 클래스의 설계 의도입니다.
+/// 카메라 이펙트 모음
 /// </summary>
 public class CCameraEffect : AMono
 {
