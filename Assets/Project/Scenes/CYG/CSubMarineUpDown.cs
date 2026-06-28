@@ -9,6 +9,7 @@ public class CSubMarineUpDown : AMono
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     //[Header("주제")]
     //[SerializeField] private Class _class;
+    private float accelalation = 5f;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -23,25 +24,30 @@ public class CSubMarineUpDown : AMono
         if (_moveOn == true) return;
         _moveOn = true;
         UFade.FadeOut(1.5f, true);
-        StartCoroutine(MoveSubmarineCo(type,3f));
+        StartCoroutine(MoveSubmarineSlowStartCo(type,3f));
         
+    }
+    public void ArriveSubmarine(int type)
+    {
+
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private IEnumerator MoveSubmarineCo(int movetype,float duration)
+    private IEnumerator MoveSubmarineSlowStartCo(int movetype,float duration)
     {
         float timer = 0f;
+        float speed = 0f;
         while (timer < duration)
         {
-
+            speed=Mathf.MoveTowards(speed, 10f, accelalation* Time.deltaTime);
             switch (movetype)
             {
                 case -1:
-                    gameObject.transform.position += Vector3.up * -10 * Time.deltaTime;
+                    gameObject.transform.position += Vector3.up * -speed * Time.deltaTime;
                     break;
                 case 1:
-                    gameObject.transform.position += Vector3.up * +10 * Time.deltaTime;
+                    gameObject.transform.position += Vector3.up * speed* Time.deltaTime;
                     break;
             }
             timer += Time.deltaTime;
@@ -49,6 +55,28 @@ public class CSubMarineUpDown : AMono
         }
         _moveOn = false;
         
+    }
+    private IEnumerator MoveSubmarineToSlowStartCo(int movetype, float duration)
+    {
+        float timer = 0f;
+        float speed = 10f;
+        while (timer < duration)
+        {
+            speed = Mathf.MoveTowards(speed, 0f, accelalation * Time.deltaTime);
+            switch (movetype)
+            {
+                case -1:
+                    gameObject.transform.position += Vector3.up * -speed * Time.deltaTime;
+                    break;
+                case 1:
+                    gameObject.transform.position += Vector3.up * speed * Time.deltaTime;
+                    break;
+            }
+            timer += Time.deltaTime;
+            yield return null;
+        }
+        _moveOn = false;
+
     }
     #endregion
 
