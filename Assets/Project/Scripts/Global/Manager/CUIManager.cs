@@ -3,7 +3,7 @@
 /// <summary>
 /// 씬 전체에서 공용으로 사용되는 전역 UI(설정창, 알림창 등)의 생명주기를 관리하는 매니저 클래스입니다.
 /// </summary>
-public class CGlobalUIManager : MonoBehaviour
+public class CUIManager : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("Global UI Prefabs")]
