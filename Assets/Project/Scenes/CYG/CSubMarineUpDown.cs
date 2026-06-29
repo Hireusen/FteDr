@@ -27,9 +27,9 @@ public class CSubMarineUpDown : AMono
         StartCoroutine(MoveSubmarineSlowStartCo(type,3f));
         
     }
-    public void ArriveSubmarine(int type)
+    public void ArriveSubmarine(float duration)
     {
-
+        
     }
     #endregion
 
@@ -77,6 +77,19 @@ public class CSubMarineUpDown : AMono
         }
         _moveOn = false;
 
+    }
+    private IEnumerator MoveStartToDestCo(Vector3 startPos, Vector3 destPos,float duration)
+    {
+        float timer = 0f;
+        while (timer < duration)
+        {
+            float t = timer / duration;
+            t = 1f - (1f - t) * (1f - t);
+
+            transform.position = Vector3.Lerp(startPos, destPos, t);
+            yield return null;
+        }
+        _moveOn = false;
     }
     #endregion
 
