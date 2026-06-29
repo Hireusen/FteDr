@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using Cinemachine;
+using System.Collections;
+using System.ComponentModel.Design.Serialization;
 using UnityEngine;
 
 /// <summary>
@@ -10,6 +12,10 @@ public class CSubMarineUpDown : AMono
     //[Header("주제")]
     //[SerializeField] private Class _class;
     private float accelalation = 5f;
+    private const string DESTNAME = "Destination";
+    private const string UPPOS = "UpPos";
+    private const string DOWNPOS = "Downpos";
+    private const string ARRIVECAM = "ArriveCamera";
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -24,12 +30,25 @@ public class CSubMarineUpDown : AMono
         if (_moveOn == true) return;
         _moveOn = true;
         UFade.FadeOut(1.5f, true);
-        StartCoroutine(MoveSubmarineSlowStartCo(type,3f));
+        StartCoroutine(MoveSubmarineSlowStartCo(type,1.5f));
         
     }
-    public void ArriveSubmarine(float duration)
+
+    //type=-1 이면 아래로 내려가는 동작. type=1이면 올라가는 동작
+    public void ArriveSubmarine(float duration,int type=-1)
     {
-        
+        if (_moveOn == true) return;
+        _moveOn = true;
+        CinemachineVirtualCamera arriveCam = GameObject.Find(ARRIVECAM).GetComponent<CinemachineVirtualCamera>();
+        arriveCam.LookAt = gameObject.transform;
+        UFade.FadeIn(1.5f, true);
+        GameObject dest = GameObject.Find(DESTNAME);
+        GameObject downPos= GameObject.Find(DOWNPOS);
+        GameObject upPos= GameObject.Find(UPPOS);
+        if(type==-1)
+            StartCoroutine(MoveStartToDestCo(upPos.transform.position, dest.transform.position, 3f));
+        else
+            StartCoroutine(MoveStartToDestCo(downPos.transform.position, dest.transform.position, 3f));
     }
     #endregion
 
@@ -56,28 +75,7 @@ public class CSubMarineUpDown : AMono
         _moveOn = false;
         
     }
-    private IEnumerator MoveSubmarineToSlowStartCo(int movetype, float duration)
-    {
-        float timer = 0f;
-        float speed = 10f;
-        while (timer < duration)
-        {
-            speed = Mathf.MoveTowards(speed, 0f, accelalation * Time.deltaTime);
-            switch (movetype)
-            {
-                case -1:
-                    gameObject.transform.position += Vector3.up * -speed * Time.deltaTime;
-                    break;
-                case 1:
-                    gameObject.transform.position += Vector3.up * speed * Time.deltaTime;
-                    break;
-            }
-            timer += Time.deltaTime;
-            yield return null;
-        }
-        _moveOn = false;
-
-    }
+    
     private IEnumerator MoveStartToDestCo(Vector3 startPos, Vector3 destPos,float duration)
     {
         float timer = 0f;
