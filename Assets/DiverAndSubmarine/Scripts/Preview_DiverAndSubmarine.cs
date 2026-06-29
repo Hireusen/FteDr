@@ -1,4 +1,9 @@
-﻿using System.Collections;
+﻿#pragma warning disable IDE0005
+#pragma warning disable IDE0052
+#pragma warning disable IDE0040
+#pragma warning disable IDE1006
+
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 

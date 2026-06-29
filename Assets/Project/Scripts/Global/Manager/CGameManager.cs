@@ -74,6 +74,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
     {
         if (!IsValidScene(index))
         {
+            UDebug.Print($"유효하지 않은 씬 인덱스를 사용했습니다!", LogType.Error);
             return;
         }
         string scenePath = SceneUtility.GetScenePathByBuildIndex(index); // 경로를 넣어도 씬 매니저에서 알아서 해준다.
@@ -94,6 +95,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
     {
         if (!IsValidScene(name))
         {
+            UDebug.Print($"유효하지 않은 씬 이름을 사용했습니다!", LogType.Error);
             return;
         }
         PreProcessing(_curScene, name);
@@ -116,6 +118,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
     {
         if (!IsValidScene(index))
         {
+            UDebug.Print($"유효하지 않은 씬 인덱스를 사용했습니다!", LogType.Error);
             return;
         }
         string scenePath = SceneUtility.GetScenePathByBuildIndex(index); // 경로를 넣어도 씬 매니저에서 알아서 해준다.
@@ -137,6 +140,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
     {
         if (!IsValidScene(name))
         {
+            UDebug.Print($"유효하지 않은 씬 이름을 사용했습니다!", LogType.Error);
             return;
         }
         PreProcessing(_curScene, name);

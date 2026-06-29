@@ -5,6 +5,11 @@ public static partial class K
 {
     // 문자열 ID 폴더 경로
     public const string STRING_ID_EXPORT_PATH = "Assets/Project/Scripts/Global/Define";
+
+    // 오디오 에셋 폴더 경로
+    public const string SOUND_IMPORT_PATH = "Assets/Project/Audios";
+    public const string SOUND_EXPORT_PATH = "Assets/Resources/ScriptableObjects/Sound";
+
     // 리소스 폴더 경로
     public const string RESOURCE_SO_PATH = "ScriptableObjects";
 

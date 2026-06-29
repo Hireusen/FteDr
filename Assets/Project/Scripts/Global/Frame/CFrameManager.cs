@@ -15,15 +15,6 @@ public sealed class CFrameManager : ASingleton<CFrameManager>
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    // 부트 매니저에게 호출당할 초기화 메서드
-    protected override void Initialize()
-    {
-        // 열거형 전달하여 리스트 초기화
-        _updateFrames = InitFrames<IUpdateFrameable>(typeof(EUpdatePriority));
-        _lateUpdateFrames = InitFrames<ILateUpdateFrameable>(typeof(ELateUpdatePriority));
-        _fixedUpdateFrames = InitFrames<IFixedUpdateFrameable>(typeof(EFixedUpdatePriority));
-    }
-
     public void Register(IUpdateFrameable frameable)
     {
         TryAddFrame(_updateFrames[(int)frameable.UpdatePriority], frameable);
@@ -52,6 +43,15 @@ public sealed class CFrameManager : ASingleton<CFrameManager>
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    // 부트 매니저에게 호출당할 초기화 메서드
+    protected override void Initialize()
+    {
+        // 열거형 전달하여 리스트 초기화
+        _updateFrames = InitFrames<IUpdateFrameable>(typeof(EUpdatePriority));
+        _lateUpdateFrames = InitFrames<ILateUpdateFrameable>(typeof(ELateUpdatePriority));
+        _fixedUpdateFrames = InitFrames<IFixedUpdateFrameable>(typeof(EFixedUpdatePriority));
+    }
+
     private List<T>[] InitFrames<T>(Type enumType)
     {
         int length = Enum.GetValues(enumType).Length;
