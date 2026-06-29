@@ -3,27 +3,19 @@ using UnityEngine;
 using System.Text;
 
 /// <summary>
-/// 모든 SO의 기반이 되는 추상 클래스입니다.
+/// 모든 SO의 최상위 기반이 되는 추상 클래스입니다. (이름, 설명 제외)
 /// </summary>
 public abstract class ABaseSO : ScriptableObject
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("기본 정보")]
     [SerializeField] protected string _id = null;
-    [SerializeField] protected string _name = "이름";
-    [SerializeField][TextArea] protected string _description = "설명";
     [SerializeField] protected EDataType _type = EDataType.None;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     /// <summary>데이터의 고유 문자열 ID를 반환합니다.</summary>
     public string Id => _id;
-
-    /// <summary>데이터의 출력용 이름을 반환합니다.</summary>
-    public string Name => _name;
-
-    /// <summary>데이터의 상세 설명을 반환합니다.</summary>
-    public string Description => _description;
 
     /// <summary>데이터의 카테고리 타입을 반환합니다.</summary>
     public EDataType Type => _type;
@@ -37,17 +29,15 @@ public abstract class ABaseSO : ScriptableObject
         {
             errorList.Add($"{errorList.Count + 1}. ID가 비어있습니다.");
         }
-        if (_name.IsBlank())
-        {
-            errorList.Add($"{errorList.Count + 1}. 이름이 비어있습니다.");
-        }
         if (_type == EDataType.None)
         {
             errorList.Add($"{errorList.Count + 1}. 타입이 비어있습니다.");
         }
     }
 
-    // 배열의 인덱스 범위를 벗어나는 접근을 방지하고 안전하게 값을 반환합니다. (외부는 1레벨 기준, 내부는 0인덱스 기준)
+    /// <summary>
+    /// 배열의 인덱스 범위를 벗어나는 접근을 방지하고 안전하게 값을 반환합니다. (외부는 1레벨 기준, 내부는 0인덱스 기준)
+    /// </summary>
     protected static T GetArrayValueSafely<T>(T[] array, int level, T fallback)
     {
         level--;
@@ -59,7 +49,9 @@ public abstract class ABaseSO : ScriptableObject
         return array[level];
     }
 
-    // 배열이 할당되지 않았거나 기본값(0 등)이 들어있는 경우 에러 목록에 추가합니다.
+    /// <summary>
+    /// 배열이 할당되지 않았거나 기본값(0 등)이 들어있는 경우 에러 목록에 추가합니다.
+    /// </summary>
     protected static void IncorrectArrayToAddError<T>(List<string> errorList, T[] array, T defaultValue) where T : struct
     {
         if (array == null || array.Length == 0)
@@ -79,7 +71,6 @@ public abstract class ABaseSO : ScriptableObject
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    // 에디터에서 값이 변경될 때마다 자동 실행되어 유효성 검사를 수행합니다.
     protected virtual void OnValidate()
     {
         List<string> errorList = new();

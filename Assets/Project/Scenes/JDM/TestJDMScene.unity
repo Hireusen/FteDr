@@ -424,6 +424,66 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &436737776
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 436737778}
+  - component: {fileID: 436737777}
+  m_Layer: 0
+  m_Name: SoundTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &436737777
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436737776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0407432013763c248976c084739e4f2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _followTarget: {fileID: 990376561}
+  _keySfxCamera: 113
+  _keySfxPosition: 119
+  _keySfxFollow: 101
+  _keyStopAll: 114
+  _keyStopAllFade: 116
+  _keyBgmPlay: 97
+  _keyBgmStop: 115
+  _keyAmbiencePlay: 100
+  _keyAmbienceStop: 102
+  _keyUnderwaterOn: 122
+  _keyUnderwaterOff: 120
+  _keyRefreshVolume: 99
+  _sfxPosition: {x: 0, y: 0, z: 5}
+  _fadeOutTime: 1
+  _underwaterCutoff: 1500
+--- !u!4 &436737778
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 436737776}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &711690888
 GameObject:
   m_ObjectHideFlags: 0
@@ -1004,7 +1064,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1505616637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1376,3 +1436,4 @@ SceneRoots:
   - {fileID: 70681651}
   - {fileID: 1505616638}
   - {fileID: 1124921955}
+  - {fileID: 436737778}

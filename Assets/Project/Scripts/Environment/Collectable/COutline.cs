@@ -1,5 +1,4 @@
-﻿using UnityEditor.SceneManagement;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 원하는 타입을 정해놓으면 해당 타입에 맞게 아웃라인이 생깁니다.
@@ -7,10 +6,8 @@ using UnityEngine;
 /// </summary>
 public class COutline : AMono
 {
-
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
-    //[Header("주제")]
-    //[SerializeField] private Class _class;
+    [SerializeField] private EOutLineType _outLineType = EOutLineType.Normal;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -18,11 +15,6 @@ public class COutline : AMono
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    public enum EOutLineType
-    {
-        Normal
-    }
-    [SerializeField] EOutLineType outLineType = EOutLineType.Normal;
     public void OutLineOn()
     {
         _outline.enabled = true;
@@ -33,16 +25,12 @@ public class COutline : AMono
     }
     #endregion
 
-    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-
-    #endregion
-
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
-        _outline =gameObject.AddComponent<Outline>();
+        _outline = gameObject.AddComponent<Outline>();
         _outline.enabled = false;
-        switch (outLineType)
+        switch (_outLineType)
         {
             case EOutLineType.Normal:
                 _outline.OutlineWidth = 8.27f;
@@ -54,6 +42,9 @@ public class COutline : AMono
     #endregion
 
     #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
-
+    public enum EOutLineType
+    {
+        Normal
+    }
     #endregion
 }

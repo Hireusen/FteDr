@@ -1,4 +1,8 @@
-﻿//
+﻿#pragma warning disable IDE0005
+#pragma warning disable IDE0040
+#pragma warning disable IDE1006
+
+//
 //  Outline.cs
 //  QuickOutline
 //

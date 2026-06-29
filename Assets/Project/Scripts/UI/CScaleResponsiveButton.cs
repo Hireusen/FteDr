@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 /// <summary>
 /// 마우스 호버 시 크기가 부드럽게 변하는 공용 반응형 버튼 컴포넌트입니다 (코루틴 버전).
 /// </summary>
-public class ScaleResponsiveButton : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class ScaleResponsiveButton : AMono, IPointerEnterHandler, IPointerExitHandler
 {
     #region ─────────────────────────▶ 인펙터 설정 ◀─────────────────────────
     [Header("Scale Settings")]

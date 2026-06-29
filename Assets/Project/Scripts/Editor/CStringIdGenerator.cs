@@ -151,6 +151,7 @@ public class CStringIdGenerator : EditorWindow
         if (GUILayout.Button("플레이어 ID")) soType = typeof(CPlayerSO);
         if (GUILayout.Button("레이더 ID")) soType = typeof(CRadarSO);
         if (GUILayout.Button("추진기 ID")) soType = typeof(CThrusterSO);
+        if (GUILayout.Button("사운드 ID")) soType = typeof(CSoundSO);
 
         if (soType == null) return;
 
