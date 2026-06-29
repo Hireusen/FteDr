@@ -17,15 +17,14 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
     private bool _useUnderwater; // 수중 분위기 전역 토글
     private float _underwaterCutoff = 1500f;
 
-    private const int PREWARM_COUNT = 9;
-    private const float BLEND_2D = 0f; // 카메라 (거리감 없음)
-    private const float BLEND_3D = 1f; // 공간 (거리감 있음)
+    private const int PREWARM_COUNT = 4;
+    private const float BLEND_2D = 0f; // 카메라(거리감 없음)
+    private const float BLEND_3D = 1f; // 공간(거리감 있음)
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ─ SFX ◀─────────────────────────
     /// <summary>
-    /// 메인 카메라 위치에서 효과음을 재생합니다. (2D처럼 거리감 없이 들림)
-    /// 다른 SFX와 동일하게 이미터로 재생되므로 중단·볼륨 변경 대상에 포함됩니다.
+    /// 메인 카메라 위치에서 거리감 없는 효과음을 재생합니다.
     /// </summary>
     public void PlaySfx(string id)
     {
@@ -37,7 +36,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
-        PlayOnEmitter(emitter, so, BLEND_2D);
+        PlayOnEmitter(emitter, so, BLEND_2D, so.MinDistance, so.MaxDistance);
     }
 
     /// <summary>지정한 좌표에서 3D 효과음을 재생합니다.</summary>
@@ -48,7 +47,18 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
-        PlayOnEmitter(emitter, so, BLEND_3D);
+        PlayOnEmitter(emitter, so, BLEND_3D, so.MinDistance, so.MaxDistance);
+    }
+
+    /// <summary>재생 거리를 덮어씌워 지정한 좌표에서 3D 효과음을 재생합니다.</summary>
+    public void PlaySfx(string id, Vector3 pos, float minDistance, float maxDistance)
+    {
+        if (!TryGetClip(id, out CSoundSO so)) return;
+
+        CSoundEmitter emitter = _factory.Rent();
+        emitter.SetPosition(pos);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        PlayOnEmitter(emitter, so, BLEND_3D, minDistance, maxDistance);
     }
 
     /// <summary>지정한 대상을 따라다니며 3D 효과음을 재생합니다.</summary>
@@ -59,12 +69,21 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetFollow(target);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
-        PlayOnEmitter(emitter, so, BLEND_3D);
+        PlayOnEmitter(emitter, so, BLEND_3D, so.MinDistance, so.MaxDistance);
     }
 
-    /// <summary>
-    /// 재생 중인 모든 효과음을 즉시 중단하고 반납합니다.
-    /// </summary>
+    /// <summary>재생 거리를 덮어씌워  지정한 대상을 따라다니며 3D 효과음을 재생합니다.</summary>
+    public void PlaySfx(string id, Transform target, float minDistance, float maxDistance)
+    {
+        if (!TryGetClip(id, out CSoundSO so)) return;
+
+        CSoundEmitter emitter = _factory.Rent();
+        emitter.SetFollow(target);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        PlayOnEmitter(emitter, so, BLEND_3D, minDistance, maxDistance);
+    }
+
+    ///<summary> 재생 중인 모든 효과음을 즉시 중단하고 반납합니다.</summary>
     public void StopAllSfx()
     {
         var active = _factory.Active;
@@ -211,20 +230,18 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         _factory = new CSoundEmitterFactory(root, PREWARM_COUNT);
     }
 
-    private void PlayOnEmitter(CSoundEmitter emitter, CSoundSO so, float spatialBlend)
+    private void PlayOnEmitter(
+        CSoundEmitter emitter, CSoundSO so, float spatialBlend, float minDistance, float maxDistance)
     {
         var v = GetVolume();
-        emitter.Play(so.Clip, so.Volume, so.Volume * v.sfx * v.master, spatialBlend);
+        emitter.Play(so.Clip, so.Volume, so.Volume * v.sfx * v.master, spatialBlend, minDistance, maxDistance);
     }
 
     private bool TryGetClip(string id, out CSoundSO so)
     {
-        so = CDatabaseManager.Ins.Get<CSoundSO>(id);
-        if (so == null)
-        {
-            UDebug.Print($"ID({id})에 해당하는 CSoundSO가 존재하지 않습니다.", LogType.Error);
-            return false;
-        }
+        so = UData.Sound(id);
+        if (so == null) return false;
+
         return true;
     }
 

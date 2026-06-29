@@ -31,8 +31,8 @@ public class CTestSound : MonoBehaviour
 
     [Header("재생 파라미터")]
     [SerializeField] private Vector3 _sfxPosition = new Vector3(0f, 0f, 5f);
-    [SerializeField] private float _fadeOutTime = 1f;
-    [SerializeField] private float _underwaterCutoff = 1500f;
+    [SerializeField] private float _fadeOutTime = 0.4f;
+    [SerializeField] private float _underwaterCutoff = 750f;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────

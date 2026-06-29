@@ -12,6 +12,10 @@ public class CSoundSO : ABaseSO
     [Header("사운드 정보")]
     [SerializeField] protected AudioClip _clip;
     [SerializeField, Range(0f, 1f)] protected float _volume = 0.5f;
+
+    [Header("3D 거리")]
+    [SerializeField] protected float _minDistance = 3f; // 최대 음량이 재생되는 거리
+    [SerializeField] protected float _maxDistance = 20f; // 거의 들리지 않는 음량이 재생되는 거리
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -20,6 +24,12 @@ public class CSoundSO : ABaseSO
 
     /// <summary>해당 사운드의 기본 볼륨 배율을 반환합니다.</summary>
     public float Volume => _volume;
+
+    /// <summary>최대 음량이 유지되는 최소 거리입니다. (3D 효과음 전용)</summary>
+    public float MinDistance => _minDistance;
+
+    /// <summary>소리가 거의 들리지 않게 되는 최대 거리입니다. (3D 효과음 전용)</summary>
+    public float MaxDistance => _maxDistance;
 
     /// <summary>
     /// 사용자 설정 볼륨을 반영한 최종 사운드 볼륨을 계산하여 반환합니다.
@@ -86,6 +96,7 @@ public class CSoundSO : ABaseSO
         if (_type != EDataType.Sound) errorList.Add($"{errorList.Count + 1}. 타입이 Sound가 아닙니다.");
         if (_clip == null) errorList.Add($"{errorList.Count + 1}. 오디오 클립이 할당되지 않았습니다.");
         if (_volume <= 0f) errorList.Add($"{errorList.Count + 1}. 볼륨이 0 이하입니다.");
+        if (_maxDistance < _minDistance) errorList.Add($"{errorList.Count + 1}. 최대 거리가 최소 거리보다 작습니다.");
     }
     #endregion
 
