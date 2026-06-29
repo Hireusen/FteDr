@@ -15,7 +15,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
     private string _curAmbienceId;
 
     private bool _useUnderwater; // 수중 분위기 전역 토글
-    private float _underwaterCutoff = 1500f;
+    private float _underwaterCutoff = 750f;
 
     private const int PREWARM_COUNT = 4;
     private const float BLEND_2D = 0f; // 카메라(거리감 없음)
@@ -173,7 +173,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
     #region ─────────────────────────▶ 공개 멤버 ─ 수중 / 볼륨 ◀─────────────────────────
     /// <summary>수중 분위기(로우패스)를 전역으로 켜거나 끕니다. 이후 재생되는 효과음에 적용됩니다.</summary>
-    public void SetUnderwater(bool enabled, float cutoffHz = 1500f)
+    public void SetUnderwater(bool enabled, float cutoffHz = 750f)
     {
         _useUnderwater = enabled;
         _underwaterCutoff = cutoffHz;
@@ -228,6 +228,16 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
         // SFX 이미터 풀
         _factory = new CSoundEmitterFactory(root, PREWARM_COUNT);
+
+        // 옵션 볼륨 변경 구독
+        CEventBus<OnOptionVolumeChanged>.Subscribe(OnOptionVolumeChangedHandler);
+    }
+
+    // 싱글톤 파괴 시 이벤트 구독 해제 (부모의 OnDestroy 확장)
+    protected override void OnDestroy()
+    {
+        CEventBus<OnOptionVolumeChanged>.Unsubscribe(OnOptionVolumeChangedHandler);
+        base.OnDestroy();
     }
 
     private void PlayOnEmitter(
@@ -245,11 +255,17 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         return true;
     }
 
-    // 볼륨 접근 격리 지점.
-    // 실제 볼륨 매니저(예: CDataManager.Ins.Volume)가 정해지면 이 본문만 교체하세요.
+    // 볼륨 접근 격리 지점. 로컬 옵션 매니저에서 현재 볼륨을 읽어옵니다.
     private (float master, float bgm, float sfx, float ambience) GetVolume()
     {
-        return (1f, 1f, 1f, 1f); // 임시 고정값
+        OptionData opt = CLocalOptionManager.Ins.Option;
+        return (opt.masterVolume, opt.bgmVolume, opt.sfxVolume, opt.ambienceVolume);
+    }
+
+    // 옵션 볼륨 변경 이벤트 구독 핸들러: 재생 중인 사운드에 즉시 반영
+    private void OnOptionVolumeChangedHandler(OnOptionVolumeChanged ctx)
+    {
+        RefreshVolume();
     }
     #endregion
 }
