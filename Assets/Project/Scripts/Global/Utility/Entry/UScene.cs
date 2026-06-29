@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -36,6 +37,24 @@ public static class UScene
     }
 
     /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 해당 씬을 비동기 로드합니다.
+    /// </summary>
+    /// <param name="scene">로드할 씬</param>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="onComplete">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="mode">씬 로드 모드</param>
+    public static void Load(
+        EScene scene,
+        IEnumerator preRoutine,
+        Action onComplete = null,
+        Action<float> onProgress = null,
+        LoadSceneMode mode = LoadSceneMode.Single)
+    {
+        Manager.LoadSceneAsync((int)scene, preRoutine, onComplete, onProgress, mode);
+    }
+
+    /// <summary>
     /// 다음 빌드 인덱스의 씬을 비동기 로드합니다.
     /// </summary>
     /// <returns>다음 씬이 빌드 세팅 범위 내에 있어 로드를 시작했다면 True</returns>
@@ -53,6 +72,27 @@ public static class UScene
     }
 
     /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 다음 빌드 인덱스의 씬을 비동기 로드합니다.
+    /// </summary>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="onComplete">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="mode">씬 로드 모드</param>
+    /// <returns>다음 씬이 빌드 세팅 범위 내에 있어 로드를 시작했다면 True</returns>
+    public static bool NextLoad(
+        IEnumerator preRoutine,
+        Action onComplete = null,
+        Action<float> onProgress = null,
+        LoadSceneMode mode = LoadSceneMode.Single)
+    {
+        int next = (int)Current + 1;
+        if (!IsValidBuildIndex(next)) return false;
+
+        Manager.LoadSceneAsync(next, preRoutine, onComplete, onProgress, mode);
+        return true;
+    }
+
+    /// <summary>
     /// 이전 빌드 인덱스의 씬을 비동기 로드합니다.
     /// </summary>
     /// <returns>다음 씬이 빌드 세팅 범위 내에 있어 로드를 시작했다면 True</returns>
@@ -66,6 +106,27 @@ public static class UScene
         if (!IsValidBuildIndex(prev)) return false;
 
         Manager.LoadSceneAsync(prev, onComplete, onProgress, delay, mode);
+        return true;
+    }
+
+    /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 이전 빌드 인덱스의 씬을 비동기 로드합니다.
+    /// </summary>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="onComplete">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="mode">씬 로드 모드</param>
+    /// <returns>이전 씬이 빌드 세팅 범위 내에 있어 로드를 시작했다면 True</returns>
+    public static bool PrevLoad(
+        IEnumerator preRoutine,
+        Action onComplete = null,
+        Action<float> onProgress = null,
+        LoadSceneMode mode = LoadSceneMode.Single)
+    {
+        int prev = (int)Current - 1;
+        if (!IsValidBuildIndex(prev)) return false;
+
+        Manager.LoadSceneAsync(prev, preRoutine, onComplete, onProgress, mode);
         return true;
     }
 
@@ -92,6 +153,28 @@ public static class UScene
     }
 
     /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 해당 씬을 페이드 효과와 함께 비동기 로드합니다.
+    /// </summary>
+    /// <param name="scene">로드할 씬</param>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="fadeOut">페이드 아웃 시간(초)</param>
+    /// <param name="fadeIn">페이드 인 시간(초)</param>
+    /// <param name="onComplete">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="mode">씬 로드 모드</param>
+    public static void LoadWithFade(
+        EScene scene,
+        IEnumerator preRoutine,
+        float fadeOut = 0.45f,
+        float fadeIn = 0.45f,
+        Action onComplete = null,
+        Action<float> onProgress = null,
+        LoadSceneMode mode = LoadSceneMode.Single)
+    {
+        Manager.LoadSceneAsyncWithFade((int)scene, preRoutine, fadeOut, fadeIn, onComplete, onProgress, mode);
+    }
+
+    /// <summary>
     /// 다음 빌드 인덱스의 씬을 페이드 효과와 함께 비동기 로드합니다.
     /// </summary>
     /// <returns>다음 씬이 빌드 세팅 범위 내에 있어 로드를 시작했다면 True</returns>
@@ -111,6 +194,31 @@ public static class UScene
     }
 
     /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 다음 빌드 인덱스의 씬을 페이드 효과와 함께 비동기 로드합니다.
+    /// </summary>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="fadeOut">페이드 아웃 시간(초)</param>
+    /// <param name="fadeIn">페이드 인 시간(초)</param>
+    /// <param name="onComplete">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="mode">씬 로드 모드</param>
+    /// <returns>다음 씬이 빌드 세팅 범위 내에 있어 로드를 시작했다면 True</returns>
+    public static bool NextLoadWithFade(
+        IEnumerator preRoutine,
+        float fadeOut = 0.45f,
+        float fadeIn = 0.45f,
+        Action onComplete = null,
+        Action<float> onProgress = null,
+        LoadSceneMode mode = LoadSceneMode.Single)
+    {
+        int next = (int)Current + 1;
+        if (!IsValidBuildIndex(next)) return false;
+
+        Manager.LoadSceneAsyncWithFade(next, preRoutine, fadeOut, fadeIn, onComplete, onProgress, mode);
+        return true;
+    }
+
+    /// <summary>
     /// 이전 빌드 인덱스의 씬을 페이드 효과와 함께 비동기 로드합니다.
     /// </summary>
     /// <returns>다음 씬이 빌드 세팅 범위 내에 있어 로드를 시작했다면 True</returns>
@@ -126,6 +234,31 @@ public static class UScene
         if (!IsValidBuildIndex(prev)) return false;
 
         Manager.LoadSceneAsyncWithFade(prev, delay, fadeOut, fadeIn, onComplete, onProgress, mode);
+        return true;
+    }
+
+    /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 이전 빌드 인덱스의 씬을 페이드 효과와 함께 비동기 로드합니다.
+    /// </summary>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="fadeOut">페이드 아웃 시간(초)</param>
+    /// <param name="fadeIn">페이드 인 시간(초)</param>
+    /// <param name="onComplete">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="mode">씬 로드 모드</param>
+    /// <returns>이전 씬이 빌드 세팅 범위 내에 있어 로드를 시작했다면 True</returns>
+    public static bool PrevLoadWithFade(
+        IEnumerator preRoutine,
+        float fadeOut = 0.45f,
+        float fadeIn = 0.45f,
+        Action onComplete = null,
+        Action<float> onProgress = null,
+        LoadSceneMode mode = LoadSceneMode.Single)
+    {
+        int prev = (int)Current - 1;
+        if (!IsValidBuildIndex(prev)) return false;
+
+        Manager.LoadSceneAsyncWithFade(prev, preRoutine, fadeOut, fadeIn, onComplete, onProgress, mode);
         return true;
     }
     #endregion
