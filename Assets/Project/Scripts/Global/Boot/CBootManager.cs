@@ -56,6 +56,8 @@ public sealed class CBootManager : MonoBehaviour
         frameManager.EntryInitialize();
         var gameManager = root.GetOrAddComponent<CGameManager>();
         gameManager.EntryInitialize();
+        var soundManager = root.GetOrAddComponent<CSoundManager>();
+        soundManager.EntryInitialize();
     }
     #endregion
 

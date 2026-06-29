@@ -11,4 +11,10 @@ public static partial class K
     public const string NAME_NORMAL_OBJECT_ROOT = "@NormalObjects";
     public const string NAME_POOLING_OBJECT_ROOT = "@PoolingObjects";
     public const string NAME_GLOBAL_MANAGER_ROOT = "@GlobalManagers";
+    public const string NAME_SOUND_ROOT = "@SoundObjects";
+
+    // 사운드 오브젝트
+    public const string NAME_SOUND_EMITTER = "SoundEmitter";
+    public const string NAME_BGM_OBJECT = "BgmSource";
+    public const string NAME_AMBIENCE_OBJECT = "AmbienceSource";
 }
