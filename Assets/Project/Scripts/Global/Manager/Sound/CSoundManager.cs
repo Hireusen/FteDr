@@ -15,7 +15,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
     private string _curAmbienceId;
 
     private bool _useUnderwater; // 수중 분위기 전역 토글
-    private float _underwaterCutoff = 1500f;
+    private float _underwaterCutoff = 750f;
 
     private const int PREWARM_COUNT = 4;
     private const float BLEND_2D = 0f; // 카메라(거리감 없음)
@@ -173,7 +173,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
     #region ─────────────────────────▶ 공개 멤버 ─ 수중 / 볼륨 ◀─────────────────────────
     /// <summary>수중 분위기(로우패스)를 전역으로 켜거나 끕니다. 이후 재생되는 효과음에 적용됩니다.</summary>
-    public void SetUnderwater(bool enabled, float cutoffHz = 1500f)
+    public void SetUnderwater(bool enabled, float cutoffHz = 750f)
     {
         _useUnderwater = enabled;
         _underwaterCutoff = cutoffHz;
