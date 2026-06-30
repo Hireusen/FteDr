@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 클래스의 설계 의도입니다.
+/// 플레이어의 조작을 담당하는 컴포넌트 입니다.
 /// </summary>
 public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrameable
 {
