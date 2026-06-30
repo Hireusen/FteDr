@@ -99,7 +99,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
             return;
         }
         PreProcessing(_curScene, name);
-        StartCoroutine(DoLoadSceneAsync(name, callback, onProgress, delay, loadSceneMode));
+        StartCoroutine(DoLoadSceneAsync(name, callback, onProgress, DelayPrologue(delay), loadSceneMode));
     }
 
     /// <summary>
@@ -145,7 +145,100 @@ public sealed class CGameManager : ASingleton<CGameManager>
         }
         PreProcessing(_curScene, name);
         StartCoroutine(DoLoadSceneAsyncWithFade
-            (name, delay, fadeOutTime, fadeInTime, callback, onProgress, loadSceneMode));
+            (name, DelayPrologue(delay), fadeOutTime, fadeInTime, callback, onProgress, loadSceneMode));
+    }
+
+    /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 해당 씬을 비동기 로드합니다.
+    /// 동일한 이름을 가지는 씬도 있을 수 있기 때문에 표준적으로는 인덱스 사용이 권장됩니다.
+    /// </summary>
+    /// <param name="index">씬 인덱스</param>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="callback">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="loadSceneMode">씬 로드 모드</param>
+    public void LoadSceneAsync(
+        int index, IEnumerator preRoutine, Action callback = null, Action<float> onProgress = null,
+        LoadSceneMode loadSceneMode = LoadSceneMode.Single)
+    {
+        if (!IsValidScene(index))
+        {
+            UDebug.Print($"유효하지 않은 씬 인덱스를 사용했습니다!", LogType.Error);
+            return;
+        }
+        string scenePath = SceneUtility.GetScenePathByBuildIndex(index);
+        LoadSceneAsync(scenePath, preRoutine, callback, onProgress, loadSceneMode);
+    }
+
+    /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 해당 씬을 비동기 로드합니다.
+    /// </summary>
+    /// <param name="name">씬 이름</param>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="callback">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="loadSceneMode">씬 로드 모드</param>
+    public void LoadSceneAsync(
+        string name, IEnumerator preRoutine, Action callback = null, Action<float> onProgress = null,
+        LoadSceneMode loadSceneMode = LoadSceneMode.Single)
+    {
+        if (!IsValidScene(name))
+        {
+            UDebug.Print($"유효하지 않은 씬 이름을 사용했습니다!", LogType.Error);
+            return;
+        }
+        PreProcessing(_curScene, name);
+        StartCoroutine(DoLoadSceneAsync(name, callback, onProgress, preRoutine, loadSceneMode));
+    }
+
+    /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 해당 씬을 페이드 효과로 비동기 로드합니다.
+    /// 동일한 이름을 가지는 씬도 있을 수 있기 때문에 표준적으로는 인덱스 사용이 권장됩니다.
+    /// </summary>
+    /// <param name="index">씬 인덱스</param>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="fadeOutTime">페이드 아웃 시간(초)</param>
+    /// <param name="fadeInTime">페이드 인 시간(초)</param>
+    /// <param name="callback">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="loadSceneMode">씬 로드 모드</param>
+    public void LoadSceneAsyncWithFade(
+        int index, IEnumerator preRoutine, float fadeOutTime = 0.45f, float fadeInTime = 0.45f,
+        Action callback = null, Action<float> onProgress = null,
+        LoadSceneMode loadSceneMode = LoadSceneMode.Single)
+    {
+        if (!IsValidScene(index))
+        {
+            UDebug.Print($"유효하지 않은 씬 인덱스를 사용했습니다!", LogType.Error);
+            return;
+        }
+        string scenePath = SceneUtility.GetScenePathByBuildIndex(index);
+        LoadSceneAsyncWithFade(scenePath, preRoutine, fadeOutTime, fadeInTime, callback, onProgress, loadSceneMode);
+    }
+
+    /// <summary>
+    /// 선행 코루틴을 끝까지 실행한 뒤 해당 씬을 페이드 효과로 비동기 로드합니다.
+    /// </summary>
+    /// <param name="name">씬 이름</param>
+    /// <param name="preRoutine">씬 로드 시작 전에 끝까지 실행할 선행 코루틴</param>
+    /// <param name="fadeOutTime">페이드 아웃 시간(초)</param>
+    /// <param name="fadeInTime">페이드 인 시간(초)</param>
+    /// <param name="callback">씬 로드 완료 시 호출할 메서드</param>
+    /// <param name="onProgress">씬 로드 진행율을 받을 메서드</param>
+    /// <param name="loadSceneMode">씬 로드 모드</param>
+    public void LoadSceneAsyncWithFade(
+        string name, IEnumerator preRoutine, float fadeOutTime = 0.45f, float fadeInTime = 0.45f,
+        Action callback = null, Action<float> onProgress = null,
+        LoadSceneMode loadSceneMode = LoadSceneMode.Single)
+    {
+        if (!IsValidScene(name))
+        {
+            UDebug.Print($"유효하지 않은 씬 이름을 사용했습니다!", LogType.Error);
+            return;
+        }
+        PreProcessing(_curScene, name);
+        StartCoroutine(DoLoadSceneAsyncWithFade
+            (name, preRoutine, fadeOutTime, fadeInTime, callback, onProgress, loadSceneMode));
     }
     #endregion
 
@@ -230,13 +323,27 @@ public sealed class CGameManager : ASingleton<CGameManager>
         return true;
     }
 
-    // 비동기 코루틴
-    private IEnumerator DoLoadSceneAsync(
-        string name, Action callback, Action<float> onProgress, float delay, LoadSceneMode loadSceneMode)
+    // delay(초)를 선행 코루틴 형태로 변환. delay가 0 이하면 null(선행 단계 없음).
+    private IEnumerator DelayPrologue(float delay)
     {
-        if (delay > 0f)
+        if (delay <= 0f) return null;
+
+        return WaitPrologue(delay);
+    }
+
+    private IEnumerator WaitPrologue(float delay)
+    {
+        yield return UCoroutine.GetWait(delay);
+    }
+
+    // 비동기 코루틴 (prologue: 로드 전에 끝까지 실행할 선행 코루틴, 없으면 null)
+    private IEnumerator DoLoadSceneAsync(
+        string name, Action callback, Action<float> onProgress, IEnumerator prologue, LoadSceneMode loadSceneMode)
+    {
+        // 선행 코루틴이 있으면 끝까지 대기
+        if (prologue != null)
         {
-            yield return UCoroutine.GetWait(delay);
+            yield return StartCoroutine(prologue);
         }
         // 유니티 기본 로드 함수 (비동기 대기)
         var asyncOperation = SceneManager.LoadSceneAsync(name, loadSceneMode);
@@ -247,14 +354,15 @@ public sealed class CGameManager : ASingleton<CGameManager>
         PostProcessing(_curScene, name);
     }
 
-    // 비동기 페이드 코루틴
+    // 비동기 페이드 코루틴 (prologue: 로드 전에 끝까지 실행할 선행 코루틴, 없으면 null)
     private IEnumerator DoLoadSceneAsyncWithFade(
-        string name, float delay, float fadeOutTime, float fadeInTime,
+        string name, IEnumerator prologue, float fadeOutTime, float fadeInTime,
         Action callback, Action<float> onProgress, LoadSceneMode loadSceneMode)
     {
-        if (delay > 0f)
+        // 선행 코루틴이 있으면 끝까지 대기
+        if (prologue != null)
         {
-            yield return UCoroutine.GetWait(delay);
+            yield return StartCoroutine(prologue);
         }
         // 유니티 기본 로드 함수 (비동기 대기)
         var asyncOperation = SceneManager.LoadSceneAsync(name, loadSceneMode);

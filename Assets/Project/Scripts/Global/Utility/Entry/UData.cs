@@ -42,32 +42,38 @@ public static class UData
     /// <summary>
     /// 문자열 ID로 잡기 도구 SO를 반환받습니다.
     /// </summary>
-    /// <param name="id">잡기 도구 ID</param>
-    /// <returns></returns>
     public static CGrabToolSO GrabTool()
         => Address.Get<CGrabToolSO>(Id.GrabTool);
 
     /// <summary>
     /// 문자열 ID로 산소 SO를 반환받습니다.
     /// </summary>
-    /// <param name="id">산소 ID</param>
-    /// <returns></returns>
     public static COxygenTankSO OxygenTank()
         => Address.Get<COxygenTankSO>(Id.OxygenTank);
 
     /// <summary>
     /// 문자열 ID로 레이더 SO를 반환받습니다.
     /// </summary>
-    /// <param name="id">레이더 ID</param>
-    /// <returns></returns>
     public static CRadarSO Radar()
         => Address.Get<CRadarSO>(Id.Rader);
 
     /// <summary>
     /// 문자열 ID로 추진기 SO를 반환받습니다.
     /// </summary>
-    /// <param name="id">추진기 ID</param>
-    /// <returns></returns>
     public static CThrusterSO Thruster()
         => Address.Get<CThrusterSO>(Id.Thruster);
+
+    /// <summary>
+    /// 문자열 ID로 가방 SO를 반환받습니다.
+    /// </summary>
+    public static CBagSO Bag()
+        => Address.Get<CBagSO>(Id.Bag);
+
+    /// <summary>
+    /// 오디오 ID로 사운드 SO를 반환받습니다.
+    /// </summary>
+    /// <param name="id">오디오 ID</param>
+    /// <returns></returns>
+    public static CSoundSO Sound(string id)
+        => Address.Get<CSoundSO>(id);
 }

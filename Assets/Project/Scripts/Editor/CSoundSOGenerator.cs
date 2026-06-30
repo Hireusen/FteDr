@@ -44,6 +44,7 @@ public class CSoundSOGenerator : EditorWindow
     {
         int length = guids.Length;
         int success = 0;
+        int skip = 0;
 
         for (int i = 0; i < length; ++i)
         {
@@ -61,27 +62,34 @@ public class CSoundSOGenerator : EditorWindow
             }
 
             // 로드된 클립을 기반으로 SO 파일 생성 시도
-            CreateSoundSO(clip, exportPath);
-            success++;
+            if (CreateSoundSO(clip, exportPath))
+            {
+                success++;
+            }
+            else
+            {
+                skip++;
+            }
         }
 
         // 일괄 저장 및 에디터 새로고침
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
-        UDebug.Print($"사운드 SO {success}개를 생성 완료했습니다.");
+        UDebug.Print($"사운드 SO {skip}개를 보존했으며, 사운드 SO {success}개를 새로 생성했습니다.");
     }
 
     // SoundSO 인스턴스 생성 및 저장
-    private static void CreateSoundSO(AudioClip clip, string exportPath)
+    private static bool CreateSoundSO(AudioClip clip, string exportPath)
     {
         string savePath = string.Format("{0}/SoundSO_{1}.asset", exportPath, clip.name);
         // 중복 생성 방지
-        if (File.Exists(savePath)) return;
+        if (File.Exists(savePath)) return false;
 
         // 생성 & 초기화 & 저장
         CSoundSO so = ScriptableObject.CreateInstance<CSoundSO>();
-        so.InitSO(clip.name, clip); 
+        so.InitSO(clip.name, clip);
         AssetDatabase.CreateAsset(so, savePath);
+        return true;
     }
     #endregion
 

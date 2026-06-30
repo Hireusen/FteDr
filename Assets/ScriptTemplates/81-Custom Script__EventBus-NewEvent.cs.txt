@@ -14,7 +14,7 @@ public readonly struct #SCRIPTNAME#
     /// <param name="number">숫자</param>
     public static void Publish(int number)
     {
-        EventBus<#SCRIPTNAME#>.Publish(new #SCRIPTNAME#(number));
+        CEventBus<#SCRIPTNAME#>.Publish(new #SCRIPTNAME#(number));
     }
 }
 #ROOTNAMESPACEEND#

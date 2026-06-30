@@ -17,11 +17,13 @@ public sealed class CBootManager : MonoBehaviour
     // 외부에서 호출할 함수
     public void StartBootSequence(GameObject root)
     {
-        if (_coBoot != null) {
+        if (_coBoot != null)
+        {
             UDebug.Print("부트 시퀀스가 중복 호출되었습니다.", LogType.Assert, gameObject);
             return;
         }
-        if (_isInitialized) {
+        if (_isInitialized)
+        {
             UDebug.Print("부트 시퀀스가 이미 실행되었습니다.", LogType.Assert, gameObject);
             return;
         }
@@ -56,8 +58,14 @@ public sealed class CBootManager : MonoBehaviour
         frameManager.EntryInitialize();
         var gameManager = root.GetOrAddComponent<CGameManager>();
         gameManager.EntryInitialize();
+        var optionManager = root.GetOrAddComponent<CLocalOptionManager>();
+        optionManager.EntryInitialize();
         var soundManager = root.GetOrAddComponent<CSoundManager>();
         soundManager.EntryInitialize();
+        var progressManager = root.GetOrAddComponent<CProgressManager>();
+        progressManager.EntryInitialize();
+        var playerManager = root.GetOrAddComponent<CPlayerManager>();
+        playerManager.EntryInitialize();
     }
     #endregion
 

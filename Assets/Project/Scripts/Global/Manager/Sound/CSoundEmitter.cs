@@ -2,7 +2,6 @@
 
 /// <summary>
 /// 효과음을 재생하고, 재생이 끝나면 스스로 풀에 반납되는 이미터입니다.
-/// 재생 시 2D(카메라)/3D(공간) 여부를 지정할 수 있습니다.
 /// </summary>
 [RequireComponent(typeof(AudioSource))]
 public sealed class CSoundEmitter : AFrameable, ILateUpdateFrameable
@@ -43,8 +42,6 @@ public sealed class CSoundEmitter : AFrameable, ILateUpdateFrameable
         _source = gameObject.GetOrAddComponent<AudioSource>();
         _source.playOnAwake = false;
         _source.rolloffMode = AudioRolloffMode.Linear;
-        _source.minDistance = 10f;
-        _source.maxDistance = 20f;
 
         // 수중 로우패스 필터
         _lowPass = gameObject.GetOrAddComponent<AudioLowPassFilter>();
@@ -88,16 +85,22 @@ public sealed class CSoundEmitter : AFrameable, ILateUpdateFrameable
     /// 클립을 지정하고 재생을 시작합니다. 풀에서 꺼낸 직후 호출됩니다.
     /// </summary>
     /// <param name="clip">재생할 클립</param>
-    /// <param name="baseVolume">SO 원본 볼륨 (사용자 볼륨 미반영)</param>
-    /// <param name="finalVolume">실제 적용할 최종 볼륨 (사용자 볼륨 반영)</param>
+    /// <param name="baseVolume">SO 원본 볼륨</param>
+    /// <param name="finalVolume">사용자 볼륨을 반영한 최종 볼륨</param>
     /// <param name="spatialBlend">0이면 2D(거리감 없음), 1이면 완전 3D</param>
-    public void Play(AudioClip clip, float baseVolume, float finalVolume, float spatialBlend)
+    /// <param name="minDistance">최대 음량이 유지되는 최소 거리 (3D일 때만 의미)</param>
+    /// <param name="maxDistance">소리가 거의 안 들리게 되는 최대 거리 (3D일 때만 의미)</param>
+    public void Play(
+        AudioClip clip, float baseVolume, float finalVolume, float spatialBlend,
+        float minDistance, float maxDistance)
     {
         _isActive = true;
         _isFading = false;
         _fadeElapsed = 0f;
         _baseVolume = baseVolume;
         _source.spatialBlend = spatialBlend;
+        _source.minDistance = minDistance;
+        _source.maxDistance = maxDistance;
         _source.clip = clip;
         _source.volume = finalVolume;
         _source.Play();
@@ -114,7 +117,7 @@ public sealed class CSoundEmitter : AFrameable, ILateUpdateFrameable
     }
 
     /// <summary>
-    /// 재생을 즉시 중단하고 반납합니다. 페이드 중이어도 즉시 끊습니다.
+    /// 재생을 즉시 중단하고 반납합니다.
     /// </summary>
     public void StopImmediate()
     {
@@ -129,7 +132,7 @@ public sealed class CSoundEmitter : AFrameable, ILateUpdateFrameable
     /// <summary>
     /// 지정한 시간 동안 페이드 아웃한 뒤 반납합니다.
     /// </summary>
-    /// <param name="duration">페이드 시간(초). 0 이하면 즉시 중단합니다.</param>
+    /// <param name="duration">페이드 시간(초).</param>
     public void FadeOutAndReturn(float duration)
     {
         if (!_isActive) return;
@@ -146,7 +149,7 @@ public sealed class CSoundEmitter : AFrameable, ILateUpdateFrameable
     }
 
     /// <summary>
-    /// 프레임 매니저가 매 프레임 호출합니다. 추적 갱신 / 페이드 / 재생 종료 감지.
+    /// 프레임 매니저가 매 프레임 호출합니다.
     /// </summary>
     public void ExecuteLateUpdateFrame()
     {

@@ -15,17 +15,16 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
     private string _curAmbienceId;
 
     private bool _useUnderwater; // 수중 분위기 전역 토글
-    private float _underwaterCutoff = 1500f;
+    private float _underwaterCutoff = 750f;
 
-    private const int PREWARM_COUNT = 9;
-    private const float BLEND_2D = 0f; // 카메라 (거리감 없음)
-    private const float BLEND_3D = 1f; // 공간 (거리감 있음)
+    private const int PREWARM_COUNT = 4;
+    private const float BLEND_2D = 0f; // 카메라(거리감 없음)
+    private const float BLEND_3D = 1f; // 공간(거리감 있음)
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ─ SFX ◀─────────────────────────
     /// <summary>
-    /// 메인 카메라 위치에서 효과음을 재생합니다. (2D처럼 거리감 없이 들림)
-    /// 다른 SFX와 동일하게 이미터로 재생되므로 중단·볼륨 변경 대상에 포함됩니다.
+    /// 메인 카메라 위치에서 거리감 없는 효과음을 재생합니다.
     /// </summary>
     public void PlaySfx(string id)
     {
@@ -37,7 +36,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
-        PlayOnEmitter(emitter, so, BLEND_2D);
+        PlayOnEmitter(emitter, so, BLEND_2D, so.MinDistance, so.MaxDistance);
     }
 
     /// <summary>지정한 좌표에서 3D 효과음을 재생합니다.</summary>
@@ -48,7 +47,18 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
-        PlayOnEmitter(emitter, so, BLEND_3D);
+        PlayOnEmitter(emitter, so, BLEND_3D, so.MinDistance, so.MaxDistance);
+    }
+
+    /// <summary>재생 거리를 덮어씌워 지정한 좌표에서 3D 효과음을 재생합니다.</summary>
+    public void PlaySfx(string id, Vector3 pos, float minDistance, float maxDistance)
+    {
+        if (!TryGetClip(id, out CSoundSO so)) return;
+
+        CSoundEmitter emitter = _factory.Rent();
+        emitter.SetPosition(pos);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        PlayOnEmitter(emitter, so, BLEND_3D, minDistance, maxDistance);
     }
 
     /// <summary>지정한 대상을 따라다니며 3D 효과음을 재생합니다.</summary>
@@ -59,12 +69,21 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetFollow(target);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
-        PlayOnEmitter(emitter, so, BLEND_3D);
+        PlayOnEmitter(emitter, so, BLEND_3D, so.MinDistance, so.MaxDistance);
     }
 
-    /// <summary>
-    /// 재생 중인 모든 효과음을 즉시 중단하고 반납합니다.
-    /// </summary>
+    /// <summary>재생 거리를 덮어씌워  지정한 대상을 따라다니며 3D 효과음을 재생합니다.</summary>
+    public void PlaySfx(string id, Transform target, float minDistance, float maxDistance)
+    {
+        if (!TryGetClip(id, out CSoundSO so)) return;
+
+        CSoundEmitter emitter = _factory.Rent();
+        emitter.SetFollow(target);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        PlayOnEmitter(emitter, so, BLEND_3D, minDistance, maxDistance);
+    }
+
+    ///<summary> 재생 중인 모든 효과음을 즉시 중단하고 반납합니다.</summary>
     public void StopAllSfx()
     {
         var active = _factory.Active;
@@ -154,7 +173,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
     #region ─────────────────────────▶ 공개 멤버 ─ 수중 / 볼륨 ◀─────────────────────────
     /// <summary>수중 분위기(로우패스)를 전역으로 켜거나 끕니다. 이후 재생되는 효과음에 적용됩니다.</summary>
-    public void SetUnderwater(bool enabled, float cutoffHz = 1500f)
+    public void SetUnderwater(bool enabled, float cutoffHz = 750f)
     {
         _useUnderwater = enabled;
         _underwaterCutoff = cutoffHz;
@@ -209,30 +228,44 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
         // SFX 이미터 풀
         _factory = new CSoundEmitterFactory(root, PREWARM_COUNT);
+
+        // 옵션 볼륨 변경 구독
+        CEventBus<OnOptionVolumeChanged>.Subscribe(OnOptionVolumeChangedHandler);
     }
 
-    private void PlayOnEmitter(CSoundEmitter emitter, CSoundSO so, float spatialBlend)
+    // 싱글톤 파괴 시 이벤트 구독 해제 (부모의 OnDestroy 확장)
+    protected override void OnDestroy()
+    {
+        CEventBus<OnOptionVolumeChanged>.Unsubscribe(OnOptionVolumeChangedHandler);
+        base.OnDestroy();
+    }
+
+    private void PlayOnEmitter(
+        CSoundEmitter emitter, CSoundSO so, float spatialBlend, float minDistance, float maxDistance)
     {
         var v = GetVolume();
-        emitter.Play(so.Clip, so.Volume, so.Volume * v.sfx * v.master, spatialBlend);
+        emitter.Play(so.Clip, so.Volume, so.Volume * v.sfx * v.master, spatialBlend, minDistance, maxDistance);
     }
 
     private bool TryGetClip(string id, out CSoundSO so)
     {
-        so = CDatabaseManager.Ins.Get<CSoundSO>(id);
-        if (so == null)
-        {
-            UDebug.Print($"ID({id})에 해당하는 CSoundSO가 존재하지 않습니다.", LogType.Error);
-            return false;
-        }
+        so = UData.Sound(id);
+        if (so == null) return false;
+
         return true;
     }
 
-    // 볼륨 접근 격리 지점.
-    // 실제 볼륨 매니저(예: CDataManager.Ins.Volume)가 정해지면 이 본문만 교체하세요.
+    // 볼륨 접근 격리 지점. 로컬 옵션 매니저에서 현재 볼륨을 읽어옵니다.
     private (float master, float bgm, float sfx, float ambience) GetVolume()
     {
-        return (1f, 1f, 1f, 1f); // 임시 고정값
+        OptionData opt = CLocalOptionManager.Ins.Option;
+        return (opt.masterVolume, opt.bgmVolume, opt.sfxVolume, opt.ambienceVolume);
+    }
+
+    // 옵션 볼륨 변경 이벤트 구독 핸들러: 재생 중인 사운드에 즉시 반영
+    private void OnOptionVolumeChangedHandler(OnOptionVolumeChanged ctx)
+    {
+        RefreshVolume();
     }
     #endregion
 }

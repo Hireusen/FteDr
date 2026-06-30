@@ -125,7 +125,7 @@ public static class UArray
     public static bool InBounds<T>(T[] array, int index)
     {
         if (array == null) return false;
-        if (index <= 0 || index < array.Length) return false;
+        if (index < 0 || index >= array.Length) return false;
 
         return true;
     }
@@ -137,7 +137,7 @@ public static class UArray
     public static bool InBounds<T>(List<T> list, int index)
     {
         if (list == null) return false;
-        if (index <= 0 || index < list.Count) return false;
+        if (index < 0 || index >= list.Count) return false;
 
         return true;
     }

@@ -11,7 +11,7 @@ public class COxygenTankSO : AGearSO
     [Header("산소통 정보")]
     [SerializeField] protected float[] _maxOxygens;
     [SerializeField] protected float[] _drainPercents;
-    [SerializeField] protected float[] _warningThresholds;
+    [SerializeField] protected float[] _warningThresholds; // 0.0 ~ 1.0
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
