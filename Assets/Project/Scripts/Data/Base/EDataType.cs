@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 데이터 타입을 정의하는 열거형입니다.
 /// </summary>
 public enum EDataType
@@ -16,4 +16,6 @@ public enum EDataType
     Radar = 6,
     // 시스템
     Sound = 8,
+    // 가방
+    Bag = 9,
 }

@@ -64,6 +64,12 @@ public static class UData
         => Address.Get<CThrusterSO>(Id.Thruster);
 
     /// <summary>
+    /// 문자열 ID로 가방 SO를 반환받습니다.
+    /// </summary>
+    public static CBagSO Bag()
+        => Address.Get<CBagSO>(Id.Bag);
+
+    /// <summary>
     /// 오디오 ID로 사운드 SO를 반환받습니다.
     /// </summary>
     /// <param name="id">오디오 ID</param>

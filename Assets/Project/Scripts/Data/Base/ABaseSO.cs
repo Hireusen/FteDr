@@ -43,7 +43,7 @@ public abstract class ABaseSO : ScriptableObject
         level--;
         if (!UArray.InBounds(array, level))
         {
-            UDebug.Print($"존재하지 않는 {typeof(T).Name} 배열 인덱스에 접근했습니다.", LogType.Error);
+            UDebug.Print($"존재하지 않는 배열 인덱스에 접근했습니다.", LogType.Error);
             return fallback;
         }
         return array[level];
