@@ -48,6 +48,13 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
             OnInputGrab.Publish();
         }
     }
+    public void OnCheat(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OnInputCheat.Publish();
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
