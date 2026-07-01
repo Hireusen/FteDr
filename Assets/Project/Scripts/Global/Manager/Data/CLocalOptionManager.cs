@@ -61,6 +61,7 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         _option.resolutionHeight = height;
         _option.fullScreenMode = fullScreenMode;
         ApplyResolution();
+        Save();
     }
     #endregion
 
@@ -116,7 +117,6 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
             _option.resolutionWidth,
             _option.resolutionHeight,
             _option.fullScreenMode);
-        Save();
     }
     #endregion
 }

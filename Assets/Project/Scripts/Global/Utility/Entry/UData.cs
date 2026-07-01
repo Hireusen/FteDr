@@ -55,7 +55,7 @@ public static class UData
     /// 문자열 ID로 레이더 SO를 반환받습니다.
     /// </summary>
     public static CRadarSO Radar()
-        => Address.Get<CRadarSO>(Id.Rader);
+        => Address.Get<CRadarSO>(Id.Radar);
 
     /// <summary>
     /// 문자열 ID로 추진기 SO를 반환받습니다.
