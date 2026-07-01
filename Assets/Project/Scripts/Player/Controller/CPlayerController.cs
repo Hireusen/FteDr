@@ -17,7 +17,14 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     [SerializeField] private float _groundDrag;
 
     [Header("회전 설정")]
-    [SerializeField] private float _lookSensitivity = 0.5f;
+    [SerializeField] private float _rotationSharpness = 12f;
+
+    [Header("수영 상승 기울임")]
+    [Tooltip("상승(스페이스) 속도가 자세 기울임에 반영되는 정도. 클수록 상승 시 정수리가 더 위로 향함")]
+    [SerializeField] private float _ascendTiltInfluence = 0.2f;
+
+    [Header("카메라 참조")]
+    [SerializeField] private Transform _cameraTransform;
 
     [Header("바닥 감지 설정")]
     [SerializeField] private float _groundCheckDistance;
@@ -27,9 +34,10 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private Rigidbody _rb;
     private Vector2 _currentMoveInput;
-    private Vector2 _currentLookInput;
 
-    private float _playerYaw;
+    private Vector3 _moveDirection;
+
+    private Vector3 _lastHeading = Vector3.forward;
 
     private EPlayerState _currentState = EPlayerState.OnGround;
 
@@ -51,11 +59,9 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
             CheckWaterGround();
         }
 
-        Vector3 moveDirection = (transform.right * _currentMoveInput.x + transform.forward * _currentMoveInput.y);
-        moveDirection.y = 0f;
-        moveDirection.Normalize();
+        _moveDirection = CalcMoveDirection();
 
-        _rb.AddForce(moveDirection * _moveSpeed, ForceMode.Force);
+        _rb.AddForce(_moveDirection * _moveSpeed, ForceMode.Force);
 
         if (_currentState == EPlayerState.Swimming)
         {
@@ -81,7 +87,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
 
     public void ExecuteUpdateFrame()
     {
-        transform.rotation = Quaternion.Euler(0f, _playerYaw, 0f);
+        UpdateRotation();
     }
     #endregion
 
@@ -125,7 +131,100 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    private Vector3 CalcMoveDirection()
+    {
+        Transform cam = GetCam();
+        if (cam == null) return Vector3.zero;
 
+        Vector3 forward;
+        Vector3 right;
+
+        if (_currentState == EPlayerState.Swimming)
+        {
+            forward = cam.forward;
+            right = cam.right;
+        }
+        else
+        {
+            forward = cam.forward;
+            forward.y = 0f;
+            forward.Normalize();
+
+            right = cam.right;
+            right.y = 0f;
+            right.Normalize();
+        }
+
+        Vector3 dir = forward * _currentMoveInput.y + right * _currentMoveInput.x;
+        return dir.normalized;
+    }
+
+    private void UpdateRotation()
+    {
+        Vector3 flatMove = _moveDirection;
+        flatMove.y = 0f;
+        if (flatMove.sqrMagnitude > 0.0001f)
+        {
+            _lastHeading = flatMove.normalized;
+        }
+
+        Quaternion targetRot;
+
+        bool hasMove = _moveDirection.sqrMagnitude >= 0.0001f;
+        bool isAscending = _currentState == EPlayerState.Swimming && _isJumpPressed;
+
+        if (_currentState == EPlayerState.Swimming && (hasMove || isAscending))
+        {
+            Vector3 poseDir = _moveDirection;
+
+            if (isAscending)
+            {
+                float upSpeed = Mathf.Max(0f, _rb != null ? _rb.velocity.y : 0f);
+                poseDir += Vector3.up * (upSpeed * _ascendTiltInfluence);
+            }
+
+            if (poseDir.sqrMagnitude < 0.0001f) poseDir = Vector3.up;
+
+            targetRot = GetSwimPose(poseDir);
+        }
+        else if (!hasMove)
+        {
+            targetRot = Quaternion.LookRotation(_lastHeading, Vector3.up);
+        }
+        else
+        {
+            targetRot = Quaternion.LookRotation(_lastHeading, Vector3.up);
+        }
+
+        float t = 1f - Mathf.Exp(-_rotationSharpness * Time.deltaTime);
+        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, t);
+    }
+
+    private Quaternion GetSwimPose(Vector3 dir)
+    {
+        Vector3 up = dir.normalized;
+
+        Vector3 right = Vector3.Cross(Vector3.up, up);
+
+        if (right.sqrMagnitude < 0.0001f)
+        {
+            right = Vector3.Cross(_lastHeading, up);
+            if (right.sqrMagnitude < 0.0001f) right = Vector3.right;
+        }
+
+        right.Normalize();
+
+        Vector3 forward = Vector3.Cross(right, up).normalized;
+
+        return Quaternion.LookRotation(forward, up);
+    }
+
+    private Transform GetCam()
+    {
+        if (_cameraTransform != null) return _cameraTransform;
+        if (Camera.main != null) _cameraTransform = Camera.main.transform;
+        return _cameraTransform;
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -134,7 +233,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
         base.OnDisable();
 
         CEventBus<OnInputMove>.Unsubscribe(MoveHandler);
-        CEventBus<OnInputLook>.Unsubscribe(LookHandler);
         CEventBus<OnInputJump>.Unsubscribe(JumpHandler);
         CEventBus<OnInputEsc>.Unsubscribe(EscHandler);
     }
@@ -144,17 +242,19 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
         base.OnEnable();
 
         _rb = GetComponent<Rigidbody>();
-
         _rb.interpolation = RigidbodyInterpolation.Interpolate;
 
-        _playerYaw = transform.eulerAngles.y;
+        GetCam();
+
+        Vector3 f = transform.forward;
+        f.y = 0f;
+        _lastHeading = f.sqrMagnitude > 0.0001f ? f.normalized : Vector3.forward;
 
         EPlayerState startState = _currentState;
         _currentState = EPlayerState.OnGround;
         SetState(startState);
 
         CEventBus<OnInputMove>.Subscribe(MoveHandler);
-        CEventBus<OnInputLook>.Subscribe(LookHandler);
         CEventBus<OnInputJump>.Subscribe(JumpHandler);
         CEventBus<OnInputEsc>.Subscribe(EscHandler);
     }
@@ -180,13 +280,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     private void MoveHandler(OnInputMove data)
     {
         _currentMoveInput = data.moved;
-    }
-
-    private void LookHandler(OnInputLook data)
-    {
-        _currentLookInput = data.delta;
-
-        _playerYaw += _currentLookInput.x * _lookSensitivity;
     }
 
     private void JumpHandler(OnInputJump data)
