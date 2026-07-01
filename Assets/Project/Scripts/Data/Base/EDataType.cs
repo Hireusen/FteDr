@@ -11,7 +11,7 @@ public enum EDataType
     Collectible = 2,
     // 플레이어 도구
     GrabTool = 3,
-    OxygenTank = 4,
+    FuelTank = 4,
     Thruster = 5,
     Radar = 6,
     // 시스템

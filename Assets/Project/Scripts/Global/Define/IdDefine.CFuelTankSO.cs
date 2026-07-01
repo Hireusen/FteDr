@@ -2,5 +2,5 @@
 
 public static partial class Id
 {
-    public const string OxygenTank = "OxygenTank";
+    public const string FuelTank = "FuelTank";
 }

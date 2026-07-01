@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 /// <summary>
 /// 스테이지 플레이동안 유지되는 휘발성 플레이어 상태입니다.
 /// </summary>
 public class PlayerRuntimeData
 {
-    #region ─────────────────────────▶ 산소 ◀─────────────────────────
-    /// <summary>현재 산소량</summary>
-    public float currentOxygen;
-    /// <summary>외부에 의해 깎인 최대 산소량</summary>
-    public float oxygenPenalty;
+    #region ─────────────────────────▶ 연료 ◀─────────────────────────
+    /// <summary>현재 연료량</summary>
+    public float currentFuel;
+    /// <summary>외부에 의해 깎인 최대 연료량</summary>
+    public float fuelPenalty;
     #endregion
 
     #region ─────────────────────────▶ 소지품 ◀─────────────────────────
@@ -20,12 +20,12 @@ public class PlayerRuntimeData
     #endregion
 
     /// <summary>
-    /// 플레이어 상태를 초기화합니다. (산소량은 매니저가 최대치로 다시 채웁니다)
+    /// 플레이어 상태를 초기화합니다. (연료량은 매니저가 최대치로 다시 채웁니다)
     /// </summary>
     public void ResetForNew()
     {
-        currentOxygen = 0f;
-        oxygenPenalty = 0f;
+        currentFuel = 0f;
+        fuelPenalty = 0f;
         bagItems.Clear();
         heldSpecialItem = null;
     }

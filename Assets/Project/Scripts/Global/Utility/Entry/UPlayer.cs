@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// 플레이어 데이터 접근의 진입점 역할을 하는 퍼사드 클래스입니다.
 /// </summary>
 public static class UPlayer
@@ -8,30 +8,30 @@ public static class UPlayer
     private static CProgressManager Progress => CProgressManager.Ins;
     #endregion
 
-    #region ─────────────────────────▶ 산소 (휘발성) ◀─────────────────────────
-    /// <summary>현재 산소량입니다.</summary>
-    public static float CurrentOxygen => Player.CurrentOxygen;
+    #region ─────────────────────────▶ 연료 (휘발성) ◀─────────────────────────
+    /// <summary>현재 연료량입니다.</summary>
+    public static float CurrentFuel => Player.CurrentFuel;
 
-    /// <summary>패널티가 적용된 현재 최대 산소량입니다.</summary>
-    public static float MaxOxygen => Player.MaxOxygen;
+    /// <summary>패널티가 적용된 현재 최대 연료량입니다.</summary>
+    public static float MaxFuel => Player.MaxFuel;
 
-    /// <summary>현재 산소가 경고 임계값 미만인지 여부입니다.</summary>
-    public static bool IsOxygenLow => Player.IsOxygenLow;
+    /// <summary>현재 연료가 경고 임계값 미만인지 여부입니다.</summary>
+    public static bool IsFuelLow => Player.IsFuelLow;
 
-    /// <summary>새 잠수를 시작합니다. 산소를 최대로 채우고 소지품을 리셋합니다.</summary>
+    /// <summary>새 잠수를 시작합니다. 연료를 최대로 채우고 소지품을 리셋합니다.</summary>
     public static void ResetForNew() => Player.ResetForNew();
 
-    /// <summary>산소를 소모합니다.</summary>
+    /// <summary>연료를 소모합니다.</summary>
     /// <param name="amount">소모량(양수)</param>
-    public static void ConsumeOxygen(float amount) => Player.ConsumeOxygen(amount);
+    public static void ConsumeFuel(float amount) => Player.ConsumeFuel(amount);
 
-    /// <summary>산소를 회복합니다. (공깃방울 등)</summary>
+    /// <summary>연료를 회복합니다. (공깃방울 등)</summary>
     /// <param name="amount">회복량(양수)</param>
-    public static void RecoverOxygen(float amount) => Player.RecoverOxygen(amount);
+    public static void RecoverFuel(float amount) => Player.RecoverFuel(amount);
 
-    /// <summary>적 공격 등으로 최대 산소량을 깎습니다. (사망 시 회복)</summary>
+    /// <summary>적 공격 등으로 최대 연료량을 깎습니다. (사망 시 회복)</summary>
     /// <param name="amount">감소량(양수)</param>
-    public static void ApplyOxygenPenalty(float amount) => Player.ApplyOxygenPenalty(amount);
+    public static void ApplyFuelPenalty(float amount) => Player.ApplyFuelPenalty(amount);
     #endregion
 
     #region ─────────────────────────▶ 가방 / 소지품 (휘발성) ◀─────────────────────────
@@ -74,10 +74,21 @@ public static class UPlayer
     #endregion
 
     #region ─────────────────────────▶ 진행 상황 (영속) ◀─────────────────────────
-    /// <summary>잠수함 하강으로 도달한 최대 스테이지입니다.</summary>
+    /// <summary>돈으로 해금한 최대 스테이지입니다. (이동 가능 범위의 상한)</summary>
     public static int UnlockedStage => Progress.UnlockedStage;
 
-    /// <summary>스테이지를 한 단계 더 깊게 갱신합니다.</summary>
-    public static void DescendStage() => Progress.DescendStage();
+    /// <summary>현재 위치한 스테이지입니다.</summary>
+    public static int CurrentStage => Progress.CurrentStage;
+
+    /// <summary>해당 스테이지가 이미 해금되어 자유 이동 가능한지 여부입니다.</summary>
+    /// <param name="stage">대상 스테이지</param>
+    public static bool IsStageUnlocked(int stage) => Progress.IsStageUnlocked(stage);
+
+    /// <summary>현재 위치를 지정 스테이지로 설정합니다. (해금 범위 내 상승/하강)</summary>
+    /// <param name="stage">이동할 스테이지</param>
+    public static void SetCurrentStage(int stage) => Progress.SetCurrentStage(stage);
+
+    /// <summary>다음 스테이지를 해금합니다. (해금 비용 차감은 호출부 책임)</summary>
+    public static void UnlockNextStage() => Progress.UnlockNextStage();
     #endregion
 }

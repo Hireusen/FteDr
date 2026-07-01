@@ -2,5 +2,5 @@
 
 public static partial class Id
 {
-    public const string Rader = "Rader";
+    public const string Radar = "Radar";
 }
