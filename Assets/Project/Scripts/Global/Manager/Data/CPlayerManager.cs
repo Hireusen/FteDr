@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// 플레이어의 런타임 데이터를 보유하고 스탯을 계산하는 매니저입니다.
@@ -16,67 +16,67 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     public PlayerRuntimeData Runtime => _runtime;
     #endregion
 
-    #region ─────────────────────────▶ 산소 ◀─────────────────────────
-    /// <summary>현재 산소량입니다.</summary>
-    public float CurrentOxygen => _runtime.currentOxygen;
+    #region ─────────────────────────▶ 연료 ◀─────────────────────────
+    /// <summary>현재 연료량입니다.</summary>
+    public float CurrentFuel => _runtime.currentFuel;
 
-    /// <summary>패널티가 적용된 현재 최대 산소량입니다.</summary>
-    public float MaxOxygen
+    /// <summary>패널티가 적용된 현재 최대 연료량입니다.</summary>
+    public float MaxFuel
     {
         get
         {
-            int level = CProgressManager.Ins.GetGearLevel(EDataType.OxygenTank);
-            float baseMax = UData.OxygenTank().MaxOxygen(level);
-            return Mathf.Max(0f, baseMax - _runtime.oxygenPenalty);
+            int level = CProgressManager.Ins.GetGearLevel(EDataType.FuelTank);
+            float baseMax = UData.FuelTank().MaxFuel(level);
+            return Mathf.Max(0f, baseMax - _runtime.fuelPenalty);
         }
     }
 
-    /// <summary>현재 산소가 경고 임계값 미만인지 여부입니다. (5% 미만 화면 이펙트 등)</summary>
-    public bool IsOxygenLow
+    /// <summary>현재 연료가 경고 임계값 미만인지 여부입니다. (5% 미만 화면 이펙트 등)</summary>
+    public bool IsFuelLow
     {
         get
         {
-            int level = CProgressManager.Ins.GetGearLevel(EDataType.OxygenTank);
-            float threshold = UData.OxygenTank().WarningThreshold(level); // 0~1 비율
-            float max = MaxOxygen;
+            int level = CProgressManager.Ins.GetGearLevel(EDataType.FuelTank);
+            float threshold = UData.FuelTank().WarningThreshold(level); // 0~1 비율
+            float max = MaxFuel;
             if (max <= 0f) return true;
 
-            return (_runtime.currentOxygen / max) < threshold;
+            return (_runtime.currentFuel / max) < threshold;
         }
     }
 
-    /// <summary>새 잠수를 시작합니다. 산소를 최대로 채우고 페널티/소지품을 리셋합니다.</summary>
+    /// <summary>새 잠수를 시작합니다. 연료를 최대로 채우고 페널티/소지품을 리셋합니다.</summary>
     public void ResetForNew()
     {
         _runtime.ResetForNew();
-        _runtime.currentOxygen = MaxOxygen;
-        PublishOxygen();
+        _runtime.currentFuel = MaxFuel;
+        PublishFuel();
         PublishBag();
     }
 
-    /// <summary>산소를 소모합니다.</summary>
+    /// <summary>연료를 소모합니다.</summary>
     /// <param name="amount">소모량(양수)</param>
-    public void ConsumeOxygen(float amount)
+    public void ConsumeFuel(float amount)
     {
-        _runtime.currentOxygen = Mathf.Max(0f, _runtime.currentOxygen - amount);
-        PublishOxygen();
+        _runtime.currentFuel = Mathf.Max(0f, _runtime.currentFuel - amount);
+        PublishFuel();
     }
 
-    /// <summary>산소를 회복합니다.</summary>
+    /// <summary>연료를 회복합니다.</summary>
     /// <param name="amount">회복량(양수)</param>
-    public void RecoverOxygen(float amount)
+    public void RecoverFuel(float amount)
     {
-        _runtime.currentOxygen = Mathf.Min(MaxOxygen, _runtime.currentOxygen + amount);
-        PublishOxygen();
+        _runtime.currentFuel = Mathf.Min(MaxFuel, _runtime.currentFuel + amount);
+        PublishFuel();
     }
 
-    /// <summary>최대 산소량을 깎습니다.</summary>
+    /// <summary>최대 연료량을 깎습니다.</summary>
     /// <param name="amount">감소량(양수)</param>
-    public void ApplyOxygenPenalty(float amount)
+    public void ApplyFuelPenalty(float amount)
     {
-        _runtime.oxygenPenalty += Mathf.Max(0f, amount);
-        _runtime.currentOxygen = Mathf.Min(_runtime.currentOxygen, MaxOxygen);
-        PublishOxygen();
+        _runtime.fuelPenalty += Mathf.Max(0f, amount);
+        _runtime.currentFuel = Mathf.Min(_runtime.currentFuel, MaxFuel);
+        PublishFuel();
     }
     #endregion
 
@@ -123,9 +123,9 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
 
     }
 
-    private void PublishOxygen()
+    private void PublishFuel()
     {
-        OnPlayerOxygenChanged.Publish(_runtime.currentOxygen, MaxOxygen);
+        OnPlayerFuelChanged.Publish(_runtime.currentFuel, MaxFuel);
     }
 
     private void PublishBag()

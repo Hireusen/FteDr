@@ -9,28 +9,28 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 125cd04161e073c439a2a727e96fa272, type: 3}
-  m_Name: OxygenTankSO
+  m_Script: {fileID: 11500000, guid: 9f5906a1e82ddfc47868779ca230f127, type: 3}
+  m_Name: FuelTankSO
   m_EditorClassIdentifier: 
-  _id: OxygenTank
+  _id: FuelTank
   _type: 4
   _shopIcon: {fileID: 21300000, guid: bca3455aa945a9048b3af46cc0293856, type: 3}
-  _upgradeCosts: 64000000fa000000f4010000e8030000
-  _maxOxygens:
-  - 200
-  - 250
+  _upgradeCosts: fa000000f4010000e8030000d0070000
+  _maxFuels:
   - 300
-  - 350
   - 400
-  _drainPercents:
+  - 500
+  - 600
+  - 700
+  _moveFuelCosts:
+  - 5
+  - 4
+  - 3
+  - 2
   - 1
-  - 0.8
-  - 0.6
-  - 0.45
-  - 0.3
   _warningThresholds:
-  - 0.3
-  - 0.3
-  - 0.3
-  - 0.3
-  - 0.3
+  - 0.2
+  - 0.2
+  - 0.2
+  - 0.2
+  - 0.2

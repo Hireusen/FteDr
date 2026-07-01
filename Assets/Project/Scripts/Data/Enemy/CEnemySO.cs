@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
@@ -25,7 +25,7 @@ public class CEnemySO : ABaseSO
     /// <summary>적의 플레이어 탐지 시야 반경을 반환합니다.</summary>
     public float FieldOfView => _fieldOfView;
 
-    /// <summary>플레이어와 접촉 시 입히는 산소/체력 피해량을 반환합니다.</summary>
+    /// <summary>플레이어와 접촉 시 입히는 연료/체력 피해량을 반환합니다.</summary>
     public float Damage => _damage;
     #endregion
 
