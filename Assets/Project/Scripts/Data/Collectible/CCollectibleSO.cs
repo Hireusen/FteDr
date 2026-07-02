@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// 수집품 정보를 담는 SO 클래스입니다.
 /// </summary>
-[CreateAssetMenu(fileName = "CCollectibleSO_", menuName = "ScriptableObjects/CollectibleSO", order = 1)]
+[CreateAssetMenu(fileName = "CollectibleSO_", menuName = "ScriptableObjects/CollectibleSO", order = 1)]
 public class CCollectibleSO : ABaseSO
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────

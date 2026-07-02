@@ -6,7 +6,7 @@ using System.Collections.Generic;
 /// 각 항목은 자체 min/max 개수를 갖고, 스테이지 전체도 총량 min/max를 갖습니다.
 /// 실제 개수 결정과 배치는 CCollectibleSpawner가 수행합니다.
 /// </summary>
-[CreateAssetMenu(fileName = "CStageSpawnSO_", menuName = "ScriptableObjects/StageSpawnSO", order = 1)]
+[CreateAssetMenu(fileName = "StageSpawnSO_", menuName = "ScriptableObjects/StageSpawnSO", order = 1)]
 public class CStageSpawnSO : ABaseSO
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
