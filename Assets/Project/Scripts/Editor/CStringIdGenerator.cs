@@ -147,7 +147,7 @@ public class CStringIdGenerator : EditorWindow
         if (GUILayout.Button("수집품 ID")) soType = typeof(CCollectibleSO);
         if (GUILayout.Button("에너미 ID")) soType = typeof(CEnemySO);
         if (GUILayout.Button("그랩 도구 ID")) soType = typeof(CGrabToolSO);
-        if (GUILayout.Button("산소통 ID")) soType = typeof(COxygenTankSO);
+        if (GUILayout.Button("연료통 ID")) soType = typeof(CFuelTankSO);
         if (GUILayout.Button("플레이어 ID")) soType = typeof(CPlayerSO);
         if (GUILayout.Button("가방 ID")) soType = typeof(CBagSO);
         if (GUILayout.Button("레이더 ID")) soType = typeof(CRadarSO);

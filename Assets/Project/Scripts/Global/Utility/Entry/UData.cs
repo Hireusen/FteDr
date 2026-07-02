@@ -46,16 +46,16 @@ public static class UData
         => Address.Get<CGrabToolSO>(Id.GrabTool);
 
     /// <summary>
-    /// 문자열 ID로 산소 SO를 반환받습니다.
+    /// 문자열 ID로 연료 SO를 반환받습니다.
     /// </summary>
-    public static COxygenTankSO OxygenTank()
-        => Address.Get<COxygenTankSO>(Id.OxygenTank);
+    public static CFuelTankSO FuelTank()
+        => Address.Get<CFuelTankSO>(Id.FuelTank);
 
     /// <summary>
     /// 문자열 ID로 레이더 SO를 반환받습니다.
     /// </summary>
     public static CRadarSO Radar()
-        => Address.Get<CRadarSO>(Id.Rader);
+        => Address.Get<CRadarSO>(Id.Radar);
 
     /// <summary>
     /// 문자열 ID로 추진기 SO를 반환받습니다.

@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
@@ -12,7 +12,7 @@ public class CCollectibleSO : ABaseSO
     [SerializeField] protected GameObject _prefab;
     [SerializeField] protected bool _isSpecial;
     [SerializeField] protected float _weight;
-    [SerializeField] protected float _sellPrice; // 접촉 시 산소 대미지
+    [SerializeField] protected float _sellPrice; // 접촉 시 연료 대미지
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────

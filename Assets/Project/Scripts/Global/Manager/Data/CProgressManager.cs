@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// 영속 진행도를 보유하고 디스크에 저장하는 매니저입니다.
@@ -48,7 +48,7 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
     {
         switch (gearType)
         {
-            case EDataType.OxygenTank: return _progress.oxygenTankLevel;
+            case EDataType.FuelTank: return _progress.fuelTankLevel;
             case EDataType.Radar: return _progress.radarLevel;
             case EDataType.Thruster: return _progress.thrusterLevel;
             case EDataType.GrabTool: return _progress.grabToolLevel;
@@ -75,7 +75,7 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
 
         switch (gearType)
         {
-            case EDataType.OxygenTank: ++_progress.oxygenTankLevel; break;
+            case EDataType.FuelTank: ++_progress.fuelTankLevel; break;
             case EDataType.Radar: ++_progress.radarLevel; break;
             case EDataType.Thruster: ++_progress.thrusterLevel; break;
             case EDataType.GrabTool: ++_progress.grabToolLevel; break;
@@ -96,7 +96,7 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
     {
         switch (gearType)
         {
-            case EDataType.OxygenTank: return UData.OxygenTank();
+            case EDataType.FuelTank: return UData.FuelTank();
             case EDataType.Radar: return UData.Radar();
             case EDataType.Thruster: return UData.Thruster();
             case EDataType.GrabTool: return UData.GrabTool();
@@ -109,11 +109,26 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
     #endregion
 
     #region 진행 상황
-    /// <summary>잠수함 하강으로 도달한 최대 스테이지입니다.</summary>
+    /// <summary>돈으로 해금한 최대 스테이지입니다. (이동 가능 범위의 상한)</summary>
     public int UnlockedStage => _progress.unlockedStage;
 
-    /// <summary>스테이지를 한 단계 더 깊게 갱신합니다.</summary>
-    public void DescendStage()
+    /// <summary>현재 위치한 스테이지입니다.</summary>
+    public int CurrentStage => _progress.currentStage;
+
+    /// <summary>해당 스테이지가 이미 해금되어 자유 이동 가능한지 여부입니다.</summary>
+    /// <param name="stage">대상 스테이지</param>
+    public bool IsStageUnlocked(int stage) => stage <= _progress.unlockedStage;
+
+    /// <summary>현재 위치를 지정 스테이지로 설정하고 저장합니다. (해금 범위 내 상승/하강)</summary>
+    /// <param name="stage">이동할 스테이지</param>
+    public void SetCurrentStage(int stage)
+    {
+        _progress.currentStage = stage;
+        Save();
+    }
+
+    /// <summary>다음 스테이지를 해금하고 저장합니다. (해금 비용 차감은 호출부 책임)</summary>
+    public void UnlockNextStage()
     {
         ++_progress.unlockedStage;
         Save();

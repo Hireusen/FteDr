@@ -60,7 +60,6 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         _option.resolutionWidth = width;
         _option.resolutionHeight = height;
         _option.fullScreenMode = fullScreenMode;
-
         ApplyResolution();
         Save();
     }
@@ -111,6 +110,10 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     private void ApplyResolution()
     {
         Screen.SetResolution(
+            _option.resolutionWidth,
+            _option.resolutionHeight,
+            _option.fullScreenMode);
+        OnOptionResolutionChanged.Publish(
             _option.resolutionWidth,
             _option.resolutionHeight,
             _option.fullScreenMode);
