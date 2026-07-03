@@ -89,7 +89,7 @@ public sealed class CRadar : AFrameable, IUpdateFrameable
         CRadarSO so = UData.Radar();
         if (so == null)
         {
-            UDebug.Print("CRadar: 레이더 SO를 찾을 수 없습니다.", LogType.Error, gameObject);
+            UDebug.Print("레이더 SO를 찾을 수 없습니다.", LogType.Error, gameObject);
             return;
         }
 
@@ -100,12 +100,12 @@ public sealed class CRadar : AFrameable, IUpdateFrameable
         // SO 배열 미설정 등으로 유효하지 않은 값 방어
         if (_maxDetectDistance <= 0f)
         {
-            UDebug.Print($"CRadar: 레벨 {level}의 감지 거리가 유효하지 않습니다({_maxDetectDistance}). SO 배열을 확인하세요.", LogType.Warning, gameObject);
+            UDebug.Print($"레벨 {level}의 감지 거리가 유효하지 않습니다({_maxDetectDistance}). SO 배열을 확인하세요.", LogType.Warning, gameObject);
             _maxDetectDistance = 0f;
         }
         if (_farInterval <= 0f)
         {
-            UDebug.Print($"CRadar: 레벨 {level}의 스캔 주기가 유효하지 않습니다({_farInterval}). SO 배열을 확인하세요.", LogType.Warning, gameObject);
+            UDebug.Print($"레벨 {level}의 스캔 주기가 유효하지 않습니다({_farInterval}). SO 배열을 확인하세요.", LogType.Warning, gameObject);
             _farInterval = Mathf.Max(_nearInterval, 1f);
         }
     }
