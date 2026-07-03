@@ -2,16 +2,6 @@
 
 /// <summary>
 /// 수집품 루트에 부착하는 컴포넌트입니다.
-/// 데이터(CCollectibleSO) 보유, 외곽선 제어, 집게 상호작용 진입점을 담당합니다.
-///
-/// [계층 전제]
-/// 루트(이 컴포넌트 + 스폰 중 Rigidbody) 아래에 하나 이상의 Visual 오브젝트가 있고,
-/// 각 Visual은 MeshRenderer/MeshCollider/COutline을 가진다.
-/// Visual이 여러 개인 프리팹(예: 조각 여러 개)도 있으므로, 자식 구성요소는 항상 복수로 참조한다.
-///
-/// [집게 상호작용]
-/// 잡는 메커니즘(관절/힘 등)은 집게 팔 쪽이 구현한다. 이 컴포넌트는 집게가 필요로 하는
-/// 정보(무게·물리 바디)와 상태 전환 훅(OnGrabbed/OnReleased)만 노출한다.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class CCollectible : AMono
@@ -30,6 +20,9 @@ public sealed class CCollectible : AMono
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     /// <summary>이 수집품의 정의 SO입니다.</summary>
     public CCollectibleSO Data => _data;
+
+    /// <summary>수집품 가격입니다.</summary>
+    public float SellPrice => _data != null ? _data.SellPrice : 0;
 
     /// <summary>수집품 무게입니다. (집게 팔에 전달할 값)</summary>
     public float Weight => _data != null ? _data.Weight : 0f;
