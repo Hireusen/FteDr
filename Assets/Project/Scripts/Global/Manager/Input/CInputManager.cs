@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
@@ -63,6 +63,9 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
         _input = new InputDispatcher();
         _input.GameMap.SetCallbacks(this);
         _input.Enable();
+
+        // 리바인딩 매니저에 이 에셋을 등록 → 저장된 커스텀 키가 있으면 복원됨
+        CRebindManager.Ins.SetAsset(_input.asset);
     }
     #endregion
 
