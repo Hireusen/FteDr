@@ -25,3 +25,26 @@ public readonly struct OnRequestCloseSettings
         CEventBus<OnRequestCloseSettings>.Publish(new OnRequestCloseSettings());
     }
 }
+
+/// <summary>
+/// 전역 크레딧(Credits) 팝업창을 열어달라고 요청하는 이벤트 구조체입니다.
+/// </summary>
+public readonly struct OnRequestOpenCredits
+{
+    public static void Publish()
+    {
+        CEventBus<OnRequestOpenCredits>.Publish(new OnRequestOpenCredits());
+    }
+}
+
+/// <summary>
+/// 전역 크레딧(Credits) 팝업창을 닫아달라고 요청하는 이벤트 구조체입니다.
+/// </summary>
+public readonly struct OnRequestCloseCredits
+{
+    public static void Publish()
+    {
+        CEventBus<OnRequestCloseCredits>.Publish(new OnRequestCloseCredits());
+    }
+}
+
