@@ -1,20 +1,19 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 프레임에이블 클래스의 설계 의도입니다.
+/// 1인칭 카메라입니다.
 /// </summary>
 public class CFPPCamera : AFrameable, ILateUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("필수 연결")]
-    [SerializeField] private Transform _player;
+    [SerializeField] private CPlayerController _playerController;
+    [Tooltip("컨트롤러가 회전을 넣는 눈높이 앵커. 카메라가 이 트랜스폼의 위치·회전을 복사")]
+    [SerializeField] private Transform _cameraRoot;
     [SerializeField] private Camera _camera;
 
-    [Header("1인칭 설정")]
-    [SerializeField] private Vector3 _offset = new Vector3(0f, 0.5f, 0.1f);
-    [SerializeField] private float _sharpness = 20f;
-
     [Header("회전 감도")]
+    [Tooltip("기본 감도값. 설정에 감도 옵션이 생기기 전까지 사용되는 폴백 (Sensitivity 프로퍼티 참고)")]
     [SerializeField] private float _lookSensitivity = 0.5f;
 
     [Header("수중 회전 제한")]
@@ -27,90 +26,39 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private CPlayerController _playerController;
-
     private Transform _camTransform;
+
     private Vector2 _currentLookInput;
+    private float _yaw;
     private float _pitch;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    // 실행 우선순위 정의
     public ELateUpdatePriority LateUpdatePriority => ELateUpdatePriority.Lv5;
 
-    // 프레임 매니저에게 호출당할 함수
+    public float LookSensitivity => _lookSensitivity;
+
     public void ExecuteLateUpdateFrame()
     {
-        if (_player == null || _camTransform == null) return;
+        if (_playerController == null || _cameraRoot == null || _camTransform == null) return;
 
-        TickCam();
+        // 1) 마우스 입력 누적
+        _yaw += _currentLookInput.x * LookSensitivity;
+        _pitch -= _currentLookInput.y * LookSensitivity;
+
+        // 2) 상태별 pitch 범위 제한
+        bool swimming = _playerController.CurrentState == EPlayerState.Swimming;
+        float min = swimming ? _swimPitchMin : _groundPitchMin;
+        float max = swimming ? _swimPitchMax : _groundPitchMax;
+        _pitch = Mathf.Clamp(_pitch, min, max);
+
+        // 3) 컨트롤러에 각도 전달 (몸/앵커 회전은 컨트롤러의 FixedUpdate 에서 적용)
+        _playerController.SetLookAngles(_yaw, _pitch);
+
+        // 4) 카메라는 EyeAnchor 의 위치·회전을 그대로 복사 (같은 보간 흐름 → 지터 없음)
+        _camTransform.SetPositionAndRotation(_cameraRoot.position, _cameraRoot.rotation);
 
         _currentLookInput = Vector2.zero;
-    }
-    #endregion
-
-    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private float GetSmoothT(float sharpness)
-    {
-        return 1f - Mathf.Exp(-sharpness * Time.deltaTime);
-    }
-
-    private void BuildCamPose(out Vector3 desiredPos, out Quaternion desiredRot, bool snap)
-    {
-        desiredPos = _player.position + (_player.rotation * _offset);
-
-        _pitch -= _currentLookInput.y * _lookSensitivity;
-
-        float currentMin = _groundPitchMin;
-        float currentMax = _groundPitchMax;
-
-        if (_playerController != null && _playerController.CurrentState == EPlayerState.Swimming)
-        {
-            currentMin = _swimPitchMin;
-            currentMax = _swimPitchMax;
-        }
-
-        _pitch = Mathf.Clamp(_pitch, currentMin, currentMax);
-
-        desiredRot = _player.rotation * Quaternion.Euler(_pitch, 0f, 0f);
-    }
-
-    private void ApplyPose(Vector3 desiredPos, Quaternion desiredRot, float sharpness, bool snap)
-    {
-        if (snap)
-        {
-            _camTransform.position = desiredPos;
-            _camTransform.rotation = desiredRot;
-            return;
-        }
-
-        float t = GetSmoothT(sharpness);
-
-        _camTransform.position = Vector3.Lerp(_camTransform.position, desiredPos, t);
-
-        _camTransform.rotation = desiredRot;
-    }
-
-    private void InitCam()
-    {
-        _pitch = 0f;
-
-        Vector3 desiredPos;
-        Quaternion desiredRot;
-
-        BuildCamPose(out desiredPos, out desiredRot, true);
-
-        ApplyPose(desiredPos, desiredRot, _sharpness, true);
-    }
-
-    private void TickCam()
-    {
-        Vector3 desiredPos;
-        Quaternion desiredRot;
-
-        BuildCamPose(out desiredPos, out desiredRot, false);
-
-        ApplyPose(desiredPos, desiredRot, _sharpness, false);
     }
     #endregion
 
@@ -133,11 +81,6 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
     private void Start()
     {
-        if (_player != null)
-        {
-            _playerController = _player.GetComponent<CPlayerController>();
-        }
-
         if (_camera == null)
         {
             GameObject mainCamGO = GameObject.FindGameObjectWithTag("MainCamera");
@@ -147,7 +90,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
             }
         }
 
-        if (_player == null || _camera == null)
+        if (_playerController == null || _cameraRoot == null || _camera == null)
         {
             UDebug.Log(true, "필수 참조 확인", LogType.Warning);
             enabled = false;
@@ -156,7 +99,10 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
         _camTransform = _camera.transform;
 
-        InitCam();
+        _yaw = _playerController.transform.eulerAngles.y;
+        _pitch = 0f;
+
+        _camTransform.SetPositionAndRotation(_cameraRoot.position, _cameraRoot.rotation);
     }
     #endregion
 
