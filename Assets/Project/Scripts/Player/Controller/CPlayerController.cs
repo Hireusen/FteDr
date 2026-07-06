@@ -18,12 +18,15 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     [SerializeField] private float _waterGravity;
     [SerializeField] private float _waterDrag;
 
-    [Header("시선 회전 설정")]
-    [SerializeField] private float _lookSensitivity = 0.5f;
-    [Tooltip("상하 시선(pitch) 제한 각도")]
-    [SerializeField] private float _pitchMin = -80f;
-    [SerializeField] private float _pitchMax = 80f;
+    [Header("이동 방향 참조")]
+    [Tooltip("이동 방향 기준이 되는 카메라 트랜스폼")]
+    [SerializeField] private Transform _cameraTransform;
+
+    [Header("시선")]
+    [Tooltip("눈높이 앵커(플레이어 자식). 카메라가 이 트랜스폼의 위치·회전을 복사함")]
     [SerializeField] private Transform _cameraRoot;
+    [Tooltip("수영↔지상 전환 시 몸이 눕고/서는 속도. 클수록 빨리 전환")]
+    [SerializeField] private float _postureBlendSharpness = 8f;
 
     [Header("바닥 감지 설정")]
     [SerializeField] private float _groundCheckDistance;
@@ -36,8 +39,12 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     private Vector3 _moveDirection;
 
+    // 카메라가 넘겨주는 시선 각도
     private float _yaw;
     private float _pitch;
+
+    // 몸에 pitch 를 싣는 비율. 수영 1, 지상 0 을 향해 서서히 이동 (기립/눕기 부드럽게)
+    private float _postureBlend;
 
     private EPlayerState _currentState = EPlayerState.OnGround;
 
@@ -49,6 +56,15 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     public EPlayerState CurrentState => _currentState;
 
+    /// <summary>
+    /// 카메라가 시선 각도를 넘겨주는 창구입니다. 실제 회전은 FixedUpdate 에서 적용됩니다.
+    /// </summary>
+    public void SetLookAngles(float yaw, float pitch)
+    {
+        _yaw = yaw;
+        _pitch = pitch;
+    }
+
     public void ExecuteFixedUpdateFrame()
     {
         if (_rb == null) return;
@@ -58,7 +74,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
             CheckWaterGround();
         }
 
-        // 시선 회전 적용: 수영이면 pitch 를 몸통에, 그 외엔 머리에
         ApplyLookRotation();
 
         _moveDirection = CalcMoveDirection();
@@ -136,35 +151,31 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
     private void ApplyLookRotation()
     {
-        bool swimming = _currentState == EPlayerState.Swimming;
+        float target = (_currentState == EPlayerState.Swimming) ? 1f : 0f;
+        float t = 1f - Mathf.Exp(-_postureBlendSharpness * Time.fixedDeltaTime);
+        _postureBlend = Mathf.Lerp(_postureBlend, target, t);
 
-        float bodyPitch = swimming ? _pitch : 0f;
+        float bodyPitch = _pitch * _postureBlend;
         _rb.MoveRotation(Quaternion.Euler(bodyPitch, _yaw, 0f));
 
         if (_cameraRoot != null)
         {
-            float headPitch = swimming ? 0f : _pitch;
+            float headPitch = _pitch * (1f - _postureBlend);
             _cameraRoot.localRotation = Quaternion.Euler(headPitch, 0f, 0f);
         }
     }
 
     private Vector3 CalcMoveDirection()
     {
-        Vector3 forward;
-        Vector3 right;
+        if (_cameraTransform == null) return Vector3.zero;
 
-        if (_currentState == EPlayerState.Swimming)
+        Vector3 forward = _cameraTransform.forward;
+        Vector3 right = _cameraTransform.right;
+
+        if (_currentState != EPlayerState.Swimming)
         {
-            // 수영: 몸통이 pitch 까지 기울어 있으므로 몸 forward 가 곧 시야 방향
-            forward = transform.forward;
-            right = transform.right;
-        }
-        else
-        {
-            // 지상 / 수중바닥: 몸은 수평(yaw만)이므로 몸 forward 가 이미 수평
-            forward = transform.forward;
+            // 지상 / 수중바닥: 수평 이동만
             forward.y = 0f;
-            right = transform.right;
             right.y = 0f;
         }
 
@@ -182,7 +193,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         base.OnDisable();
 
         CEventBus<OnInputMove>.Unsubscribe(MoveHandler);
-        CEventBus<OnInputLook>.Unsubscribe(LookHandler);
         CEventBus<OnInputJump>.Unsubscribe(JumpHandler);
         CEventBus<OnInputEsc>.Unsubscribe(EscHandler);
     }
@@ -194,17 +204,16 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         _rb = GetComponent<Rigidbody>();
         _rb.interpolation = RigidbodyInterpolation.Interpolate;
 
-        // 현재 몸 방향에서 시선 각도 초기화
-        Vector3 e = transform.eulerAngles;
-        _yaw = e.y;
+        // 현재 몸 방향에서 yaw 초기화 (카메라가 이후 값을 덮어씀)
+        _yaw = transform.eulerAngles.y;
         _pitch = 0f;
+        _postureBlend = 0f; // 지상 시작
 
         EPlayerState startState = _currentState;
         _currentState = EPlayerState.OnGround;
         SetState(startState);
 
         CEventBus<OnInputMove>.Subscribe(MoveHandler);
-        CEventBus<OnInputLook>.Subscribe(LookHandler);
         CEventBus<OnInputJump>.Subscribe(JumpHandler);
         CEventBus<OnInputEsc>.Subscribe(EscHandler);
     }
@@ -230,13 +239,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     private void MoveHandler(OnInputMove data)
     {
         _currentMoveInput = data.moved;
-    }
-
-    private void LookHandler(OnInputLook data)
-    {
-        _yaw += data.delta.x * _lookSensitivity;
-        _pitch -= data.delta.y * _lookSensitivity;
-        _pitch = Mathf.Clamp(_pitch, _pitchMin, _pitchMax);
     }
 
     private void JumpHandler(OnInputJump data)
