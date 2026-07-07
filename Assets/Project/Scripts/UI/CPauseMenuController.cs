@@ -28,11 +28,14 @@ public class CPauseMenuController : AMono
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Start()
     {
-        // 설정 버튼 클릭시 이벤트 발행
+        // 설정 버튼 클릭 이벤트 리스너를 올바르게 등록하고 EUI 인자를 넘깁니다.
         if (_btnOptions != null)
         {
-            UDebug.Print("설정의 옵션을 요청합니다.");
-            OnRequestOpenSettings.Publish();
+            _btnOptions.onClick.AddListener(() =>
+            {
+                UDebug.Print("설정의 옵션을 요청합니다.");
+                OnRequestOpenUI.Publish(EUI.SettingsWindow);
+            });
         }
 
         // 계속하기 버튼
@@ -45,6 +48,7 @@ public class CPauseMenuController : AMono
             });
         }
     }
+
     #endregion
 
     #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────

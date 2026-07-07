@@ -37,7 +37,6 @@ public class CTitleSceneController : AMono
         {
             _btnNewGame.onClick.AddListener(() =>
             {
-                UDebug.Print($"[CTitleSceneController] 새 게임 클릭: {_currentScene} -> {_nextScene} 로딩 이벤트를 발행합니다.");
                 OnSceneLoadStart.Publish(_currentScene, _nextScene);
             });
         }
@@ -48,24 +47,22 @@ public class CTitleSceneController : AMono
             _btnLoad.onClick.AddListener(OnLoadGameClicked);
         }
 
-        // 로컬 옵션 패널 켜고 끄기 리스너 등록
+        // 옵션 버튼: 로컬 패널을 켜는 게 아니라, 전역 매니저에게 요청
         if (_btnOptions != null)
         {
-            _btnOptions.onClick.AddListener(() => ToggleOptionsPanel(true));
-        }
-        if (_btnCloseOptions != null)
-        {
-            _btnCloseOptions.onClick.AddListener(() => ToggleOptionsPanel(false));
+            _btnOptions.onClick.AddListener(() =>
+            {
+                OnRequestOpenUI.Publish(EUI.SettingsWindow);
+            });
         }
 
-        // 로컬 크레딧 패널 켜고 끄기 리스너 등록
+        // 크레딧 버튼: 로컬 패널을 켜는 게 아니라, 전역 매니저에게 요청
         if (_btnCredits != null)
         {
-            _btnCredits.onClick.AddListener(() => ToggleCreditsPanel(true));
-        }
-        if (_btnCloseCredits != null)
-        {
-            _btnCloseCredits.onClick.AddListener(() => ToggleCreditsPanel(false));
+            _btnCredits.onClick.AddListener(() =>
+            {
+                OnRequestOpenUI.Publish(EUI.CreditsWindow);
+            });
         }
     }
 

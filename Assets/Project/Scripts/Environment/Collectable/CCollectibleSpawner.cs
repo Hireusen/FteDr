@@ -4,7 +4,6 @@ using System.Collections.Generic;
 
 /// <summary>
 /// 스테이지 진입 시 수집품을 공중에 스폰하고 중력으로 낙하시킨 후 Rigidbody를 제거합니다.
-/// 개수는 엔트리별 min/max와 스테이지 총량 min/max를 함께 만족하도록 결정합니다.
 /// </summary>
 public sealed class CCollectibleSpawner : AMono
 {

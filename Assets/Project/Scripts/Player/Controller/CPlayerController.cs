@@ -3,28 +3,30 @@
 /// <summary>
 /// 플레이어의 조작을 담당하는 컴포넌트 입니다.
 /// </summary>
-public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrameable
+public class CPlayerController : AFrameable, IFixedUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("플레이어 세팅")]
+    [Tooltip("수영 이동에 가하는 힘")]
     [SerializeField] private float _moveSpeed;
+    [Tooltip("지상 이동 속도(m/s). 속도 직접 제어라 미끄러짐 없음")]
+    [SerializeField] private float _groundMoveSpeed = 6f;
     [SerializeField] private float _jumpForce;
     [SerializeField] private float _ascendForce;
 
     [Header("수중 물리 세팅")]
     [SerializeField] private float _waterGravity;
     [SerializeField] private float _waterDrag;
-    [SerializeField] private float _groundDrag;
 
-    [Header("회전 설정")]
-    [SerializeField] private float _rotationSharpness = 12f;
-
-    [Header("수영 상승 기울임")]
-    [Tooltip("상승(스페이스) 속도가 자세 기울임에 반영되는 정도. 클수록 상승 시 정수리가 더 위로 향함")]
-    [SerializeField] private float _ascendTiltInfluence = 0.2f;
-
-    [Header("카메라 참조")]
+    [Header("이동 방향 참조")]
+    [Tooltip("이동 방향 기준이 되는 카메라 트랜스폼")]
     [SerializeField] private Transform _cameraTransform;
+
+    [Header("시선")]
+    [Tooltip("눈높이 앵커(플레이어 자식). 카메라가 이 트랜스폼의 위치·회전을 복사함")]
+    [SerializeField] private Transform _cameraRoot;
+    [Tooltip("수영↔지상 전환 시 몸이 눕고/서는 속도. 클수록 빨리 전환")]
+    [SerializeField] private float _postureBlendSharpness = 8f;
 
     [Header("바닥 감지 설정")]
     [SerializeField] private float _groundCheckDistance;
@@ -37,7 +39,12 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
 
     private Vector3 _moveDirection;
 
-    private Vector3 _lastHeading = Vector3.forward;
+    // 카메라가 넘겨주는 시선 각도
+    private float _yaw;
+    private float _pitch;
+
+    // 몸에 pitch 를 싣는 비율. 수영 1, 지상 0 을 향해 서서히 이동 (기립/눕기 부드럽게)
+    private float _postureBlend;
 
     private EPlayerState _currentState = EPlayerState.OnGround;
 
@@ -46,9 +53,17 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public EFixedUpdatePriority FixedUpdatePriority => EFixedUpdatePriority.Lv5;
-    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
 
     public EPlayerState CurrentState => _currentState;
+
+    /// <summary>
+    /// 카메라가 시선 각도를 넘겨주는 창구입니다. 실제 회전은 FixedUpdate 에서 적용됩니다.
+    /// </summary>
+    public void SetLookAngles(float yaw, float pitch)
+    {
+        _yaw = yaw;
+        _pitch = pitch;
+    }
 
     public void ExecuteFixedUpdateFrame()
     {
@@ -59,12 +74,15 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
             CheckWaterGround();
         }
 
-        _moveDirection = CalcMoveDirection();
+        ApplyLookRotation();
 
-        _rb.AddForce(_moveDirection * _moveSpeed, ForceMode.Force);
+        _moveDirection = CalcMoveDirection();
 
         if (_currentState == EPlayerState.Swimming)
         {
+            // 수영: 힘 기반 이동 (물의 관성 유지)
+            _rb.AddForce(_moveDirection * _moveSpeed, ForceMode.Force);
+
             _rb.AddForce(Vector3.down * _waterGravity, ForceMode.Acceleration);
 
             if (_isJumpPressed)
@@ -74,6 +92,10 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
         }
         else
         {
+            // 지상 / 수중바닥: 수평 속도 직접 제어로 미끄러짐 제거 (y속도는 유지)
+            Vector3 horizontalVel = _moveDirection * _groundMoveSpeed;
+            _rb.velocity = new Vector3(horizontalVel.x, _rb.velocity.y, horizontalVel.z);
+
             if (_isJumpPressed)
             {
                 if (_rb.velocity.y <= 0.1f && Physics.Raycast(transform.position, Vector3.down, _groundCheckDistance, _groundLayer))
@@ -83,11 +105,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
                 }
             }
         }
-    }
-
-    public void ExecuteUpdateFrame()
-    {
-        UpdateRotation();
     }
     #endregion
 
@@ -111,7 +128,8 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
         else if (_currentState == EPlayerState.OnGround)
         {
             _rb.useGravity = true;
-            _rb.drag = _groundDrag;
+            // 수영에서 넘어왔을 때 물 drag 가 그대로 남아 점프가 붕 뜨지 않도록 명시적으로 초기화
+            _rb.drag = 0f;
         }
     }
 
@@ -131,99 +149,41 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    private void ApplyLookRotation()
+    {
+        float target = (_currentState == EPlayerState.Swimming) ? 1f : 0f;
+        float t = 1f - Mathf.Exp(-_postureBlendSharpness * Time.fixedDeltaTime);
+        _postureBlend = Mathf.Lerp(_postureBlend, target, t);
+
+        float bodyPitch = _pitch * _postureBlend;
+        _rb.MoveRotation(Quaternion.Euler(bodyPitch, _yaw, 0f));
+
+        if (_cameraRoot != null)
+        {
+            float headPitch = _pitch * (1f - _postureBlend);
+            _cameraRoot.localRotation = Quaternion.Euler(headPitch, 0f, 0f);
+        }
+    }
+
     private Vector3 CalcMoveDirection()
     {
-        Transform cam = GetCam();
-        if (cam == null) return Vector3.zero;
+        if (_cameraTransform == null) return Vector3.zero;
 
-        Vector3 forward;
-        Vector3 right;
+        Vector3 forward = _cameraTransform.forward;
+        Vector3 right = _cameraTransform.right;
 
-        if (_currentState == EPlayerState.Swimming)
+        if (_currentState != EPlayerState.Swimming)
         {
-            forward = cam.forward;
-            right = cam.right;
-        }
-        else
-        {
-            forward = cam.forward;
+            // 지상 / 수중바닥: 수평 이동만
             forward.y = 0f;
-            forward.Normalize();
-
-            right = cam.right;
             right.y = 0f;
-            right.Normalize();
         }
+
+        forward.Normalize();
+        right.Normalize();
 
         Vector3 dir = forward * _currentMoveInput.y + right * _currentMoveInput.x;
         return dir.normalized;
-    }
-
-    private void UpdateRotation()
-    {
-        Vector3 flatMove = _moveDirection;
-        flatMove.y = 0f;
-        if (flatMove.sqrMagnitude > 0.0001f)
-        {
-            _lastHeading = flatMove.normalized;
-        }
-
-        Quaternion targetRot;
-
-        bool hasMove = _moveDirection.sqrMagnitude >= 0.0001f;
-        bool isAscending = _currentState == EPlayerState.Swimming && _isJumpPressed;
-
-        if (_currentState == EPlayerState.Swimming && (hasMove || isAscending))
-        {
-            Vector3 poseDir = _moveDirection;
-
-            if (isAscending)
-            {
-                float upSpeed = Mathf.Max(0f, _rb != null ? _rb.velocity.y : 0f);
-                poseDir += Vector3.up * (upSpeed * _ascendTiltInfluence);
-            }
-
-            if (poseDir.sqrMagnitude < 0.0001f) poseDir = Vector3.up;
-
-            targetRot = GetSwimPose(poseDir);
-        }
-        else if (!hasMove)
-        {
-            targetRot = Quaternion.LookRotation(_lastHeading, Vector3.up);
-        }
-        else
-        {
-            targetRot = Quaternion.LookRotation(_lastHeading, Vector3.up);
-        }
-
-        float t = 1f - Mathf.Exp(-_rotationSharpness * Time.deltaTime);
-        transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, t);
-    }
-
-    private Quaternion GetSwimPose(Vector3 dir)
-    {
-        Vector3 up = dir.normalized;
-
-        Vector3 right = Vector3.Cross(Vector3.up, up);
-
-        if (right.sqrMagnitude < 0.0001f)
-        {
-            right = Vector3.Cross(_lastHeading, up);
-            if (right.sqrMagnitude < 0.0001f) right = Vector3.right;
-        }
-
-        right.Normalize();
-
-        Vector3 forward = Vector3.Cross(right, up).normalized;
-
-        return Quaternion.LookRotation(forward, up);
-    }
-
-    private Transform GetCam()
-    {
-        if (_cameraTransform != null) return _cameraTransform;
-        if (Camera.main != null) _cameraTransform = Camera.main.transform;
-        return _cameraTransform;
     }
     #endregion
 
@@ -244,11 +204,10 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable, IUpdateFrame
         _rb = GetComponent<Rigidbody>();
         _rb.interpolation = RigidbodyInterpolation.Interpolate;
 
-        GetCam();
-
-        Vector3 f = transform.forward;
-        f.y = 0f;
-        _lastHeading = f.sqrMagnitude > 0.0001f ? f.normalized : Vector3.forward;
+        // 현재 몸 방향에서 yaw 초기화 (카메라가 이후 값을 덮어씀)
+        _yaw = transform.eulerAngles.y;
+        _pitch = 0f;
+        _postureBlend = 0f; // 지상 시작
 
         EPlayerState startState = _currentState;
         _currentState = EPlayerState.OnGround;

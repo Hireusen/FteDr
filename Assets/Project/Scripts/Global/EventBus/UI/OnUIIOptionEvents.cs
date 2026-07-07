@@ -1,27 +1,42 @@
 ﻿/// <summary>
-/// 전역 설정(Options) 팝업창을 열어달라고 요청하는 이벤트 구조체입니다.
+/// UI 오픈을 요청하는 통합 이벤트 구조체 입니다.
 /// </summary>
-public readonly struct OnRequestOpenSettings
+public readonly struct OnRequestOpenUI
 {
-    /// <summary>
-    /// 설정창 오픈 이벤트를 발행합니다.
-    /// </summary>
-    public static void Publish()
+    public readonly EUI UIType;
+
+    public OnRequestOpenUI(EUI uiType)
     {
-        CEventBus<OnRequestOpenSettings>.Publish(new OnRequestOpenSettings());
+        UIType = uiType;
+    }
+
+    /// <summary>
+    /// 매개변수로 전달받은 UI를 열도록 이벤트를 발행합니다.
+    /// </summary>
+    public static void Publish(EUI uiType)
+    {
+        CEventBus<OnRequestOpenUI>.Publish(new OnRequestOpenUI(uiType));
     }
 }
 
 /// <summary>
-/// 전역 설정(Options) 팝업창을 닫아달라고 요청하는 이벤트 구조체입니다.
+/// UI 폐쇄을 요청하는 통합 이벤트 구조체 입니다.
 /// </summary>
-public readonly struct OnRequestCloseSettings
+public readonly struct OnRequestCloseUI
 {
-    /// <summary>
-    /// 설정창 닫기 이벤트를 발행합니다.
-    /// </summary>
-    public static void Publish()
+    public readonly EUI UIType;
+
+    public OnRequestCloseUI(EUI uiType)
     {
-        CEventBus<OnRequestCloseSettings>.Publish(new OnRequestCloseSettings());
+        UIType = uiType;
+    }
+
+    /// <summary>
+    /// 매개변수로 전달받은 UI를 폐쇄하도록 이벤트를 발행합니다.
+    /// </summary>
+    public static void Publish(EUI uiType)
+    {
+        CEventBus<OnRequestCloseUI>.Publish(new OnRequestCloseUI(uiType));
     }
 }
+
