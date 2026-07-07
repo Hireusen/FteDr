@@ -22,7 +22,10 @@ public class CTwizers : AMono
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-
+    private void OnCollisionEnter(Collision collision)
+    {
+           
+    }
     #endregion
 
     #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
