@@ -37,26 +37,31 @@ public class CTwizers : AFrameable, IUpdateFrameable
             {
                 print("잡앗음");
                 grabObject = temp.First();
-                ConfigurableJoint objJoint = grabObject.AddComponent<ConfigurableJoint>();
-                objJoint.xMotion = ConfigurableJointMotion.Locked;
-                objJoint.yMotion = ConfigurableJointMotion.Locked;
-                objJoint.zMotion = ConfigurableJointMotion.Locked;
+                activeJoint = grabObject.AddComponent<ConfigurableJoint>();
+                activeJoint.xMotion = ConfigurableJointMotion.Locked;
+                activeJoint.yMotion = ConfigurableJointMotion.Locked;
+                activeJoint.zMotion = ConfigurableJointMotion.Locked;
 
-                SoftJointLimit xlowLimit = objJoint.lowAngularXLimit;
+                SoftJointLimit xlowLimit = activeJoint.lowAngularXLimit;
                 xlowLimit.limit = -20f;
-                objJoint.lowAngularXLimit = xlowLimit;
-                SoftJointLimit xhighLimit = objJoint.lowAngularXLimit;
+                activeJoint.lowAngularXLimit = xlowLimit;
+                SoftJointLimit xhighLimit = activeJoint.lowAngularXLimit;
                 xhighLimit.limit = 20f;
-                objJoint.lowAngularXLimit = xhighLimit;
+                activeJoint.lowAngularXLimit = xhighLimit;
 
-                SoftJointLimit yLimit = objJoint.angularYLimit;
+                SoftJointLimit yLimit = activeJoint.angularYLimit;
                 yLimit.limit = 30f;
-                objJoint.angularYLimit = yLimit;
+                activeJoint.angularYLimit = yLimit;
 
-                SoftJointLimit zLimit = objJoint.angularZLimit;
+                SoftJointLimit zLimit = activeJoint.angularZLimit;
                 zLimit.limit = 30f;
-                objJoint.angularZLimit = zLimit;
-                objJoint.connectedBody = _twizersRG;
+                activeJoint.angularZLimit = zLimit;
+                activeJoint.connectedBody = _twizersRG;
+
+
+                ///물건에서 받아와야함.
+                activeJoint.breakForce = 5f;
+                activeJoint.breakTorque = 5f;
             }
         }
         
