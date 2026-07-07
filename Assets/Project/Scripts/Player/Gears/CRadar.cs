@@ -2,16 +2,13 @@
 
 /// <summary>
 /// 플레이어 탐지기(레이더)입니다.
-/// 주기적으로 소나 핑 소리를 재생하며, 가장 가까운 수집품이 감지 범위 안에서 가까워질수록 핑 주기가 짧아집니다.
+/// 주기적으로 소나 핑 소리를 재생하며, 가장 가까운 수집품이 감지 범위 안에서
+/// 가까워질수록 핑 주기가 짧아집니다. (가까울수록 더 자주 울림)
 /// </summary>
 [DisallowMultipleComponent]
-public sealed class CRadar : AFrameable, IUpdateFrameable
+public sealed class CRadar : AGear, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
-    [Header("측정 기준점")]
-    [Tooltip("거리 측정 기준 트랜스폼. 비우면 이 오브젝트 위치를 사용합니다.")]
-    [SerializeField] private Transform _originOverride;
-
     [Header("핑 주기")]
     [Tooltip("수집품이 가장 가까울 때(거리 0)의 최소 핑 주기(초). 감지 거리 끝에서의 주기(레이더 SO의 ScanInterval)보다 작아야 합니다.")]
     [SerializeField, Min(0.01f)] private float _nearInterval = 0.12f;
@@ -30,85 +27,20 @@ public sealed class CRadar : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private float _maxDetectDistance;
-    private float _farInterval;
-    private float _timer;
-    private bool _isScanning = true;
+    private float _maxDetectDistance; // 현재 레벨의 최대 감지 거리
+    private float _farInterval;       // 현재 레벨의 최대(가장 느린) 핑 주기 = SO.ScanInterval
+    private float _phase;             // 다음 핑까지의 진행률(0~1). 매 프레임 현재 주기로 누적
 
-    private CCollectible[] _cache;
-    private float _nextRefreshTime;
+    private CCollectible[] _cache;    // 수집품 목록 캐시 (주기적으로 갱신)
+    private float _nextRefreshTime;   // 다음 캐시 갱신 시점
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    /// <summary>이 장비의 데이터 타입입니다.</summary>
+    public override EDataType GearType => EDataType.Radar;
+
+    /// <summary>업데이트 실행 순서입니다.</summary>
     public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
-
-    /// <summary>
-    /// 현재 탐지가 동작 중인지 여부입니다.
-    /// </summary>
-    public bool IsScanning => _isScanning;
-
-    public void ExecuteUpdateFrame()
-    {
-        if (!_isScanning) return;
-
-        _timer -= Time.deltaTime;
-        if (_timer > 0f) return;
-
-        float interval = ComputeInterval(out bool hasTarget);
-        _timer = interval;
-
-        if (hasTarget || _pingWhenNoTarget)
-        {
-            Ping();
-        }
-    }
-
-    /// <summary>
-    /// 탐지를 시작합니다. (즉시 첫 핑 평가)
-    /// </summary>
-    public void StartScan()
-    {
-        _isScanning = true;
-        _timer = 0f;
-    }
-
-    /// <summary>
-    /// 탐지를 중지합니다. (핑 정지)
-    /// </summary>
-    public void StopScan()
-    {
-        _isScanning = false;
-    }
-
-    /// <summary>
-    /// 현재 장비 레벨에 맞춰 감지 거리와 핑 주기를 다시 읽어옵니다.
-    /// 레이더 업그레이드 시 자동으로 호출됩니다.
-    /// </summary>
-    public void RefreshStats()
-    {
-        CRadarSO so = UData.Radar();
-        if (so == null)
-        {
-            UDebug.Print("레이더 SO를 찾을 수 없습니다.", LogType.Error, gameObject);
-            return;
-        }
-
-        int level = UPlayer.GetGearLevel(EDataType.Radar);
-        _maxDetectDistance = so.MaxDetectDistance(level);
-        _farInterval = so.ScanInterval(level);
-
-        // SO 배열 미설정 등으로 유효하지 않은 값 방어
-        if (_maxDetectDistance <= 0f)
-        {
-            UDebug.Print($"레벨 {level}의 감지 거리가 유효하지 않습니다({_maxDetectDistance}). SO 배열을 확인하세요.", LogType.Warning, gameObject);
-            _maxDetectDistance = 0f;
-        }
-        if (_farInterval <= 0f)
-        {
-            UDebug.Print($"레벨 {level}의 스캔 주기가 유효하지 않습니다({_farInterval}). SO 배열을 확인하세요.", LogType.Warning, gameObject);
-            _farInterval = Mathf.Max(_nearInterval, 1f);
-        }
-    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -138,7 +70,7 @@ public sealed class CRadar : AFrameable, IUpdateFrameable
         RefreshCacheIfDue();
         if (_cache == null) return false;
 
-        Vector3 origin = (_originOverride != null ? _originOverride : transform).position;
+        Vector3 origin = Origin.position;
         float maxSqr = _maxDetectDistance * _maxDetectDistance;
         float bestSqr = float.PositiveInfinity;
         bool found = false;
@@ -174,7 +106,7 @@ public sealed class CRadar : AFrameable, IUpdateFrameable
         _nextRefreshTime = Time.time + _targetRefreshInterval;
     }
 
-    // 핑 소리를 1회 재생합니다. (플레이어 장비음이므로 2D)
+    // 핑 소리를 1회 재생합니다.
     private void Ping()
     {
         if (_pingSoundId.IsBlank()) return;
@@ -184,33 +116,71 @@ public sealed class CRadar : AFrameable, IUpdateFrameable
 
         sound.PlaySfx(_pingSoundId);
     }
+    #endregion
 
-    // 레이더 업그레이드 이벤트 처리. 레이더 타입일 때만 스탯 재갱신.
-    private void GearUpgradedHandler(OnGearUpgraded ctx)
+    #region ─────────────────────────▶ AGear 구현 ◀─────────────────────────
+    // 현재 레벨에 맞춰 감지 거리와 핑 주기를 다시 읽어옵니다. (활성화 + 업그레이드 시)
+    protected override void OnStatsRefreshed()
     {
-        if (ctx.gearType == EDataType.Radar)
+        CRadarSO so = UData.Radar();
+        if (so == null)
         {
-            RefreshStats();
+            UDebug.Print("레이더 SO를 찾을 수 없습니다.", LogType.Error, gameObject);
+            return;
         }
+
+        _maxDetectDistance = so.MaxDetectDistance(Level);
+        _farInterval = so.ScanInterval(Level);
+
+        // SO 배열 미설정 등으로 유효하지 않은 값 방어
+        if (_maxDetectDistance <= 0f)
+        {
+            UDebug.Print($"레벨 {Level}의 감지 거리가 유효하지 않습니다({_maxDetectDistance}). SO 배열을 확인하세요.", LogType.Warning, gameObject);
+            _maxDetectDistance = 0f;
+        }
+        if (_farInterval <= 0f)
+        {
+            UDebug.Print($"레벨 {Level}의 스캔 주기가 유효하지 않습니다({_farInterval}). SO 배열을 확인하세요.", LogType.Warning, gameObject);
+            _farInterval = Mathf.Max(_nearInterval, 1f);
+        }
+    }
+
+    // 가동 시작 시 즉시 첫 핑을 울리도록 진행률을 채우고 캐시를 비웁니다.
+    protected override void OnActivated()
+    {
+        _phase = 1f;
+        _cache = null;
     }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     protected override void OnEnable()
     {
-        base.OnEnable(); 
+        base.OnEnable(); // 프레임 등록 + 이벤트 구독 + 레벨/스탯 갱신
 
-        CEventBus<OnGearUpgraded>.Subscribe(GearUpgradedHandler);
-        RefreshStats();
+        // 활성화 직후 즉시 첫 핑을 울리고 목록을 새로 수집합니다.
+        _phase = 1f;
         _cache = null;
-        _timer = 0f;
     }
 
-    protected override void OnDisable()
+    public void ExecuteUpdateFrame()
     {
-        base.OnDisable();
+        if (!IsActive) return;
 
-        CEventBus<OnGearUpgraded>.Unsubscribe(GearUpgradedHandler);
+        // 매 프레임 현재 거리로 주기를 다시 계산합니다.
+        // 주기 중간에 가까워지면 진행률이 그만큼 빨리 차서 다음 핑이 앞당겨집니다.
+        float interval = ComputeInterval(out bool hasTarget);
+        if (interval <= 0f) return; // 방어
+
+        _phase += Time.deltaTime / interval;
+        if (_phase < 1f) return;
+
+        _phase = 0f;
+
+        if (hasTarget || _pingWhenNoTarget)
+        {
+            Ping();
+        }
     }
     #endregion
 }
