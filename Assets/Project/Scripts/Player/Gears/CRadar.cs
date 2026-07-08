@@ -2,7 +2,7 @@
 
 /// <summary>
 /// 플레이어 탐지기(레이더)입니다.
-/// 주기적으로 소나 핑 소리를 재생하며, 가장 가까운 수집품이 감지 범위 안에서
+/// 주기적으로 소나 핑 소리를 재생하며, 가장 가까운 특수 수집품이 감지 범위 안에서
 /// 가까워질수록 핑 주기가 짧아집니다. (가까울수록 더 자주 울림)
 /// </summary>
 [DisallowMultipleComponent]
@@ -16,8 +16,10 @@ public sealed class CRadar : AGear, IUpdateFrameable
     [SerializeField] private AnimationCurve _proximityCurve = AnimationCurve.Linear(0f, 0f, 1f, 1f);
 
     [Header("동작 옵션")]
+    [Tooltip("특수 수집품만 탐지 대상으로 삼을지 여부입니다. (끄면 모든 수집품 탐지)")]
+    [SerializeField] private bool _detectSpecialOnly = true;
     [Tooltip("감지 범위에 수집품이 없을 때도 최대 주기로 핑을 울릴지 여부입니다.")]
-    [SerializeField] private bool _pingWhenNoTarget = true;
+    [SerializeField] private bool _pingWhenNoTarget = false;
     [Tooltip("집게에 잡혀 있는 수집품은 탐지 대상에서 제외할지 여부입니다.")]
     [SerializeField] private bool _ignoreHeld = true;
     [Tooltip("씬의 수집품 목록을 다시 수집하는 주기(초). 이 사이에는 캐시를 재사용합니다. 스폰/수거 반영 지연이 됩니다.")]
@@ -36,11 +38,31 @@ public sealed class CRadar : AGear, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    /// <summary>이 장비의 데이터 타입입니다.</summary>
     public override EDataType GearType => EDataType.Radar;
 
-    /// <summary>업데이트 실행 순서입니다.</summary>
+    // 실행 우선순위 정의
     public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
+
+    // 프레임 매니저에게 호출당할 함수
+    public void ExecuteUpdateFrame()
+    {
+        if (!IsActive) return;
+
+        // 매 프레임 현재 거리로 주기를 다시 계산합니다.
+        // 주기 중간에 가까워지면 진행률이 그만큼 빨리 차서 다음 핑이 앞당겨집니다.
+        float interval = ComputeInterval(out bool hasTarget);
+        if (interval <= 0f) return; // 방어
+
+        _phase += Time.deltaTime / interval;
+        if (_phase < 1f) return;
+
+        _phase = 0f;
+
+        if (hasTarget || _pingWhenNoTarget)
+        {
+            Ping();
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -79,6 +101,7 @@ public sealed class CRadar : AGear, IUpdateFrameable
         {
             CCollectible collectible = _cache[i];
             if (collectible == null) continue; // 수거/파괴되어 사라진 항목
+            if (_detectSpecialOnly && !collectible.IsSpecial) continue; // 특수만 탐지
             if (_ignoreHeld && collectible.IsHeld) continue;
 
             float sqr = (collectible.transform.position - origin).sqrMagnitude;
@@ -161,26 +184,6 @@ public sealed class CRadar : AGear, IUpdateFrameable
         // 활성화 직후 즉시 첫 핑을 울리고 목록을 새로 수집합니다.
         _phase = 1f;
         _cache = null;
-    }
-
-    public void ExecuteUpdateFrame()
-    {
-        if (!IsActive) return;
-
-        // 매 프레임 현재 거리로 주기를 다시 계산합니다.
-        // 주기 중간에 가까워지면 진행률이 그만큼 빨리 차서 다음 핑이 앞당겨집니다.
-        float interval = ComputeInterval(out bool hasTarget);
-        if (interval <= 0f) return; // 방어
-
-        _phase += Time.deltaTime / interval;
-        if (_phase < 1f) return;
-
-        _phase = 0f;
-
-        if (hasTarget || _pingWhenNoTarget)
-        {
-            Ping();
-        }
     }
     #endregion
 }
