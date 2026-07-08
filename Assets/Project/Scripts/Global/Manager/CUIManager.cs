@@ -69,12 +69,13 @@ public class CUIManager : AMono
             }
         }
     }
+
     /// <summary>
     /// 이벤트를 수신받아 특정 UI를 열어주고 필요한 경우 캐싱합니다.
     /// </summary>
     private void OpenUI(OnRequestOpenUI ctx)
     {
-        EUI targetUI = ctx.UIType;
+        EUI targetUI = ctx.uIType;
         // 1. 이미 캐싱되어 생성된 인스턴스가 있다면 활성화만 해주고 종료
         if (_uiInstanceDict.TryGetValue(targetUI, out GameObject instance) && instance != null)
         {
@@ -106,7 +107,7 @@ public class CUIManager : AMono
     /// </summary>
     private void CloseUI(OnRequestCloseUI ctx)
     {
-        EUI targetUI = ctx.UIType;
+        EUI targetUI = ctx.uIType;
         // 딕셔너리에서 인스턴스를 찾고, 굳이 Destroy 하지 않고 SetActive(false)로 처리
         if (_uiInstanceDict.TryGetValue(targetUI, out GameObject instance) && instance != null)
         {
@@ -114,6 +115,5 @@ public class CUIManager : AMono
         }
     }
     #endregion
-
 
 }
