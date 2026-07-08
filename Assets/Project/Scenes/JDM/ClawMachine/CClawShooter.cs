@@ -51,12 +51,24 @@ public sealed class CClawShooter : AMono
     [SerializeField] private EAxis _armLengthAxis = EAxis.Z;
     [Tooltip("팔 큐브의 기본 두께(길이축 제외한 스케일)")]
     [SerializeField] private float _armThickness = 0.2f;
+
+    [Header("발톱 / 감지")]
+    [Tooltip("발톱 개폐 컴포넌트 (ClawHead의 CClawPincer)")]
+    [SerializeField] private CClawPincer _pincer;
+    [Tooltip("헤드 중심에서 잡을 대상을 찾는 반경")]
+    [SerializeField] private float _grabRadius = 0.6f;
+    [Tooltip("감지 대상 레이어 (비우면 전체)")]
+    [SerializeField] private LayerMask _grabMask = ~0;
+    [Tooltip("자동 집기: 발사 중 대상에 닿으면 자동으로 집음")]
+    [SerializeField] private bool _autoGrab = false;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private EState _state = EState.Idle;
     private Vector3 _targetPoint;  // 발사 시 월드에 고정되는 목표 지점
+    private Vector3 _fireDir;      // 발사 시 향한 방향 (복귀 중에도 이 방향 유지)
     private bool _prevFirePressed; // 키 엣지 감지용
+    private CCollectible _detected; // 감지된 잡기 후보 (5단계에서 실제로 잡음)
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -68,6 +80,7 @@ public sealed class CClawShooter : AMono
     private void Start()
     {
         if (_aim == null) _aim = _muzzle;
+        _fireDir = _aim.forward;
         SnapHeadToMuzzle();
     }
 
@@ -92,14 +105,14 @@ public sealed class CClawShooter : AMono
 
         if (!justPressed) return;
 
-        // 대기 중이면 발사, 뻗는 중이면 즉시 복귀(= 도중 집기 트리거의 토대)
+        // 대기 중이면 발사, 뻗는 중이면 집기(수동 모드의 집기 트리거)
         if (_state == EState.Idle)
         {
             Fire();
         }
         else if (_state == EState.Extending)
         {
-            _state = EState.Retracting;
+            BeginGrab();
         }
     }
     #endregion
@@ -110,8 +123,11 @@ public sealed class CClawShooter : AMono
     {
         Vector3 origin = _muzzle.position;
         Vector3 dir = _aim.forward;
+        _fireDir = dir;                        // 발사 방향 저장 (복귀 중에도 유지)
         _targetPoint = origin + dir * _maxDistance;
 
+        _detected = null;
+        if (_pincer != null) _pincer.Open(); // 발사 중엔 발톱 열림
         _state = EState.Extending;
     }
 
@@ -119,9 +135,26 @@ public sealed class CClawShooter : AMono
     {
         switch (_state)
         {
+            case EState.Idle:
+                // 대기 중엔 매 프레임 Muzzle을 따라다닌다 (플레이어가 움직여도 붙어 있음)
+                SnapHeadToMuzzle();
+                break;
+
             case EState.Extending:
+                // 복귀/발사 내내 발사 방향을 유지 (이동 방향으로 홱 돌지 않게)
+                _head.rotation = Quaternion.LookRotation(_fireDir);
                 MoveHeadToward(_targetPoint, _extendSpeed);
-                // 목표(최대 거리)에 거의 도달하면 복귀 시작
+
+                // 헤드 주변에서 잡을 대상(CCollectible) 감지
+                _detected = DetectCollectible();
+
+                // 자동 모드: 대상에 닿으면 즉시 집기
+                if (_autoGrab && _detected != null)
+                {
+                    BeginGrab();
+                    break;
+                }
+
                 if (ReachedTarget(_targetPoint))
                 {
                     _state = EState.Retracting;
@@ -129,32 +162,69 @@ public sealed class CClawShooter : AMono
                 break;
 
             case EState.Retracting:
+                // 복귀 중에도 발사했던 방향을 유지 (뒤로 돌지 않게)
+                _head.rotation = Quaternion.LookRotation(_fireDir);
                 MoveHeadToward(_muzzle.position, _retractSpeed);
-                // Muzzle로 돌아오면 대기
                 if (ReachedTarget(_muzzle.position))
                 {
-                    SnapHeadToMuzzle();
+                    if (_pincer != null) _pincer.Open(); // 대기 준비: 발톱 다시 열기
                     _state = EState.Idle;
                 }
                 break;
         }
     }
 
-    // 헤드를 목표점으로 일정 속도 이동 (Position). 헤드가 목표를 바라보게 회전도.
+    // 헤드를 목표점으로 일정 속도 이동 (Position만. 회전은 호출부가 발사 방향으로 유지).
     private void MoveHeadToward(Vector3 point, float speed)
     {
         _head.position = Vector3.MoveTowards(_head.position, point, speed * Time.deltaTime);
-
-        Vector3 look = point - _head.position;
-        if (look.sqrMagnitude > 0.0001f)
-        {
-            _head.rotation = Quaternion.LookRotation(look.normalized);
-        }
     }
 
     private bool ReachedTarget(Vector3 point)
     {
         return (_head.position - point).sqrMagnitude < 0.01f;
+    }
+
+    // 집기 트리거: 발톱을 닫고 복귀 상태로 전환한다.
+    // (이 단계에선 감지 여부만 로그. 실제 물리 잡기(FixedJoint)는 5단계.)
+    private void BeginGrab()
+    {
+        if (_pincer != null) _pincer.Close();
+
+        if (_detected != null)
+        {
+            UDebug.Print($"[집게] 집기 시도 → 대상 감지: {_detected.name}");
+        }
+        else
+        {
+            UDebug.Print("[집게] 집기 시도 → 대상 없음 (빈손 복귀)");
+        }
+
+        _state = EState.Retracting;
+    }
+
+    // 헤드 중심 주변에서 CCollectible을 가진 가장 가까운 대상을 찾는다.
+    private CCollectible DetectCollectible()
+    {
+        Collider[] hits = Physics.OverlapSphere(_head.position, _grabRadius, _grabMask);
+
+        CCollectible nearest = null;
+        float nearestSqr = float.MaxValue;
+
+        for (int i = 0; i < hits.Length; ++i)
+        {
+            // 콜라이더가 자식 Visual에 있을 수 있으니 부모까지 탐색
+            CCollectible c = hits[i].GetComponentInParent<CCollectible>();
+            if (c == null) continue;
+
+            float sqr = (c.transform.position - _head.position).sqrMagnitude;
+            if (sqr < nearestSqr)
+            {
+                nearestSqr = sqr;
+                nearest = c;
+            }
+        }
+        return nearest;
     }
 
     // 헤드를 Muzzle 위치/방향으로 스냅 (대기 상태)
@@ -201,6 +271,16 @@ public sealed class CClawShooter : AMono
             default:
                 return new Vector3(_armThickness, _armThickness, length);
         }
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 기즈모 ◀─────────────────────────
+    private void OnDrawGizmosSelected()
+    {
+        if (_head == null) return;
+
+        Gizmos.color = new Color(1f, 0.6f, 0.1f, 0.5f);
+        Gizmos.DrawWireSphere(_head.position, _grabRadius);
     }
     #endregion
 
