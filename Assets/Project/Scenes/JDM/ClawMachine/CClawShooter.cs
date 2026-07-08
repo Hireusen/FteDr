@@ -185,22 +185,34 @@ public sealed class CClawShooter : AMono
         return (_head.position - point).sqrMagnitude < 0.01f;
     }
 
-    // 집기 트리거: 발톱을 닫고 복귀 상태로 전환한다.
-    // (이 단계에선 감지 여부만 로그. 실제 물리 잡기(FixedJoint)는 5단계.)
+    // 집기 트리거: 발톱을 (물체 크기에 맞춰) 닫고 복귀 상태로 전환한다.
+    // (이 단계에선 감지/닫힘까지. 실제 물리 잡기(FixedJoint)는 5단계.)
     private void BeginGrab()
     {
-        if (_pincer != null) _pincer.Close();
-
         if (_detected != null)
         {
-            UDebug.Print($"[집게] 집기 시도 → 대상 감지: {_detected.name}");
+            float radius = GetObjectRadius(_detected);
+            if (_pincer != null) _pincer.CloseOnObject(radius);
+            UDebug.Print($"[집게] 집기 → 대상: {_detected.name} (반지름 {radius:F2})");
         }
         else
         {
-            UDebug.Print("[집게] 집기 시도 → 대상 없음 (빈손 복귀)");
+            if (_pincer != null) _pincer.Close();
+            UDebug.Print("[집게] 집기 → 대상 없음 (빈손 복귀)");
         }
 
         _state = EState.Retracting;
+    }
+
+    // 수집품의 콜라이더 bounds에서 대략적인 반지름을 구한다.
+    private float GetObjectRadius(CCollectible c)
+    {
+        Collider col = c.GetComponentInChildren<Collider>();
+        if (col == null) return 0f;
+
+        // bounds의 가로/세로 중 작은 쪽 절반을 반지름으로 (발톱이 무는 방향 기준 근사)
+        Vector3 ext = col.bounds.extents;
+        return Mathf.Min(ext.x, ext.z);
     }
 
     // 헤드 중심 주변에서 CCollectible을 가진 가장 가까운 대상을 찾는다.

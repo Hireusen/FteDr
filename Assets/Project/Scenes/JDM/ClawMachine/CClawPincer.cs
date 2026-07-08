@@ -19,16 +19,15 @@ public sealed class CClawPincer : AMono
     [Header("회전 설정")]
     [Tooltip("회전 축 (기본 Y)")]
     [SerializeField] private EAxis _axis = EAxis.Y;
-    [Tooltip("열렸을 때 각도(도)")]
+    [Tooltip("완전히 열렸을 때 각도(도)")]
     [SerializeField] private float _openAngle = 30f;
-    [Tooltip("닫혔을 때 각도(도)")]
+    [Tooltip("완전히 닫혔을 때(빈손) 각도(도)")]
     [SerializeField] private float _closeAngle = 0f;
     [Tooltip("여닫는 속도(도/초)")]
     [SerializeField] private float _speed = 360f;
 
-    [Header("시작 상태")]
-    [Tooltip("시작 시 닫힌 상태로")]
-    [SerializeField] private bool _startClosed = true;
+    [Tooltip("발톱 회전 중심에서 발톱 끝까지 길이 (크기 대응 각도 계산용)")]
+    [SerializeField] private float _fingerLength = 1f;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -39,20 +38,35 @@ public sealed class CClawPincer : AMono
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    /// <summary>현재 닫혀 있는지 여부입니다. (목표가 닫힘이고 거의 도달)</summary>
-    public bool IsClosed => Mathf.Approximately(_targetAngle, _closeAngle)
-                            && Mathf.Abs(_currentAngle - _closeAngle) < 1f;
+    /// <summary>현재 목표만큼 닫혀서 거의 도달했는지 여부입니다.</summary>
+    public bool IsSettled => Mathf.Abs(_currentAngle - _targetAngle) < 1f;
 
-    /// <summary>발톱을 엽니다.</summary>
+    /// <summary>발톱을 완전히 엽니다. (평상시)</summary>
     public void Open()
     {
         _targetAngle = _openAngle;
     }
 
-    /// <summary>발톱을 닫습니다.</summary>
+    /// <summary>발톱을 완전히 닫습니다. (빈손 잡기)</summary>
     public void Close()
     {
         _targetAngle = _closeAngle;
+    }
+
+    /// <summary>
+    /// 물체 반지름에 맞춰 표면에 닿을 만큼만 닫습니다.
+    /// 발톱 길이와 물체 반지름의 기하 관계로 목표 각도를 역산합니다.
+    /// </summary>
+    /// <param name="objectRadius">잡을 물체의 반지름(월드 단위)</param>
+    public void CloseOnObject(float objectRadius)
+    {
+        // 발톱이 벌어진 각도 θ일 때 두 발톱 끝 간격 ≈ 2 * fingerLength * sin(θ).
+        // 물체 지름(2r)에 맞추려면 sin(θ) = r / fingerLength.
+        float ratio = Mathf.Clamp01(objectRadius / Mathf.Max(0.0001f, _fingerLength));
+        float angle = Mathf.Asin(ratio) * Mathf.Rad2Deg;
+
+        // 완전 닫힘~완전 열림 범위로 제한 (물체가 발톱보다 크면 최대한 벌린 채 멈춤)
+        _targetAngle = Mathf.Clamp(angle, _closeAngle, _openAngle);
     }
     #endregion
 
@@ -63,7 +77,7 @@ public sealed class CClawPincer : AMono
         if (_fingerL != null) _baseL = _fingerL.localRotation;
         if (_fingerR != null) _baseR = _fingerR.localRotation;
 
-        _currentAngle = _startClosed ? _closeAngle : _openAngle;
+        _currentAngle = _openAngle; // 평상시 열린 상태로 시작
         _targetAngle = _currentAngle;
         ApplyRotation();
     }
