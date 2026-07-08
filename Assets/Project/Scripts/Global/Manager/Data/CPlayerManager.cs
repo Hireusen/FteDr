@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 플레이어의 런타임 데이터를 보유하고 스탯을 계산하는 매니저입니다.
@@ -58,8 +58,15 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     /// <param name="amount">소모량(양수)</param>
     public void ConsumeFuel(float amount)
     {
+        bool wasAboveZero = _runtime.currentFuel > 0f;
+
         _runtime.currentFuel = Mathf.Max(0f, _runtime.currentFuel - amount);
         PublishFuel();
+
+        if (wasAboveZero && _runtime.currentFuel <= 0f)
+        {
+            OnPlayerFuelDepleted.Publish();
+        }
     }
 
     /// <summary>연료를 회복합니다.</summary>
