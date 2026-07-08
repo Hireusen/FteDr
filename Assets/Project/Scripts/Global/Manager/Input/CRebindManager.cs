@@ -1,18 +1,9 @@
-using System;
+﻿using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 /// <summary>
-/// 키 리바인딩(커스텀 키 설정)을 담당하는 싱글톤입니다.
-/// CInputManager가 쓰는 InputActionAsset에 대해 대화형 리바인딩, 기본값 복원,
-/// 오버라이드 저장/복원을 제공합니다.
-///
-/// [저장] 바인딩 오버라이드를 JSON으로 뽑아 USaveFile("rebind")에 저장합니다.
-///        (볼륨/해상도 저장과 같은 로컬 세이브 도메인)
-///
-/// [다중 장치/플랫폼] 리바인딩은 InputActionAsset 전체에 작용하므로,
-///        에셋에 키보드/게임패드 등 여러 Binding·Control Scheme을 추가해 두면
-///        같은 코드로 장치 구분 없이 동작합니다. (에셋 설정은 에디터에서)
+/// 키 리바인딩을 담당하는 싱글톤 매니저입니다.
 /// </summary>
 public sealed class CRebindManager : ASingleton<CRebindManager>
 {
@@ -83,12 +74,12 @@ public sealed class CRebindManager : ASingleton<CRebindManager>
         }
 
         _op = _op.OnComplete(operation =>
-                 {
-                     action.Enable();
-                     DisposeOp();
-                     Save();
-                     onComplete?.Invoke();
-                 })
+        {
+            action.Enable();
+            DisposeOp();
+            Save();
+            onComplete?.Invoke();
+        })
                  .OnCancel(operation =>
                  {
                      action.Enable();
@@ -147,6 +138,34 @@ public sealed class CRebindManager : ASingleton<CRebindManager>
         if (action == null || bindingIndex >= action.bindings.Count) return "";
 
         return action.GetBindingDisplayString(bindingIndex);
+    }
+
+    /// <summary>
+    /// 액션에서 특정 그룹(Control Scheme)에 속한 첫 바인딩의 인덱스를 찾습니다.
+    /// 바인딩 인덱스를 손으로 세지 않고 "Jump의 PC 바인딩" 식으로 지정할 때 사용합니다.
+    /// 찾지 못하면 -1을 반환합니다.
+    /// </summary>
+    /// <param name="actionName">액션 이름 (예: "Jump")</param>
+    /// <param name="controlScheme">Control Scheme 이름 (예: "PC", "Gamepad")</param>
+    public int FindBindingIndex(string actionName, string controlScheme)
+    {
+        if (_asset == null) return -1;
+
+        InputAction action = _asset.FindAction(actionName);
+        if (action == null) return -1;
+
+        for (int i = 0; i < action.bindings.Count; ++i)
+        {
+            InputBinding b = action.bindings[i];
+            // composite(2D Vector 등)의 부모 헤더는 건너뜀 (실제 키가 아님)
+            if (b.isComposite) continue;
+            // groups에 해당 Control Scheme 이름이 포함되면 그 바인딩
+            if (!string.IsNullOrEmpty(b.groups) && b.groups.Contains(controlScheme))
+            {
+                return i;
+            }
+        }
+        return -1;
     }
     #endregion
 
