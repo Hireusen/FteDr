@@ -56,6 +56,13 @@ public sealed class CCollectibleSpawner : AMono
     /// <summary>이미 스폰이 완료(또는 진행)되었는지 여부입니다.</summary>
     public bool HasSpawned => _spawned;
 
+    [ContextMenu("추가 생성")]
+    public void AlwaysSpawn()
+    {
+        _spawned = false;
+        Spawn();
+    }
+
     /// <summary>수집품을 스폰합니다. 최초 1회만 실행됩니다.</summary>
     public void Spawn()
     {
