@@ -3,11 +3,11 @@
 /// </summary>
 public readonly struct OnRequestOpenUI
 {
-    public readonly EUI UIType;
+    public readonly EUI uIType;
 
     public OnRequestOpenUI(EUI uiType)
     {
-        UIType = uiType;
+        this.uIType = uiType;
     }
 
     /// <summary>
@@ -24,11 +24,11 @@ public readonly struct OnRequestOpenUI
 /// </summary>
 public readonly struct OnRequestCloseUI
 {
-    public readonly EUI UIType;
+    public readonly EUI uIType;
 
     public OnRequestCloseUI(EUI uiType)
     {
-        UIType = uiType;
+        this.uIType = uiType;
     }
 
     /// <summary>
