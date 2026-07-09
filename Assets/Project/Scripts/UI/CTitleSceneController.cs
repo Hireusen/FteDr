@@ -21,7 +21,6 @@ public class CTitleSceneController : AMono
 
     [Header("Transition Settings")]
     [SerializeField] private EScene _currentScene = EScene.Title;               // 현재 씬 ID (일반적으로 Title)
-    [SerializeField] private EScene _nextScene = EScene.Game;                   // 새 게임 시작 시 전환할 다음 씬 ID
     [SerializeField] private float _hoverScaleFactor = 1.08f;                   // 마우스 호버 시 버튼 확대 비율
     [SerializeField] private float _animationDuration = 0.15f;                  // 크기 변화 연출 시간
     #endregion
@@ -35,10 +34,7 @@ public class CTitleSceneController : AMono
         // 새 게임 버튼: 클릭 시 기존 구축된 OnSceneLoadStart 이벤트를 발행하여 씬 전환 시작
         if (_btnNewGame != null)
         {
-            _btnNewGame.onClick.AddListener(() =>
-            {
-                OnSceneLoadStart.Publish(_currentScene, _nextScene);
-            });
+            
         }
 
         // 이어하기 버튼: 세이브 데이터 로드 후 해당 저장된 씬으로 로딩을 유도하도록 확장 가능

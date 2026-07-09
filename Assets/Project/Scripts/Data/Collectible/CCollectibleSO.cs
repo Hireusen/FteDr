@@ -13,6 +13,7 @@ public class CCollectibleSO : AUnitSO
     [SerializeField] protected bool _isSpecial;
     [SerializeField] protected float _weight;
     [SerializeField] protected float _sellPrice; // 판매 가격
+    [SerializeField] protected ECollectibleRarity _rarity; // 등급
 
     [Header("크기 범위 (스폰 시 이 범위에서 랜덤)")]
     [SerializeField] protected float _minScale = 1f;
@@ -26,8 +27,9 @@ public class CCollectibleSO : AUnitSO
     public float SellPrice => _sellPrice;
     public float MinScale => _minScale;
     public float MaxScale => _maxScale;
+    public ECollectibleRarity CollectibleRarity => _rarity;
 
-    /// <summary>min~max 범위에서 랜덤한 크기 배율을 반환합니다.</summary>
+    /// <summary>Min ~ Max 범위에서 랜덤한 크기 배율을 반환합니다.</summary>
     public float GetRandomScale() => Random.Range(_minScale, _maxScale);
     #endregion
 
@@ -56,6 +58,10 @@ public class CCollectibleSO : AUnitSO
         if (_maxScale < _minScale)
         {
             errorList.Add($"{errorList.Count + 1}. 최대 크기 배율이 최소보다 작습니다.");
+        }
+        if(_rarity == ECollectibleRarity.None)
+        {
+            errorList.Add($"{errorList.Count + 1}. 수집품 등급이 설정되지 않았습니다.");
         }
     }
     #endregion

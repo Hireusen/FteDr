@@ -41,7 +41,6 @@ public class CUIManager : AMono
         CEventBus<OnRequestOpenUI>.Unsubscribe(OpenUI);
         CEventBus<OnRequestCloseUI>.Unsubscribe(CloseUI);
     }
-
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
