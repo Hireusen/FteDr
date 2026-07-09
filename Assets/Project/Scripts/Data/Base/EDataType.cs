@@ -17,6 +17,7 @@ public enum EDataType
     // 시스템
     Sound = 8,
     Spawner = 10,
+    UI = 11,
     // 가방
     Bag = 9,
 }

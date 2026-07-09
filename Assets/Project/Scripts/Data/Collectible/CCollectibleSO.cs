@@ -10,9 +10,11 @@ public class CCollectibleSO : AUnitSO
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("기본 정보")]
     [SerializeField] protected GameObject _prefab;
+    [SerializeField] protected Sprite _icon;
     [SerializeField] protected bool _isSpecial;
     [SerializeField] protected float _weight;
     [SerializeField] protected float _sellPrice; // 판매 가격
+    [SerializeField] protected ECollectibleRarity _rarity; // 등급
 
     [Header("크기 범위 (스폰 시 이 범위에서 랜덤)")]
     [SerializeField] protected float _minScale = 1f;
@@ -21,14 +23,23 @@ public class CCollectibleSO : AUnitSO
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public GameObject Prefab => _prefab;
+    public Sprite Icon => _icon;
     public bool IsSpecial => _isSpecial;
     public float Weight => _weight;
     public float SellPrice => _sellPrice;
     public float MinScale => _minScale;
     public float MaxScale => _maxScale;
+    public ECollectibleRarity CollectibleRarity => _rarity;
 
-    /// <summary>min~max 범위에서 랜덤한 크기 배율을 반환합니다.</summary>
+    /// <summary>Min ~ Max 범위에서 랜덤한 크기 배율을 반환합니다.</summary>
     public float GetRandomScale() => Random.Range(_minScale, _maxScale);
+    public void SetIcon(Sprite icon)
+    {
+        _icon = icon;
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(this);
+#endif
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -56,6 +67,10 @@ public class CCollectibleSO : AUnitSO
         if (_maxScale < _minScale)
         {
             errorList.Add($"{errorList.Count + 1}. 최대 크기 배율이 최소보다 작습니다.");
+        }
+        if(_rarity == ECollectibleRarity.None)
+        {
+            errorList.Add($"{errorList.Count + 1}. 수집품 등급이 설정되지 않았습니다.");
         }
     }
     #endregion

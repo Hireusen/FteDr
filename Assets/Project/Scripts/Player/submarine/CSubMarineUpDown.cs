@@ -1,6 +1,5 @@
 ﻿using Cinemachine;
 using System.Collections;
-using System.ComponentModel.Design.Serialization;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 

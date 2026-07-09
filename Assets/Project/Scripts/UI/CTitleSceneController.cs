@@ -2,143 +2,126 @@
 using UnityEngine.UI;
 
 /// <summary>
-/// 타이틀 씬의 UI 제어를 담당하며, 기존 CEventBus 및 EScene 구조를 활용하여 씬 로딩을 요청하는 컨트롤러입니다.
+/// 타이틀 씬의 버튼과 씬 전환을 담당하는 컨트롤러입니다.
+/// 새 게임/이어하기 시 데이터를 처리한 뒤 다음 씬으로 페이드 전환합니다.
 /// </summary>
 public class CTitleSceneController : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
-    [Header("Title Buttons")]
-    [SerializeField] private Button _btnNewGame;                                // 새 게임 버튼
-    [SerializeField] private Button _btnLoad;                                   // 이어하기 버튼
-    [SerializeField] private Button _btnOptions;                                // 옵션 버튼
-    [SerializeField] private Button _btnCredits;                                // 크레딧 버튼
+    [Header("타이틀 버튼")]
+    [SerializeField] private Button _btnNewGame;  // 새 게임
+    [SerializeField] private Button _btnLoad;      // 이어하기
+    [SerializeField] private Button _btnOptions;   // 옵션
+    [SerializeField] private Button _btnCredits;   // 크레딧
 
-    [Header("Popup UI Panels (Local)")]
-    [SerializeField] private GameObject _panelOptions;                          // 로컬 옵션 패널 (필요시 사용)
-    [SerializeField] private GameObject _panelCredits;                          // 로컬 크레딧 패널 (로컬 토글용)
-    [SerializeField] private Button _btnCloseOptions;                           // 옵션 패널 닫기 버튼
-    [SerializeField] private Button _btnCloseCredits;                           // 크레딧 패널 닫기 버튼
-
-    [Header("Transition Settings")]
-    [SerializeField] private EScene _currentScene = EScene.Title;               // 현재 씬 ID (일반적으로 Title)
-    [SerializeField] private EScene _nextScene = EScene.Game;                   // 새 게임 시작 시 전환할 다음 씬 ID
-    [SerializeField] private float _hoverScaleFactor = 1.08f;                   // 마우스 호버 시 버튼 확대 비율
-    [SerializeField] private float _animationDuration = 0.15f;                  // 크기 변화 연출 시간
+    [Header("씬 전환 / 연출")]
+    [SerializeField] private float _fadeOutDuration = 0.45f; // 페이드 아웃 시간
+    [SerializeField] private float _fadeInDuration = 0.45f;  // 페이드 인 시간
+    [SerializeField] private Color _fadeColor = Color.black; // 페이드 색
+    [SerializeField] private float _hoverScaleFactor = 1.08f; // 호버 확대 비율
+    [SerializeField] private float _animationDuration = 0.15f; // 크기 변화 연출 시간
     #endregion
 
-    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    /// <summary>
-    /// 버튼들의 클릭 이벤트를 등록합니다.
-    /// </summary>
-    private void InitButtonEvents()
-    {
-        // 새 게임 버튼: 클릭 시 기존 구축된 OnSceneLoadStart 이벤트를 발행하여 씬 전환 시작
-        if (_btnNewGame != null)
-        {
-            _btnNewGame.onClick.AddListener(() =>
-            {
-                OnSceneLoadStart.Publish(_currentScene, _nextScene);
-            });
-        }
-
-        // 이어하기 버튼: 세이브 데이터 로드 후 해당 저장된 씬으로 로딩을 유도하도록 확장 가능
-        if (_btnLoad != null)
-        {
-            _btnLoad.onClick.AddListener(OnLoadGameClicked);
-        }
-
-        // 옵션 버튼: 로컬 패널을 켜는 게 아니라, 전역 매니저에게 요청
-        if (_btnOptions != null)
-        {
-            _btnOptions.onClick.AddListener(() =>
-            {
-                OnRequestOpenUI.Publish(EUI.SettingsWindow);
-            });
-        }
-
-        // 크레딧 버튼: 로컬 패널을 켜는 게 아니라, 전역 매니저에게 요청
-        if (_btnCredits != null)
-        {
-            _btnCredits.onClick.AddListener(() =>
-            {
-                OnRequestOpenUI.Publish(EUI.CreditsWindow);
-            });
-        }
-    }
-
-    /// <summary>
-    /// 각 버튼 오브젝트에 반응형 스케일 연출 스크립트를 동적으로 장착 및 파라미터를 주입합니다.
-    /// </summary>
-    private void SetupResponsiveButtons()
-    {
-        // GC 방지를 위해 1차원 배열을 만들어 indexing 루프로 초기화 진행 (for 루프 사용 규칙 준수)
-        Button[] targetButtons = new Button[] { _btnNewGame, _btnLoad, _btnOptions, _btnCredits };
-
-        for (int i = 0; i < targetButtons.Length; i++)
-        {
-            if (targetButtons[i] != null)
-            {
-                GameObject buttonObj = targetButtons[i].gameObject;
-
-                // 이미 해당 스크립트가 컴포넌트로 붙어있는지 검사 후 동적 추가 (중복 방지)
-                ScaleResponsiveButton responsiveScript = buttonObj.GetComponent<ScaleResponsiveButton>();
-                if (responsiveScript == null)
-                {
-                    responsiveScript = buttonObj.AddComponent<ScaleResponsiveButton>();
-                }
-
-                // 설정된 딜레이 및 크기 주입
-                responsiveScript.Initialize(_hoverScaleFactor, _animationDuration);
-            }
-        }
-    }
-
-    /// <summary>
-    /// 이어하기 클릭 시의 로직입니다.
-    /// </summary>
-    private void OnLoadGameClicked()
-    {
-        UDebug.Print("[CTitleSceneController] 이어하기 기능이 호출되었습니다.");
-
-        // EScene savedScene = SaveSystem.GetLastSavedScene();
-        // OnSceneLoadStart.Publish(_currentScene, savedScene);
-    }
-
-    /// <summary>
-    /// 로컬 옵션 패널을 켜거나 끕니다.
-    /// </summary>
-    private void ToggleOptionsPanel(bool isActive)
-    {
-        if (_panelOptions != null)
-        {
-            _panelOptions.SetActive(isActive);
-        }
-    }
-
-    /// <summary>
-    /// 로컬 크레딧 패널을 켜거나 끕니다.
-    /// </summary>
-    private void ToggleCreditsPanel(bool isActive)
-    {
-        if (_panelCredits != null)
-        {
-            _panelCredits.SetActive(isActive);
-        }
-    }
+    #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
+    private bool _transitioning; // 씬 전환 중복 방지
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Start()
     {
-        // 모든 버튼 클릭 이벤트 바인딩
         InitButtonEvents();
-
-        // 버튼들의 마우스 호버 확대 연출 자동 셋업
         SetupResponsiveButtons();
+        RefreshLoadButton();
+    }
+    #endregion
 
-        // [초기화 원칙] 시작 시 옵션 패널과 크레딧 패널은 비활성화 상태로 세팅
-        ToggleOptionsPanel(false);
-        ToggleCreditsPanel(false);
+    #region ─────────────────────────▶ 버튼 초기화 ◀─────────────────────────
+    // 버튼 클릭 이벤트를 등록한다.
+    private void InitButtonEvents()
+    {
+        if (_btnNewGame != null) _btnNewGame.onClick.AddListener(OnNewGameClicked);
+        if (_btnLoad != null) _btnLoad.onClick.AddListener(OnLoadGameClicked);
+
+        // 옵션/크레딧: 로컬 패널을 직접 켜지 않고 전역 UI 매니저(CUIManager)에 열기 요청
+        if (_btnOptions != null) _btnOptions.onClick.AddListener(() => OnRequestOpenUI.Publish(EUI.SettingsWindow));
+        if (_btnCredits != null) _btnCredits.onClick.AddListener(() => OnRequestOpenUI.Publish(EUI.CreditsWindow));
+    }
+
+    // 각 버튼에 호버 확대 연출 컴포넌트를 동적으로 장착하고 파라미터를 주입한다.
+    private void SetupResponsiveButtons()
+    {
+        Button[] targets = { _btnNewGame, _btnLoad, _btnOptions, _btnCredits };
+
+        for (int i = 0; i < targets.Length; ++i)
+        {
+            if (targets[i] == null) continue;
+
+            GameObject go = targets[i].gameObject;
+            ScaleResponsiveButton responsive = go.GetComponent<ScaleResponsiveButton>();
+            if (responsive == null) responsive = go.AddComponent<ScaleResponsiveButton>();
+
+            responsive.Initialize(_hoverScaleFactor, _animationDuration);
+        }
+    }
+
+    // 저장 데이터가 없으면 이어하기 버튼을 비활성화한다.
+    private void RefreshLoadButton()
+    {
+        if (_btnLoad == null) return;
+
+        _btnLoad.interactable = CProgressManager.Ins.HasSave;
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 버튼 동작 ◀─────────────────────────
+    // 새 게임
+    private void OnNewGameClicked()
+    {
+        if (_transitioning) return;
+
+        CProgressManager.Ins.ResetProgress(); // 진행도 초기화(저장 파일 삭제)
+        UPlayer.ResetForNew();                // 런타임 데이터 초기화
+        UDebug.Print("새 게임 시작 → 데이터 초기화 완료");
+
+        MoveToNextScene();
+    }
+
+    // 이어하기
+    private void OnLoadGameClicked()
+    {
+        if (_transitioning) return;
+        if (!CProgressManager.Ins.HasSave)
+        {
+            UDebug.Print("저장 데이터가 없어 이어하기를 취소합니다.", LogType.Warning);
+            return;
+        }
+
+        CProgressManager.Ins.Load(); // 저장된 진행도 로드
+        UDebug.Print("이어하기 → 진행도 로드 완료");
+
+        MoveToNextScene();
+    }
+
+    // 다음 빌드 씬으로 페이드 전환한다.
+    private void MoveToNextScene()
+    {
+        ApplyFadeColor();
+
+        _transitioning = true;
+        bool started = UScene.NextLoadWithFade(0f, _fadeOutDuration, _fadeInDuration);
+        if (!started)
+        {
+            UDebug.Print("다음 씬이 빌드 세팅 범위를 벗어났습니다.", LogType.Error);
+            _transitioning = false;
+        }
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    // 페이드 색을 UFade에 반영한다.
+    private void ApplyFadeColor()
+    {
+        UFade.SetColor(_fadeColor);
     }
     #endregion
 }

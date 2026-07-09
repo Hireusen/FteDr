@@ -52,6 +52,8 @@ public sealed class CBootManager : MonoBehaviour
 
     private void ManagerSpawner(GameObject root)
     {
+        var rebindManager = root.GetOrAddComponent<CRebindManager>(); // InputManager 이전에 생성
+        rebindManager.EntryInitialize();
         var inputManager = root.GetOrAddComponent<CInputManager>();
         inputManager.EntryInitialize();
         var frameManager = root.GetOrAddComponent<CFrameManager>();
