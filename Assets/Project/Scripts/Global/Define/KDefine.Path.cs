@@ -6,6 +6,9 @@ public static partial class K
     // 문자열 ID 폴더 경로
     public const string STRING_ID_EXPORT_PATH = "Assets/Project/Scripts/Global/Define";
 
+    // 아이템 아이콘 스프라이트 경로
+    public const string ITEM_ICON_EXPORT_PATH = "Assets/Project/Visual/Sprites";
+
     // 오디오 에셋 폴더 경로
     public const string SOUND_IMPORT_PATH = "Assets/Project/Audios";
     public const string SOUND_EXPORT_PATH = "Assets/Resources/ScriptableObjects/Sound";

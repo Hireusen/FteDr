@@ -10,6 +10,7 @@ public class CCollectibleSO : AUnitSO
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("기본 정보")]
     [SerializeField] protected GameObject _prefab;
+    [SerializeField] protected Sprite _icon;
     [SerializeField] protected bool _isSpecial;
     [SerializeField] protected float _weight;
     [SerializeField] protected float _sellPrice; // 판매 가격
@@ -22,6 +23,7 @@ public class CCollectibleSO : AUnitSO
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public GameObject Prefab => _prefab;
+    public Sprite Icon => _icon;
     public bool IsSpecial => _isSpecial;
     public float Weight => _weight;
     public float SellPrice => _sellPrice;
@@ -31,6 +33,13 @@ public class CCollectibleSO : AUnitSO
 
     /// <summary>Min ~ Max 범위에서 랜덤한 크기 배율을 반환합니다.</summary>
     public float GetRandomScale() => Random.Range(_minScale, _maxScale);
+    public void SetIcon(Sprite icon)
+    {
+        _icon = icon;
+#if UNITY_EDITOR
+        UnityEditor.EditorUtility.SetDirty(this);
+#endif
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────

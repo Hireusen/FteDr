@@ -74,7 +74,7 @@ public class CTitleSceneController : AMono
     #endregion
 
     #region ─────────────────────────▶ 버튼 동작 ◀─────────────────────────
-    // 새 게임: 진행도/런타임 데이터를 초기화하고 다음 씬으로.
+    // 새 게임
     private void OnNewGameClicked()
     {
         if (_transitioning) return;
@@ -86,7 +86,7 @@ public class CTitleSceneController : AMono
         MoveToNextScene();
     }
 
-    // 이어하기: 저장된 진행도를 로드하고 다음 씬으로. (버튼은 저장 있을 때만 활성)
+    // 이어하기
     private void OnLoadGameClicked()
     {
         if (_transitioning) return;

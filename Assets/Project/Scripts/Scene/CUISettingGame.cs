@@ -1,5 +1,5 @@
 ﻿/// <summary>
-/// 씬 시작 시 Ui를 타이틀 씬에 맞게 정리합니다.
+/// 씬 시작 시 Ui를 게임 씬에 맞게 정리합니다.
 /// </summary>
 public class CUISettingGame : AMono
 {
