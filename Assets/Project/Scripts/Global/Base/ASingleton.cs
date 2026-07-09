@@ -81,7 +81,7 @@ public abstract class ASingleton<T> : AMono where T : AMono
         // 중복 싱글톤 방어
         if (_instance != null && _instance != this)
         {
-            Destroy(gameObject);
+            Destroy(this);
             UDebug.Print($"중복 싱글톤({gameObject.name}<{typeof(T).ToString()}>)을 삭제했습니다.");
             return;
         }

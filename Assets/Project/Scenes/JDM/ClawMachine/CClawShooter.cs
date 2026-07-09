@@ -4,7 +4,6 @@ using UnityEngine.InputSystem;
 /// <summary>
 /// [3단계] 집게 발사 & 복귀. 카메라 정면으로 집게 헤드를 뻗고 되돌립니다.
 ///
-/// [핵심 설계 — 팀원이 막힌 Scale 문제의 해법]
 ///   - 집게 헤드(콜라이더 O)는 Scale이 아니라 Position으로 이동한다. → 물리가 깨지지 않음.
 ///   - 발사 순간 목표 지점을 월드 좌표에 고정한다. → 플레이어가 움직여도 헤드는 그 자리.
 ///   - 팔(콜라이더 X 비주얼)은 매 프레임 Muzzle↔Head를 잇도록 Scale/회전만 갱신.
@@ -204,14 +203,23 @@ public sealed class CClawShooter : AMono
         _state = EState.Retracting;
     }
 
-    // 수집품의 콜라이더 bounds에서 대략적인 반지름을 구한다.
+    // 수집품의 모든 콜라이더 bounds를 합쳐 대략적인 반지름을 구한다.
+    // (다중 Visual = 콜라이더 여러 개인 경우까지 전체를 감싸도록)
+    // bounds 읽기는 삼각형 수와 무관한 상수 비용이고, 집는 순간 1회만 호출되므로 성능 부담 없음.
     private float GetObjectRadius(CCollectible c)
     {
-        Collider col = c.GetComponentInChildren<Collider>();
-        if (col == null) return 0f;
+        Collider[] cols = c.GetComponentsInChildren<Collider>();
+        if (cols.Length == 0) return 0f;
 
-        // bounds의 가로/세로 중 작은 쪽 절반을 반지름으로 (발톱이 무는 방향 기준 근사)
-        Vector3 ext = col.bounds.extents;
+        // 첫 콜라이더로 bounds 초기화 후 나머지를 합침
+        Bounds total = cols[0].bounds;
+        for (int i = 1; i < cols.Length; ++i)
+        {
+            total.Encapsulate(cols[i].bounds);
+        }
+
+        // 무는 방향(가로/세로) 기준 근사 반지름 = 가로·세로 절반 중 작은 쪽
+        Vector3 ext = total.extents;
         return Mathf.Min(ext.x, ext.z);
     }
 

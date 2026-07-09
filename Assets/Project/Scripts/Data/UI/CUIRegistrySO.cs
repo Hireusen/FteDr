@@ -78,7 +78,7 @@ public class CUIRegistrySO : ABaseSO
         base.Reset();
 
         _id = "UI_Registry";
-        _type = EDataType.None;
+        _type = EDataType.UI;
     }
     #endregion
 }

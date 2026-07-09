@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 영속 진행도를 보유하고 디스크에 저장하는 매니저입니다.
@@ -134,6 +134,9 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
         Save();
     }
     #endregion
+
+    /// <summary>저장된 진행도 파일이 존재하는지 여부입니다.</summary>
+    public bool HasSave => USaveFile.Exists(FILE_NAME);
 
     /// <summary>현재 진행도를 로컬 파일에 저장합니다.</summary>
     public void Save()
