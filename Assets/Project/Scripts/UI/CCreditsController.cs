@@ -16,7 +16,7 @@ public class CCreditsController : AMono
 
     [Header("Scroll Setting")]
     [SerializeField] private float _scrollSpeed = 80f;              // 초당 이동 거리 (위로 상승)
-    [SerializeField] private float _delayBeforeScroll = 3.0f;       // 첫 화면 노출 후 대기 시간 (3초)
+    [SerializeField] private float _delayBeforeScroll = 2.0f;       // 첫 화면 노출 후 대기 시간 (2초)
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -128,10 +128,10 @@ public class CCreditsController : AMono
 
         // 0.5초 동안 화면을 밝혀서 첫 줄이 있는 크레딧 창을 노출
         bool isFadeInComplete = false;
-        UFade.FadeIn(0.5f, blockRaycasts: true, onComplete: () => isFadeInComplete = true);
+        UFade.FadeIn(0.3f, blockRaycasts: true, onComplete: () => isFadeInComplete = true);
         yield return new WaitUntil(() => isFadeInComplete);
 
-        // 정지 상태에서 3초간 대기
+        // 정지 상태에서 2초간 대기
         yield return new WaitForSeconds(_delayBeforeScroll);
 
         // 위로 올라가려면 Y값이 증가해야 하므로, 종료 Y가 시작 Y보다 큽니다 (_endPositionY > _startPositionY)
@@ -171,7 +171,7 @@ public class CCreditsController : AMono
     {
         _closeButton.interactable = false;
 
-        UFade.FadeOut(0.5f, blockRaycasts: true, onComplete: () =>
+        UFade.FadeOut(0.3f, blockRaycasts: true, onComplete: () =>
         {
             gameObject.SetActive(false);
             _closeButton.interactable = true;
