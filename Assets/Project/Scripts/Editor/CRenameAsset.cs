@@ -100,7 +100,7 @@ public class CRenameAsset : EditorWindow
     private string BuildNewName(string original)
     {
         // 1) 공백/언더바를 경계로 단어 분리 (빈 단어 제거)
-        string[] words = original.Split(new[] { ' ', '_' }, System.StringSplitOptions.RemoveEmptyEntries);
+        string[] words = original.Split(new[] { ' ', '_', '-' }, System.StringSplitOptions.RemoveEmptyEntries);
 
         // 2) 각 단어 첫 문자 대소문자 변환
         if (_capitalMode != ECapitalMode.None)
