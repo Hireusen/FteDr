@@ -31,12 +31,16 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     private Vector2 _currentLookInput;
     private float _yaw;
     private float _pitch;
+
+    private bool _controlSuspended;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public ELateUpdatePriority LateUpdatePriority => ELateUpdatePriority.Lv5;
 
     public float LookSensitivity => _lookSensitivity;
+
+    public bool IsControlling => !_controlSuspended;
 
     public void ExecuteLateUpdateFrame()
     {
@@ -68,6 +72,34 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         _camTransform.SetPositionAndRotation(_cameraRoot.position, _cameraRoot.rotation);
 
         _currentLookInput = Vector2.zero;
+    }
+
+    /// <summary>
+    /// 카메라 제어권을 외부(시네머신 연출 등)에 넘기거나 되돌립니다.<br/>
+    /// suspend=true 면 이 스크립트가 카메라 트랜스폼을 건드리지 않아, 시네머신 브레인이 온전히 제어합니다.<br/>
+    /// suspend=false 로 되돌릴 때는 현재 카메라 자세에 맞춰 yaw/pitch 를 재동기화해 시선이 튀지 않게 합니다.
+    /// </summary>
+    public void SetControlSuspended(bool controlSuspended)
+    {
+        if (_controlSuspended == controlSuspended) return;
+
+        _controlSuspended = controlSuspended;
+
+        if (controlSuspended && _camTransform != null)
+        {
+            Vector3 e = _camTransform.eulerAngles;
+            _yaw = e.y;
+            _pitch = NormalizePitch(e.x);
+            _currentLookInput = Vector2.zero;
+        }
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    private float NormalizePitch(float euler)
+    {
+        if (euler > 180f) euler -= 360f;
+        return euler;
     }
     #endregion
 
