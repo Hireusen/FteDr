@@ -15,6 +15,8 @@ public class CTwizers : AFrameable, IUpdateFrameable
     [SerializeField] private CFinger _finger2;
     [SerializeField] private GameObject _finger1Real;
     [SerializeField] private GameObject _finger2Real;
+    [SerializeField] private BoxCollider _finger1OutCollider;
+    [SerializeField] private BoxCollider _finger2OutCollider;
     [SerializeField] private float _grabSpeed = 10f;
     [SerializeField] private float _grab1OpenAngle = 30;
     [SerializeField] private float _grab1CloseAngle = -16;
@@ -40,6 +42,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private Collider _finger1Col;
     private Collider _finger2Col;
     private Collider _objectCol;
+    
 
     private float grabTimer = 0f;
     private float openTimer = 0f;
@@ -137,6 +140,8 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 _objectCol=grabInfo.crashedObject.GetComponent<BoxCollider>();
                 Physics.IgnoreCollision(_finger1Col, _objectCol,true);
                 Physics.IgnoreCollision(_finger2Col, _objectCol, true);
+                Physics.IgnoreCollision(_finger1OutCollider, _objectCol, true);
+                Physics.IgnoreCollision(_finger2OutCollider, _objectCol, true);
 
 
 
@@ -204,6 +209,8 @@ public class CTwizers : AFrameable, IUpdateFrameable
     {
         Physics.IgnoreCollision(_finger1Col, _objectCol, false);
         Physics.IgnoreCollision(_finger2Col, _objectCol, false);
+        Physics.IgnoreCollision(_finger1OutCollider, _objectCol, false);
+        Physics.IgnoreCollision(_finger2OutCollider, _objectCol, false);
     }
     #endregion
 
