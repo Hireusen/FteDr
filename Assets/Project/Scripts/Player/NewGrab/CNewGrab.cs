@@ -8,26 +8,30 @@ using UnityEngine;
 public class CNewGrab : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
-    [SerializeField] GameObject shoulder;
-    [SerializeField] GameObject arm;
-    [SerializeField] GameObject armEndPivot;
-    [SerializeField] GameObject twizers;
-    [SerializeField] ConfigurableJoint twizersJointToArm;
-    [SerializeField] float ShootForce = 10f;
-    [SerializeField] float ShrinkSpeed = 10f;
-    [SerializeField] float twizersRotateSpeed = 1f;
-    [SerializeField] Transform playerCam;
-    [SerializeField] float maxdistance=3f;
+    [SerializeField] private GameObject _shoulder;
+    [SerializeField] private GameObject _arm;
+    [SerializeField] private GameObject _armEndPivot;
+    [SerializeField] private GameObject _twizersAnchor;
+    [SerializeField] private CTwizers _twizers;
+    [SerializeField] private ConfigurableJoint _twizersJointToArm;
+    [SerializeField] private float _ShootForce = 10f;
+    [SerializeField] private float _ShrinkSpeed = 10f;
+    [SerializeField] private float _twizersRotateSpeed = 1f;
+
+    [SerializeField] private Transform _playerCam;
+    [SerializeField] private float _maxdistance=3f;
+    
+    
 
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private ConfigurableJoint armJoint;
-    private Rigidbody armRigidBody;
-    private Rigidbody twizersRigidBody;
-    private Rigidbody shoulderRg;
-    private float armOriginScale;
-    private float armOriginLength;
+    private ConfigurableJoint _armJoint;
+    private Rigidbody _armRigidBody;
+    private Rigidbody _twizersRigidBody;
+    private Rigidbody _shoulderRg;
+    private float _armOriginScale;
+    private float _armOriginLength;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -44,7 +48,7 @@ public class CNewGrab : AMono
     public EGrabStatus grabStatus=EGrabStatus.Wait;
     public void ShootWrist()
     {
-        twizersRigidBody.isKinematic = false;
+        _twizersRigidBody.isKinematic = false;
         //twizersRigidBody.AddForce(ShootForce * playerCam.forward, ForceMode.Impulse);
     }
     #endregion
@@ -66,74 +70,88 @@ public class CNewGrab : AMono
     }
     private bool DistanceCk()
     {
-        float distance = (arm.transform.position - twizers.transform.position).magnitude;
-        if (distance < maxdistance) return true;
+        float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
+        if (distance < _maxdistance) return true;
         else return false;
     }
     private void ShootWristContinuous()
     {
-        //충돌하면 중지해야함, 거리제한되면 중지해야함.
-        //
-        twizersRigidBody.AddForce(playerCam.transform.forward * ShootForce, ForceMode.Force);
+        _twizersRigidBody.AddForce(_playerCam.transform.forward * _ShootForce, ForceMode.Force);
         //부력 보정
-        Vector3 velocity = twizersRigidBody.velocity;
+        Vector3 velocity = _twizersRigidBody.velocity;
         velocity.y *= 0.5f;
-        twizersRigidBody.velocity = velocity;
+        _twizersRigidBody.velocity = velocity;
 
 
         //거리제한되면 자동으로 그랩동작을 시행한 다음 회수해야한다. 지금은 물리연결로 바로 넘어가는데 잡기->물리연결이 되어야 한다.
         if (!DistanceCk())
         {
-            ConnectTwizers();
+            print("거리제한");
+            ChangeStatus(EGrabStatus.Grab);
         }
 
     }
     private bool BringDistanceCk()
     {
-        float distance = (arm.transform.position - twizers.transform.position).magnitude;
-        if(distance<=armOriginLength) return true;
+        float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
+        if(distance<=_armOriginLength) return true;
         else return false;
     }
     private void ExtendArm()
     {
 
-        Vector3 dir = (twizers.transform.position - arm.transform.position);
+        Vector3 dir = (_twizersAnchor.transform.position - _arm.transform.position);
         float distance = dir.magnitude;
 
-        arm.transform.forward = dir.normalized;
+        _arm.transform.forward = dir.normalized;
 
-        Vector3 scale = arm.transform.localScale;
-        scale.z = distance / armOriginLength * armOriginScale;
-        arm.transform.localScale = scale;
+        Vector3 scale = _arm.transform.localScale;
+        scale.z = distance / _armOriginLength * _armOriginScale;
+        _arm.transform.localScale = scale;
         
-
-    }
-    private void ConnectTwizers()
-    {
-        grabStatus = EGrabStatus.Connect;
-        armRigidBody.isKinematic = false;
-        JointOn(twizersJointToArm, armRigidBody);
-        JointOn(armJoint, shoulderRg);
-        twizersJointToArm.connectedAnchor = armEndPivot.transform.localPosition;
-
 
     }
     private void ShrinkArm()
     {
-        Vector3 scale = arm.transform.localScale;
-        scale.z -= ShrinkSpeed * Time.deltaTime;
-        arm.transform.localScale = scale;
+        Vector3 scale = _arm.transform.localScale;
+        scale.z -= _ShrinkSpeed * Time.deltaTime;
+        _arm.transform.localScale = scale;
 
         //팔이 줄어드는 힘을 따로 구현하고 싶으면 이런식으로 구현해야 함.
         //Vector3 dir=(armEndPivot.transform.position-twizers.transform.position).normalized;
 
-        twizersJointToArm.connectedAnchor = armEndPivot.transform.localPosition;
+        _twizersJointToArm.connectedAnchor = _armEndPivot.transform.localPosition;
     }
     private void ChangeStatus(EGrabStatus status)
     {
+        if (grabStatus == status) return;
+
         switch (status)
         {
             case EGrabStatus.Wait:
+                print("상태변경>wait");
+                grabStatus = EGrabStatus.Wait;
+                break;
+            case EGrabStatus.Shooting:
+                _twizers.OpenGrabContinuous();
+                print("상태변경>shooting");
+                grabStatus= EGrabStatus.Shooting;
+                
+                break;
+            case EGrabStatus.Grab:
+                print("상태변경>grab");
+                grabStatus = EGrabStatus.Grab;
+                _twizersRigidBody.isKinematic = true;
+                _twizers.GrabContinuous();
+                break;
+            case EGrabStatus.Connect:
+                print("상태변경>connect");
+                _twizersRigidBody.isKinematic = false;
+                _armRigidBody.isKinematic = false;
+                JointOn(_twizersJointToArm, _armRigidBody);
+                JointOn(_armJoint, _shoulderRg);
+                _twizersJointToArm.connectedAnchor = _armEndPivot.transform.localPosition;
+                grabStatus = EGrabStatus.Connect;
                 break;
         }
     }
@@ -146,15 +164,15 @@ public class CNewGrab : AMono
         yield return null;
         float timeLimit = 2f;
         float timer = 0;
-        twizers.transform.SetParent(arm.transform, true);
+        _twizersAnchor.transform.SetParent(_arm.transform, true);
         while(timer<timeLimit)
         {
             timer += Time.deltaTime;
-            arm.transform.localRotation = Quaternion.Slerp(arm.transform.localRotation, Quaternion.Euler(3, -90, -90), timer / timeLimit);
+            _arm.transform.localRotation = Quaternion.Slerp(_arm.transform.localRotation, Quaternion.Euler(3, -90, -90), timer / timeLimit);
             yield return null;
         }
-        arm.transform.localRotation = Quaternion.Euler(3, -90, -90);
-        twizers.transform.SetParent(shoulder.transform, true);
+        _arm.transform.localRotation = Quaternion.Euler(3, -90, -90);
+        _twizersAnchor.transform.SetParent(_shoulder.transform, true);
         grabStatus = EGrabStatus.Wait;
     }
   
@@ -163,13 +181,14 @@ public class CNewGrab : AMono
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
-        armJoint=arm.GetComponent<ConfigurableJoint>();
-        twizersJointToArm=twizers.GetComponent<ConfigurableJoint>();
-        armRigidBody=arm.GetComponent<Rigidbody>();
-        shoulderRg = shoulder.GetComponent<Rigidbody>();
-        twizersRigidBody=twizers.GetComponent<Rigidbody>();
-        armOriginScale = arm.transform.localScale.z;
-        armOriginLength= (arm.transform.position - armEndPivot.transform.position).magnitude;
+        _armJoint=_arm.GetComponent<ConfigurableJoint>();
+        _twizersJointToArm=_twizersAnchor.GetComponent<ConfigurableJoint>();
+        _armRigidBody=_arm.GetComponent<Rigidbody>();
+        _shoulderRg = _shoulder.GetComponent<Rigidbody>();
+        _twizersRigidBody=_twizersAnchor.GetComponent<Rigidbody>();
+        _armOriginScale = _arm.transform.localScale.z;
+        _armOriginLength= (_arm.transform.position - _armEndPivot.transform.position).magnitude;
+       
 
 
     }
@@ -181,21 +200,21 @@ public class CNewGrab : AMono
                 if (Input.GetKey(KeyCode.Q))
                 {
                     //왼쪽집게회전
-                    Quaternion temp = twizers.transform.localRotation;
-                    temp.x -= twizersRotateSpeed * Time.deltaTime;
-                    twizers.transform.localRotation = temp;
+                    Quaternion temp = _twizersAnchor.transform.localRotation;
+                    temp.x -= _twizersRotateSpeed * Time.deltaTime;
+                    _twizersAnchor.transform.localRotation = temp;
                 }
                 if (Input.GetKey(KeyCode.E))
                 {
-                    Quaternion temp = twizers.transform.localRotation;
-                    temp.x += twizersRotateSpeed * Time.deltaTime;
-                    twizers.transform.localRotation = temp;
+                    Quaternion temp = _twizersAnchor.transform.localRotation;
+                    temp.x += _twizersRotateSpeed * Time.deltaTime;
+                    _twizersAnchor.transform.localRotation = temp;
                     //오른집게회전
                 }
                 if (Input.GetKey(KeyCode.K))
                 {
                     ShootWrist();
-                    grabStatus = EGrabStatus.Shooting;
+                    ChangeStatus(EGrabStatus.Shooting);
                 }
                 break;
             case EGrabStatus.Shooting:
@@ -204,17 +223,19 @@ public class CNewGrab : AMono
                 ExtendArm();
                 if (Input.GetKey(KeyCode.U))
                 {
-                     ConnectTwizers();
+                    
+                    ChangeStatus(EGrabStatus.Grab);
                 }
                 break;
             case EGrabStatus.Grab:
-
+                //물건을 집거나, 집게를 다 닫으면 connect로 이동.
+                if (_twizers.Grabed == true)
+                {
+                    ChangeStatus(EGrabStatus.Connect);
+                }
                 break;
             case EGrabStatus.Connect:
-                if (Input.GetKey(KeyCode.N))
-                {
-                    grabStatus = EGrabStatus.Bring;
-                }
+                grabStatus = EGrabStatus.Bring;
                 break;
             case EGrabStatus.Bring:
                 if (!BringDistanceCk())
@@ -223,10 +244,10 @@ public class CNewGrab : AMono
                 }
                 else
                 {
-                    JointFree(armJoint);
-                    armRigidBody.isKinematic = true;
-                    JointFree(twizersJointToArm);
-                    twizersRigidBody.isKinematic = true;
+                    JointFree(_armJoint);
+                    _armRigidBody.isKinematic = true;
+                    JointFree(_twizersJointToArm);
+                    _twizersRigidBody.isKinematic = true;
                     ArmToOriginPos();
                     grabStatus = EGrabStatus.AdjustArm;
                 }
