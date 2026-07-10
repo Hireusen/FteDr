@@ -33,6 +33,8 @@ public class CNewGrab : AMono
     private float _armOriginScale;
     private float _armOriginLength;
     private Quaternion _grabOffset;
+    private Vector3 _aimDir;
+    private const float _AIMDISTANCE=10f;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -77,11 +79,8 @@ public class CNewGrab : AMono
     }
     private void ShootWristContinuous()
     {
-        _twizersRigidBody.AddForce(_playerCam.transform.forward * _ShootForce, ForceMode.Force);
-        //부력 보정
-        Vector3 velocity = _twizersRigidBody.velocity;
-        velocity.y *= 0.5f;
-        _twizersRigidBody.velocity = velocity;
+        _twizersRigidBody.AddForce(_aimDir* _ShootForce, ForceMode.Force);
+        
 
 
         //거리제한되면 자동으로 그랩동작을 시행한 다음 상태변경한다. 
@@ -135,15 +134,27 @@ public class CNewGrab : AMono
                 grabStatus = EGrabStatus.Wait;
                 break;
             case EGrabStatus.Shooting:
+                Ray ray=new Ray(_playerCam.transform.position, _playerCam.transform.forward);
+                Vector3 aimPos;
+                if(Physics.Raycast(ray, out RaycastHit hit, _AIMDISTANCE))
+                {
+                    aimPos = hit.point;
+                }
+                else
+                {
+                    aimPos = ray.origin + ray.direction * _AIMDISTANCE;
+                }
+                _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizers.OpenGrabContinuous();
                 print("상태변경>shooting");
                 grabStatus= EGrabStatus.Shooting;
-                
+                _twizersRigidBody.useGravity = false;
                 break;
             case EGrabStatus.Grab:
                 print("상태변경>grab");
                 grabStatus = EGrabStatus.Grab;
                 _twizersRigidBody.isKinematic = true;
+                _twizersRigidBody.useGravity = true;
                 _twizers.GrabContinuous();
                 break;
             case EGrabStatus.Connect:
@@ -173,9 +184,10 @@ public class CNewGrab : AMono
     }
     private void ArmToOriginPos()
     {
+        _twizers.GrabToOriginContinuous();
         StartCoroutine(ArmToOriginCo());
     }
-    IEnumerator ArmToOriginCo()
+    private IEnumerator ArmToOriginCo()
     {
         yield return null;
         float timeLimit = 2f;
