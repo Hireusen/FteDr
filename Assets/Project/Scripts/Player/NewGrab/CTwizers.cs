@@ -10,6 +10,7 @@ using UnityEngine;
 /// </summary>
 public class CTwizers : AFrameable, IUpdateFrameable
 {
+    [SerializeField] private float customGravity = -10f;
     [SerializeField] private CFinger _finger1;
     [SerializeField] private CFinger _finger2;
     [SerializeField] private GameObject _finger1Real;
@@ -51,7 +52,6 @@ public class CTwizers : AFrameable, IUpdateFrameable
     public bool Grabed { get; private set; } = false;
     // 실행 우선순위 정의
     public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
-
     // 프레임 매니저에게 호출당할 함수
     public void ExecuteUpdateFrame()
     {
@@ -151,11 +151,18 @@ public class CTwizers : AFrameable, IUpdateFrameable
         }
 
     }
+
     public GameObject GetItemInfo()
     {
         if (grabInfo.crashedObject != null)
         {
-            return grabInfo.crashedObject;
+            CFinger.CrashInfo temp = grabInfo;
+            Destroy(activeJoint);
+            activeJoint = null;
+
+            grabInfo = default;
+
+            return temp.crashedObject;
             
         }
         return null;
@@ -184,6 +191,14 @@ public class CTwizers : AFrameable, IUpdateFrameable
         _finger2StartRot = _finger2Real.transform.localRotation;
 
         _openCo=StartCoroutine(OpenGrabCo());
+    }
+    public void GrabToOriginContinuous()
+    {
+        openTimer = 0;
+        _finger1StartRot = _finger1Real.transform.localRotation;
+        _finger2StartRot = _finger2Real.transform.localRotation;
+
+        _openCo = StartCoroutine(GrabToOriginCo());
     }
     public void CollisionOn()
     {
@@ -221,6 +236,20 @@ public class CTwizers : AFrameable, IUpdateFrameable
         print("open complete");
         _finger1Real.transform.localRotation = _finger1OpenRot;
         _finger2Real.transform.localRotation = _finger2OpenRot;
+    }
+    private IEnumerator GrabToOriginCo()
+    {
+        print("toOrigin start");
+        while (openTimer < grabOpenTime)
+        {
+            openTimer += Time.deltaTime;
+            _finger1Real.transform.localRotation = Quaternion.Slerp(_finger1StartRot, _finger1OriginRot, openTimer / grabOpenTime);
+            _finger2Real.transform.localRotation = Quaternion.Slerp(_finger2StartRot, _finger2OriginRot, openTimer / grabOpenTime);
+            yield return null;
+        }
+        print("toOrigin complete");
+        _finger1Real.transform.localRotation = _finger1OriginRot;
+        _finger2Real.transform.localRotation = _finger2OriginRot;
     }
     #endregion
 
