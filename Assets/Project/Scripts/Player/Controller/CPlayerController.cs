@@ -31,6 +31,10 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     [Header("바닥 감지 설정")]
     [SerializeField] private float _groundCheckDistance;
     [SerializeField] private LayerMask _groundLayer;
+
+    [Header("연료 상태")]
+    [Tooltip("연료 부족(Low) 시 이동 속도 배율. 작을수록 급격히 느려짐")]
+    [SerializeField, Range(0f, 1f)] private float _lowFuelSpeedMultiplier = 0.3f;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -49,6 +53,9 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     private EPlayerState _currentState = EPlayerState.OnGround;
 
     private bool _isJumpPressed = false;
+
+    private float _fuelSpeedMultiplier = 1f;
+    private bool _controlLocked = false;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -77,26 +84,27 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         ApplyLookRotation();
 
         _moveDirection = CalcMoveDirection();
+        if (_controlLocked) _moveDirection = Vector3.zero; // 고갈: 조작 무시
 
         if (_currentState == EPlayerState.Swimming)
         {
             // 수영: 힘 기반 이동 (물의 관성 유지)
-            _rb.AddForce(_moveDirection * _moveSpeed, ForceMode.Force);
+            _rb.AddForce(_moveDirection * (_moveSpeed * _fuelSpeedMultiplier), ForceMode.Force);
 
             _rb.AddForce(Vector3.down * _waterGravity, ForceMode.Acceleration);
 
-            if (_isJumpPressed)
+            if (_isJumpPressed && !_controlLocked)
             {
-                _rb.AddForce(Vector3.up * _ascendForce, ForceMode.Force);
+                _rb.AddForce(Vector3.up * (_ascendForce * _fuelSpeedMultiplier), ForceMode.Force);
             }
         }
         else
         {
             // 지상 / 수중바닥: 수평 속도 직접 제어로 미끄러짐 제거 (y속도는 유지)
-            Vector3 horizontalVel = _moveDirection * _groundMoveSpeed;
+            Vector3 horizontalVel = _moveDirection * (_groundMoveSpeed * _fuelSpeedMultiplier);
             _rb.velocity = new Vector3(horizontalVel.x, _rb.velocity.y, horizontalVel.z);
 
-            if (_isJumpPressed)
+            if (_isJumpPressed && !_controlLocked)
             {
                 if (_rb.velocity.y <= 0.1f && Physics.Raycast(transform.position, Vector3.down, _groundCheckDistance, _groundLayer))
                 {
@@ -185,6 +193,27 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         Vector3 dir = forward * _currentMoveInput.y + right * _currentMoveInput.x;
         return dir.normalized;
     }
+
+    private void ApplyFuelState(EFuelState state)
+    {
+        switch (state)
+        {
+            case EFuelState.Normal:
+                _fuelSpeedMultiplier = 1f;
+                _controlLocked = false;
+                break;
+
+            case EFuelState.Low:
+                _fuelSpeedMultiplier = _lowFuelSpeedMultiplier;
+                _controlLocked = false;
+                break;
+
+            case EFuelState.Depleted:
+                _fuelSpeedMultiplier = 0f;
+                _controlLocked = true;
+                break;
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -195,6 +224,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         CEventBus<OnInputMove>.Unsubscribe(MoveHandler);
         CEventBus<OnInputJump>.Unsubscribe(JumpHandler);
         CEventBus<OnInputEsc>.Unsubscribe(EscHandler);
+        CEventBus<OnPlayerFuelStateChanged>.Unsubscribe(FuelStateHandler);
     }
 
     protected override void OnEnable()
@@ -216,6 +246,9 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         CEventBus<OnInputMove>.Subscribe(MoveHandler);
         CEventBus<OnInputJump>.Subscribe(JumpHandler);
         CEventBus<OnInputEsc>.Subscribe(EscHandler);
+        CEventBus<OnPlayerFuelStateChanged>.Subscribe(FuelStateHandler);
+
+        ApplyFuelState(CPlayerManager.Ins.FuelState);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -248,16 +281,15 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     private void EscHandler(OnInputEsc data)
     {
-        if (Cursor.lockState == CursorLockMode.Locked)
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-        else
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        // 커서는 입력 매니저가 단독 소유. 여기서는 메뉴 사유만 토글합니다.
+        CInputManager input = CInputManager.Ins;
+        bool menuOpen = input.IsCursorReasonActive(ECursorReason.Menu);
+        input.SetCursorReason(ECursorReason.Menu, !menuOpen);
+    }
+
+    private void FuelStateHandler(OnPlayerFuelStateChanged e)
+    {
+        ApplyFuelState(e.state);
     }
     #endregion
 }

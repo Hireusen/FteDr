@@ -83,7 +83,7 @@ public class CNewGrab : AMono
         _twizersRigidBody.velocity = velocity;
 
 
-        //거리제한되면 자동으로 그랩동작을 시행한 다음 회수해야한다. 지금은 물리연결로 바로 넘어가는데 잡기->물리연결이 되어야 한다.
+        //거리제한되면 자동으로 그랩동작을 시행한 다음 상태변경한다. 
         if (!DistanceCk())
         {
             print("거리제한");
@@ -129,6 +129,7 @@ public class CNewGrab : AMono
         switch (status)
         {
             case EGrabStatus.Wait:
+                _twizers.CollisionOn();
                 print("상태변경>wait");
                 grabStatus = EGrabStatus.Wait;
                 break;
@@ -153,7 +154,21 @@ public class CNewGrab : AMono
                 _twizersJointToArm.connectedAnchor = _armEndPivot.transform.localPosition;
                 grabStatus = EGrabStatus.Connect;
                 break;
+            case EGrabStatus.AdjustArm:
+                grabStatus = EGrabStatus.AdjustArm;
+                break;
         }
+    }
+    private CCollectible GetItem()
+    {
+        CCollectible item = null;
+        GameObject itemObj= _twizers.GetItemInfo();
+        if(itemObj != null)
+        {
+            item=itemObj.GetComponent<CCollectible>();
+            itemObj.SetActive(false);
+        }
+        return item; 
     }
     private void ArmToOriginPos()
     {
@@ -241,15 +256,18 @@ public class CNewGrab : AMono
                 if (!BringDistanceCk())
                 {
                     ShrinkArm();
+                    
                 }
                 else
                 {
+                    GetItem();
                     JointFree(_armJoint);
                     _armRigidBody.isKinematic = true;
                     JointFree(_twizersJointToArm);
                     _twizersRigidBody.isKinematic = true;
                     ArmToOriginPos();
-                    grabStatus = EGrabStatus.AdjustArm;
+                    ChangeStatus(EGrabStatus.AdjustArm);
+
                 }
                 break;
             case EGrabStatus.AdjustArm:
