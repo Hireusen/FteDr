@@ -350,21 +350,14 @@ MonoBehaviour:
   _shoulder: {fileID: 1828189939410175483}
   _arm: {fileID: 3817024157390611165}
   _armEndPivot: {fileID: 4841097012469455845}
-  _twizers: {fileID: 3403138958318467995}
+  _twizersAnchor: {fileID: 0}
+  _twizers: {fileID: 436165854929801706}
   _twizersJointToArm: {fileID: 8847130862975817666}
-  _finger1: {fileID: 4595206074745100944}
-  _finger2: {fileID: 4779709317881642076}
   _ShootForce: 4
   _ShrinkSpeed: 10
-  _grabSpeed: 5
-  _grab1OpenAngle: 98
-  _grab1CloseAngle: 42
-  _grab2OpenAngle: 16
-  _grab2CloseAngle: 80
   _twizersRotateSpeed: 1
   _playerCam: {fileID: 0}
   _maxdistance: 1
-  grabTime: 3
   grabStatus: 0
 --- !u!95 &6206200857099054113
 Animator:
@@ -693,13 +686,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _finger1: {fileID: 2081302843524030394}
   _finger2: {fileID: 2200909129396178965}
+  _finger1Real: {fileID: 0}
+  _finger2Real: {fileID: 0}
   _grabSpeed: 10
   _grab1OpenAngle: 98
   _grab1CloseAngle: 42
   _grab2OpenAngle: 16
   _grab2CloseAngle: 80
-  _twizersRotateSpeed: 1
   grabTime: 3
+  grabOpenTime: 1
   breakWaitTimeSetting: 1
 --- !u!54 &3754687211619141780
 Rigidbody:
@@ -1114,7 +1109,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da13df2e58ca4184c957efe6291019fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  testnum: 0
+  _testnum: 0
 --- !u!54 &6391103375446436309
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1209,7 +1204,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da13df2e58ca4184c957efe6291019fb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  testnum: 1
+  _testnum: 0
 --- !u!54 &7953622120627551093
 Rigidbody:
   m_ObjectHideFlags: 0
