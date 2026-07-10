@@ -155,7 +155,13 @@ public class CTwizers : AFrameable, IUpdateFrameable
     {
         if (grabInfo.crashedObject != null)
         {
-            return grabInfo.crashedObject;
+            CFinger.CrashInfo temp = grabInfo;
+            Destroy(activeJoint);
+            activeJoint = null;
+
+            grabInfo = default;
+
+            return temp.crashedObject;
             
         }
         return null;

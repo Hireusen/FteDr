@@ -32,6 +32,7 @@ public class CNewGrab : AMono
     private Rigidbody _shoulderRg;
     private float _armOriginScale;
     private float _armOriginLength;
+    private Quaternion _grabOffset;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -179,6 +180,7 @@ public class CNewGrab : AMono
         yield return null;
         float timeLimit = 2f;
         float timer = 0;
+        _twizersAnchor.transform.localRotation = _arm.transform.localRotation * _grabOffset;
         _twizersAnchor.transform.SetParent(_arm.transform, true);
         while(timer<timeLimit)
         {
@@ -204,7 +206,7 @@ public class CNewGrab : AMono
         _armOriginScale = _arm.transform.localScale.z;
         _armOriginLength= (_arm.transform.position - _armEndPivot.transform.position).magnitude;
        
-
+        _grabOffset=Quaternion.Inverse(_arm.transform.localRotation)*_twizersAnchor.transform.localRotation;
 
     }
     //테스트용
