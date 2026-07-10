@@ -9,6 +9,7 @@ public static partial class Id
     public const string BGM_Peritune_Portside_Cafe_Loop = "BGM_Peritune Portside Cafe Loop";
     public const string BGM_Underwater_Exploration = "BGM_Underwater Exploration";
     public const string BGM_Underwater_Theme_II = "BGM_Underwater Theme II";
+    public const string clank1 = "clank1";
     public const string SFX_Attack_03 = "SFX_Attack 03";
     public const string SFX_Dive_02 = "SFX_Dive 02";
     public const string SFX_Jump_03 = "SFX_Jump 03";
