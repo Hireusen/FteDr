@@ -36,6 +36,9 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private Quaternion _finger2StartRot;
     private Quaternion _finger1OriginRot;
     private Quaternion _finger2OriginRot;
+    private Collider _finger1Col;
+    private Collider _finger2Col;
+    private Collider _objectCol;
 
     private float grabTimer = 0f;
     private float openTimer = 0f;
@@ -55,8 +58,6 @@ public class CTwizers : AFrameable, IUpdateFrameable
         //잡고 있을때 조인트가 break될시
         if (grabInfo.crashedObject != null && activeJoint == null)
         {
-            grabObject = null;
-
             grabInfo.crashedObject = null;
 
             print("break!");
@@ -110,26 +111,32 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 activeJoint.lowAngularXLimit = xhighLimit;
 
                 SoftJointLimit yLimit = activeJoint.angularYLimit;
-                yLimit.limit = 30f;
+                yLimit.limit = 10f;
                 activeJoint.angularYLimit = yLimit;
 
                 SoftJointLimit zLimit = activeJoint.angularZLimit;
-                zLimit.limit = 30f;
+                zLimit.limit = 0f;
                 activeJoint.angularZLimit = zLimit;
                 activeJoint.connectedBody = _twizersRG;
 
                 //조인트 앵커 설정
                 Vector3 avgPoint = (f1joint + f2joint) / 2;
                 activeJoint.autoConfigureConnectedAnchor = false;
+                activeJoint.enableCollision = false;
                 activeJoint.connectedAnchor = _twizersRG.transform.InverseTransformPoint(avgPoint);
                 activeJoint.anchor = grabInfo.crashedObject.transform.InverseTransformPoint(avgPoint);
+
                 // 살짝 벌려서 지터링 방지
                 Vector3 temp = _finger1Real.transform.localEulerAngles;
-                temp.x += 2;
+                temp.x += 5;
                 _finger1Real.transform.localRotation = Quaternion.Euler(temp);
                 temp = _finger2Real.transform.localEulerAngles;
-                temp.x -= 2;
+                temp.x -= 5;
                 _finger2Real.transform.localRotation= Quaternion.Euler(temp);
+                // collision 무시
+                _objectCol=grabInfo.crashedObject.GetComponent<BoxCollider>();
+                Physics.IgnoreCollision(_finger1Col, _objectCol,true);
+                Physics.IgnoreCollision(_finger2Col, _objectCol, true);
 
 
 
@@ -143,6 +150,15 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
         }
 
+    }
+    public GameObject GetItemInfo()
+    {
+        if (grabInfo.crashedObject != null)
+        {
+            return grabInfo.crashedObject;
+            
+        }
+        return null;
     }
     public void GrabContinuous()
     {
@@ -169,6 +185,11 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
         _openCo=StartCoroutine(OpenGrabCo());
     }
+    public void CollisionOn()
+    {
+        Physics.IgnoreCollision(_finger1Col, _objectCol, false);
+        Physics.IgnoreCollision(_finger2Col, _objectCol, false);
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -178,7 +199,6 @@ public class CTwizers : AFrameable, IUpdateFrameable
     {
         while (grabTimer < grabTime)
         {
-            Debug.Log(_finger1Real.transform.localRotation.eulerAngles);
             grabTimer += Time.deltaTime;
             _finger1Real.transform.localRotation = Quaternion.Slerp(_finger1StartRot, _finger1CloseRot, grabTimer / grabTime);
             _finger2Real.transform.localRotation = Quaternion.Slerp(_finger2StartRot, _finger2CloseRot, grabTimer / grabTime);
@@ -193,7 +213,6 @@ public class CTwizers : AFrameable, IUpdateFrameable
         print("open start");
         while(openTimer < grabOpenTime)
         {
-            Debug.Log(openTimer);
             openTimer += Time.deltaTime;
             _finger1Real.transform.localRotation=Quaternion.Slerp(_finger1StartRot,_finger1OpenRot, openTimer / grabOpenTime);
             _finger2Real.transform.localRotation=Quaternion.Slerp(_finger2StartRot,_finger2OpenRot, openTimer / grabOpenTime);
@@ -209,6 +228,8 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private void Awake()
     {
         _twizersRG=GetComponent<Rigidbody>();
+        _finger1Col=_finger1.GetComponent<BoxCollider>();
+        _finger2Col=_finger2.GetComponent<BoxCollider>();
         _finger1OriginRot = _finger1Real.transform.localRotation;
         _finger2OriginRot = _finger2Real.transform.localRotation;
 
