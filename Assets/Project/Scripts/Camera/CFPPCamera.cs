@@ -42,6 +42,15 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     {
         if (_playerController == null || _cameraRoot == null || _camTransform == null) return;
 
+        // 게임플레이 입력이 아닐 때(메뉴, 연료 고갈 등)는 회전 입력을 막습니다.
+        // 카메라는 앵커를 계속 복사해 몸에 붙어 있게 하고, 누적 입력만 버립니다.
+        if (!CInputManager.Ins.IsGameplayInput)
+        {
+            _currentLookInput = Vector2.zero;
+            _camTransform.SetPositionAndRotation(_cameraRoot.position, _cameraRoot.rotation);
+            return;
+        }
+
         // 1) 마우스 입력 누적
         _yaw += _currentLookInput.x * LookSensitivity;
         _pitch -= _currentLookInput.y * LookSensitivity;
@@ -68,8 +77,11 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         base.OnEnable();
 
         CEventBus<OnInputLook>.Subscribe(LookHandler);
+        CEventBus<OnPlayerFuelStateChanged>.Subscribe(FuelStateHandler);
 
-        Cursor.lockState = CursorLockMode.Locked;
+        // 게임플레이 진입: 커서를 기준값으로 되돌림 (이미 고갈 상태면 커서 유지)
+        bool depleted = CPlayerManager.Ins != null && CPlayerManager.Ins.FuelState == EFuelState.Depleted;
+        CInputManager.Ins.ResetForGameplay(depleted);
     }
 
     protected override void OnDisable()
@@ -77,6 +89,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         base.OnDisable();
 
         CEventBus<OnInputLook>.Unsubscribe(LookHandler);
+        CEventBus<OnPlayerFuelStateChanged>.Unsubscribe(FuelStateHandler);
     }
 
     private void Start()
@@ -110,6 +123,19 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     private void LookHandler(OnInputLook data)
     {
         _currentLookInput = data.delta;
+    }
+
+    private void FuelStateHandler(OnPlayerFuelStateChanged e)
+    {
+        // 고갈되면 커서 사유를 켜고(→ 회전 차단), 고갈에서 벗어나면 사유를 끕니다.
+        if (e.state == EFuelState.Depleted)
+        {
+            CInputManager.Ins.SetCursorReason(ECursorReason.FuelDepleted, true);
+        }
+        else if (e.previous == EFuelState.Depleted)
+        {
+            CInputManager.Ins.SetCursorReason(ECursorReason.FuelDepleted, false);
+        }
     }
     #endregion
 }

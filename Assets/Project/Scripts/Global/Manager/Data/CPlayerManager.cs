@@ -7,6 +7,8 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
 {
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private readonly PlayerRuntimeData _runtime = new();
+
+    private EFuelState _fuelState = EFuelState.Normal;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -14,6 +16,8 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
 
     /// <summary>플레이어 런타임 데이터를 읽습니다.</summary>
     public PlayerRuntimeData Runtime => _runtime;
+
+    public EFuelState FuelState => _fuelState;
     #endregion
 
     #region ─────────────────────────▶ 연료 ◀─────────────────────────
@@ -52,21 +56,16 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
         _runtime.currentFuel = MaxFuel;
         PublishFuel();
         PublishBag();
+        RefreshFuelState();
     }
 
     /// <summary>연료를 소모합니다.</summary>
     /// <param name="amount">소모량(양수)</param>
     public void ConsumeFuel(float amount)
     {
-        bool wasAboveZero = _runtime.currentFuel > 0f;
-
         _runtime.currentFuel = Mathf.Max(0f, _runtime.currentFuel - amount);
         PublishFuel();
-
-        if (wasAboveZero && _runtime.currentFuel <= 0f)
-        {
-            OnPlayerFuelDepleted.Publish();
-        }
+        RefreshFuelState();
     }
 
     /// <summary>연료를 회복합니다.</summary>
@@ -75,6 +74,7 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     {
         _runtime.currentFuel = Mathf.Min(MaxFuel, _runtime.currentFuel + amount);
         PublishFuel();
+        RefreshFuelState();
     }
 
     /// <summary>최대 연료량을 깎습니다.</summary>
@@ -84,6 +84,7 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
         _runtime.fuelPenalty += Mathf.Max(0f, amount);
         _runtime.currentFuel = Mathf.Min(_runtime.currentFuel, MaxFuel);
         PublishFuel();
+        RefreshFuelState();
     }
     #endregion
 
@@ -133,6 +134,17 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     private void PublishFuel()
     {
         OnPlayerFuelChanged.Publish(_runtime.currentFuel, MaxFuel);
+    }
+
+    private void RefreshFuelState()
+    {
+        EFuelState next = _runtime.currentFuel <= 0 ? EFuelState.Depleted : IsFuelLow ? EFuelState.Low : EFuelState.Normal;
+
+        if (next == _fuelState) return;
+
+        EFuelState prev = _fuelState;
+        _fuelState = next;
+        OnPlayerFuelStateChanged.Publish(next, prev);
     }
 
     private void PublishBag()
