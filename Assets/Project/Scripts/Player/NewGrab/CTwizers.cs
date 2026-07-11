@@ -1,36 +1,30 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Unity.Mathematics;
-using UnityEditor.Rendering;
-using UnityEditorInternal;
 using UnityEngine;
 /// <summary>
 /// 프레임에이블 클래스의 설계 의도입니다.
 /// </summary>
 public class CTwizers : AFrameable, IUpdateFrameable
 {
-    [SerializeField] private float customGravity = -10f;
     [SerializeField] private CFinger _finger1;
     [SerializeField] private CFinger _finger2;
     [SerializeField] private GameObject _finger1Real;
     [SerializeField] private GameObject _finger2Real;
     [SerializeField] private BoxCollider _finger1OutCollider;
     [SerializeField] private BoxCollider _finger2OutCollider;
-    [SerializeField] private float _grabSpeed = 10f;
     [SerializeField] private float _grab1OpenAngle = 30;
     [SerializeField] private float _grab1CloseAngle = -16;
     [SerializeField] private float _grab2OpenAngle = -40;
     [SerializeField] private float _grab2CloseAngle = 20;
     
-    [SerializeField] private float grabTime = 3f;
-    [SerializeField] private float grabOpenTime = 1f;
-    [SerializeField] private float breakWaitTimeSetting = 1f;
+    [SerializeField] private float _grabTime = 3f;
+    [SerializeField] private float _grabOpenTime = 1f;
+    [SerializeField] private float _breakWaitTimeSetting = 1f;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private GameObject grabObject = null;
-    private CFinger.CrashInfo grabInfo = new CFinger.CrashInfo();
+    private CFinger.CrashInfo _grabInfo = new CFinger.CrashInfo();
     private Rigidbody _twizersRG;
-    private ConfigurableJoint activeJoint = null;
+    private ConfigurableJoint _activeJoint = null;
     private Quaternion _finger1OpenRot;
     private Quaternion _finger2OpenRot;
     private Quaternion _finger1CloseRot;
@@ -44,9 +38,9 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private Collider _objectCol;
     
 
-    private float grabTimer = 0f;
-    private float openTimer = 0f;
-    private float breakWaitTimer = 0f;
+    private float _grabTimer = 0f;
+    private float _openTimer = 0f;
+    private float _breakWaitTimer = 0f;
     private Coroutine _grabCo;
     private Coroutine _openCo;
     #endregion
@@ -59,31 +53,31 @@ public class CTwizers : AFrameable, IUpdateFrameable
     public void ExecuteUpdateFrame()
     {
         //잡고 있을때 조인트가 break될시
-        if (grabInfo.crashedObject != null && activeJoint == null)
+        if (_grabInfo.crashedObject != null && _activeJoint == null)
         {
-            grabInfo.crashedObject = null;
+            _grabInfo.crashedObject = null;
 
             print("break!");
             //힘을 받아서 놓쳤을 경우 잡기 쿨타임
-            breakWaitTimer = breakWaitTimeSetting;
+            _breakWaitTimer = _breakWaitTimeSetting;
         }
-        if(breakWaitTimer>0) breakWaitTimer-=Time.deltaTime;
+        if(_breakWaitTimer>0) _breakWaitTimer-=Time.deltaTime;
 
         //잡기 체크 프로토타입2
-        if (breakWaitTimer <= 0 && _finger1.crashObjects.Count > 0 && _finger2.crashObjects.Count > 0)
+        if (_breakWaitTimer <= 0 && _finger1.CrashObjects.Count > 0 && _finger2.CrashObjects.Count > 0)
         {
-            HashSet<CFinger.CrashInfo> crashInfos= new HashSet<CFinger.CrashInfo>(_finger1.crashObjects);
-            crashInfos.IntersectWith(_finger2.crashObjects);
+            HashSet<CFinger.CrashInfo> crashInfos= new HashSet<CFinger.CrashInfo>(_finger1.CrashObjects);
+            crashInfos.IntersectWith(_finger2.CrashObjects);
 
 
 
-            if (crashInfos.Count > 0 && grabInfo.crashedObject == null)
+            if (crashInfos.Count > 0 && _grabInfo.crashedObject == null)
             {
                 print("잡기 시도");
-                grabInfo = crashInfos.First();
+                _grabInfo = crashInfos.First();
                 Vector3 f1joint = Vector3.zero;
                 Vector3 f2joint = Vector3.zero;
-                if (_finger1.crashObjects.TryGetValue(grabInfo, out CFinger.CrashInfo f1data))
+                if (_finger1.CrashObjects.TryGetValue(_grabInfo, out CFinger.CrashInfo f1data))
                 {
                     f1joint = f1data.crashPoint;
                     print("finger1 joint set : " + f1joint);
@@ -92,7 +86,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 {
                     print("f1 joint error");
                 }
-                if (_finger2.crashObjects.TryGetValue(grabInfo, out CFinger.CrashInfo f2data))
+                if (_finger2.CrashObjects.TryGetValue(_grabInfo, out CFinger.CrashInfo f2data))
                 {
                     f2joint = f2data.crashPoint;
                     print("finger2 joint set: " + f2joint);
@@ -101,36 +95,36 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 {
                     print("f2 joint error");
                 }
-                activeJoint = grabInfo.crashedObject.AddComponent<ConfigurableJoint>();
-                activeJoint.xMotion = ConfigurableJointMotion.Locked;
-                activeJoint.yMotion = ConfigurableJointMotion.Locked;
-                activeJoint.zMotion = ConfigurableJointMotion.Locked;
+                _activeJoint = _grabInfo.crashedObject.AddComponent<ConfigurableJoint>();
+                _activeJoint.xMotion = ConfigurableJointMotion.Locked;
+                _activeJoint.yMotion = ConfigurableJointMotion.Locked;
+                _activeJoint.zMotion = ConfigurableJointMotion.Locked;
 
-                activeJoint.angularXMotion= ConfigurableJointMotion.Limited;
-                activeJoint.angularYMotion= ConfigurableJointMotion.Limited;
-                activeJoint.angularZMotion = ConfigurableJointMotion.Limited;
-                SoftJointLimit xlowLimit = activeJoint.lowAngularXLimit;
+                _activeJoint.angularXMotion= ConfigurableJointMotion.Limited;
+                _activeJoint.angularYMotion= ConfigurableJointMotion.Limited;
+                _activeJoint.angularZMotion = ConfigurableJointMotion.Limited;
+                SoftJointLimit xlowLimit = _activeJoint.lowAngularXLimit;
                 xlowLimit.limit = 0f;
-                activeJoint.lowAngularXLimit = xlowLimit;
-                SoftJointLimit xhighLimit = activeJoint.lowAngularXLimit;
+                _activeJoint.lowAngularXLimit = xlowLimit;
+                SoftJointLimit xhighLimit = _activeJoint.lowAngularXLimit;
                 xhighLimit.limit = 0f;
-                activeJoint.lowAngularXLimit = xhighLimit;
+                _activeJoint.lowAngularXLimit = xhighLimit;
 
-                SoftJointLimit yLimit = activeJoint.angularYLimit;
+                SoftJointLimit yLimit = _activeJoint.angularYLimit;
                 yLimit.limit = 10f;
-                activeJoint.angularYLimit = yLimit;
+                _activeJoint.angularYLimit = yLimit;
 
-                SoftJointLimit zLimit = activeJoint.angularZLimit;
+                SoftJointLimit zLimit = _activeJoint.angularZLimit;
                 zLimit.limit = 0f;
-                activeJoint.angularZLimit = zLimit;
-                activeJoint.connectedBody = _twizersRG;
+                _activeJoint.angularZLimit = zLimit;
+                _activeJoint.connectedBody = _twizersRG;
 
                 //조인트 앵커 설정
                 Vector3 avgPoint = (f1joint + f2joint) / 2;
-                activeJoint.autoConfigureConnectedAnchor = false;
-                activeJoint.enableCollision = false;
-                activeJoint.connectedAnchor = _twizersRG.transform.InverseTransformPoint(avgPoint);
-                activeJoint.anchor = grabInfo.crashedObject.transform.InverseTransformPoint(avgPoint);
+                _activeJoint.autoConfigureConnectedAnchor = false;
+                _activeJoint.enableCollision = false;
+                _activeJoint.connectedAnchor = _twizersRG.transform.InverseTransformPoint(avgPoint);
+                _activeJoint.anchor = _grabInfo.crashedObject.transform.InverseTransformPoint(avgPoint);
 
                 // 살짝 벌려서 지터링 방지
                 Vector3 temp = _finger1Real.transform.localEulerAngles;
@@ -140,7 +134,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 temp.x -= 5;
                 _finger2Real.transform.localRotation= Quaternion.Euler(temp);
                 // collision 무시
-                _objectCol=grabInfo.crashedObject.GetComponent<BoxCollider>();
+                _objectCol=_grabInfo.crashedObject.GetComponent<BoxCollider>();
                 Physics.IgnoreCollision(_finger1Col, _objectCol,true);
                 Physics.IgnoreCollision(_finger2Col, _objectCol, true);
                 Physics.IgnoreCollision(_finger1OutCollider, _objectCol, true);
@@ -162,13 +156,13 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
     public GameObject GetItemInfo()
     {
-        if (grabInfo.crashedObject != null)
+        if (_grabInfo.crashedObject != null)
         {
-            CFinger.CrashInfo temp = grabInfo;
-            Destroy(activeJoint);
-            activeJoint = null;
+            CFinger.CrashInfo temp = _grabInfo;
+            Destroy(_activeJoint);
+            _activeJoint = null;
 
-            grabInfo = default;
+            _grabInfo = default;
 
             return temp.crashedObject;
             
@@ -178,7 +172,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
     public void GrabContinuous()
     {
         
-        grabTimer = 0;
+        _grabTimer = 0;
         _finger1StartRot = _finger1Real.transform.localRotation;
         _finger2StartRot = _finger2Real.transform.localRotation;
 
@@ -194,7 +188,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
     public void OpenGrabContinuous()
     {
         Grabed = false;
-        openTimer = 0;
+        _openTimer = 0;
         _finger1StartRot = _finger1Real.transform.localRotation;
         _finger2StartRot = _finger2Real.transform.localRotation;
 
@@ -202,7 +196,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
     }
     public void GrabToOriginContinuous()
     {
-        openTimer = 0;
+        _openTimer = 0;
         _finger1StartRot = _finger1Real.transform.localRotation;
         _finger2StartRot = _finger2Real.transform.localRotation;
 
@@ -222,11 +216,11 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
     private IEnumerator GrabContinueCo()
     {
-        while (grabTimer < grabTime)
+        while (_grabTimer < _grabTime)
         {
-            grabTimer += Time.deltaTime;
-            _finger1Real.transform.localRotation = Quaternion.Slerp(_finger1StartRot, _finger1CloseRot, grabTimer / grabTime);
-            _finger2Real.transform.localRotation = Quaternion.Slerp(_finger2StartRot, _finger2CloseRot, grabTimer / grabTime);
+            _grabTimer += Time.deltaTime;
+            _finger1Real.transform.localRotation = Quaternion.Slerp(_finger1StartRot, _finger1CloseRot, _grabTimer / _grabTime);
+            _finger2Real.transform.localRotation = Quaternion.Slerp(_finger2StartRot, _finger2CloseRot, _grabTimer / _grabTime);
             yield return null;
         }
         _finger1Real.transform.localRotation = _finger1CloseRot;
@@ -236,11 +230,11 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private IEnumerator OpenGrabCo()
     {
         print("open start");
-        while(openTimer < grabOpenTime)
+        while(_openTimer < _grabOpenTime)
         {
-            openTimer += Time.deltaTime;
-            _finger1Real.transform.localRotation=Quaternion.Slerp(_finger1StartRot,_finger1OpenRot, openTimer / grabOpenTime);
-            _finger2Real.transform.localRotation=Quaternion.Slerp(_finger2StartRot,_finger2OpenRot, openTimer / grabOpenTime);
+            _openTimer += Time.deltaTime;
+            _finger1Real.transform.localRotation=Quaternion.Slerp(_finger1StartRot,_finger1OpenRot, _openTimer / _grabOpenTime);
+            _finger2Real.transform.localRotation=Quaternion.Slerp(_finger2StartRot,_finger2OpenRot, _openTimer / _grabOpenTime);
             yield return null;
         }
         print("open complete");
@@ -250,11 +244,11 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private IEnumerator GrabToOriginCo()
     {
         print("toOrigin start");
-        while (openTimer < grabOpenTime)
+        while (_openTimer < _grabOpenTime)
         {
-            openTimer += Time.deltaTime;
-            _finger1Real.transform.localRotation = Quaternion.Slerp(_finger1StartRot, _finger1OriginRot, openTimer / grabOpenTime);
-            _finger2Real.transform.localRotation = Quaternion.Slerp(_finger2StartRot, _finger2OriginRot, openTimer / grabOpenTime);
+            _openTimer += Time.deltaTime;
+            _finger1Real.transform.localRotation = Quaternion.Slerp(_finger1StartRot, _finger1OriginRot, _openTimer / _grabOpenTime);
+            _finger2Real.transform.localRotation = Quaternion.Slerp(_finger2StartRot, _finger2OriginRot, _openTimer / _grabOpenTime);
             yield return null;
         }
         print("toOrigin complete");

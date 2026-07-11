@@ -85,6 +85,13 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
             OnInputGrab.Publish();
         }
     }
+    public void OnCollect(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OnInputCollect.Publish();
+        }
+    }
     public void OnCheat(InputAction.CallbackContext ctx)
     {
         if (ctx.performed)

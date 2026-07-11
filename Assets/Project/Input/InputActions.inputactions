@@ -59,6 +59,15 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "Collect",
+                    "type": "Button",
+                    "id": "a83ebca2-213a-48e2-b10b-ee1259e20e57",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -153,7 +162,7 @@
                 {
                     "name": "",
                     "id": "aae73500-b1fc-4109-b2b8-9845e86b4f31",
-                    "path": "<Mouse>/rightButton",
+                    "path": "<Mouse>/leftButton",
                     "interactions": "",
                     "processors": "",
                     "groups": ";PC",
@@ -164,7 +173,7 @@
                 {
                     "name": "",
                     "id": "4717f5eb-a588-442e-a0c3-298665dba8b4",
-                    "path": "<Gamepad>/rightTrigger",
+                    "path": "<Gamepad>/leftTrigger",
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
@@ -235,6 +244,17 @@
                     "processors": "",
                     "groups": ";Gamepad",
                     "action": "Cheat",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "a2123988-6330-448e-9cea-952d3aa756a8",
+                    "path": "<Mouse>/rightButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "Collect",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
