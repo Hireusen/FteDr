@@ -99,8 +99,49 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
         }
     }
 
+    /// <summary>
+    /// 현재 가방에 담긴 아이템들의 총 무게(KG)입니다.
+    /// </summary>
+    public float MaxWeight
+    {
+        get
+        {
+            int level = CProgressManager.Ins.GetGearLevel(EDataType.Bag);
+            return UData.Bag().MaxWeight(level);
+        }
+    }
+
+    /// <summary>
+    /// 가방에 담긴 아이템들의 현재 총 무게(KG)입니다.
+    /// </summary>
+    public float CurrentWeight
+    {
+        get
+        {
+            float totalWeight = 0f;
+            foreach (string collectibleId in _runtime.bagItems)
+            {
+                CCollectibleSO so = UData.Collectible(collectibleId);
+                if (so != null)
+                {
+                    totalWeight += so.Weight;
+                }
+            }
+            return totalWeight;
+        }
+    }
+
     /// <summary>가방에 빈 슬롯이 있는지 여부입니다.</summary>
     public bool HasBagSpace => _runtime.bagItems.Count < BagCapacity;
+
+    /// <summary>지정한 수집품을 추가했을 때 무게 한도를 넘지 않는지 여부입니다.</summary>
+    /// <param name="collectibleId">수집품 ID</param>
+    public bool HasWeightSpace(string collectibleId)
+    {
+        CCollectibleSO so = UData.Collectible(collectibleId);
+        float addedWeight = so != null ? so.Weight : 0f;
+        return CurrentWeight + addedWeight <= MaxWeight;
+    }
 
     /// <summary>일반 수집품을 가방에 담습니다. 공간이 없으면 false.</summary>
     /// <param name="collectibleId">수집품 ID</param>
@@ -150,6 +191,7 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     private void PublishBag()
     {
         OnPlayerBagChanged.Publish(_runtime.bagItems.Count, BagCapacity);
+        OnPlayerWeightChanged.Publish(CurrentWeight, MaxWeight);
     }
     #endregion
 }

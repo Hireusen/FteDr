@@ -1,3 +1,5 @@
+﻿using System.Collections.Generic;
+
 /// <summary>
 /// 플레이어 데이터 접근의 진입점 역할을 하는 퍼사드 클래스입니다.
 /// </summary>
@@ -38,8 +40,17 @@ public static class UPlayer
     /// <summary>현재 가방 최대 슬롯 수입니다.</summary>
     public static int BagCapacity => Player.BagCapacity;
 
+    /// <summary>현재 레벨의 가방 최대 허용 무게(KG)입니다.</summary>
+    public static float MaxWeight => Player.MaxWeight;
+
+    /// <summary>가방에 담긴 아이템들의 현재 총 무게(KG)입니다.</summary>
+    public static float CurrentWeight => Player.CurrentWeight;
+
     /// <summary>가방에 빈 슬롯이 있는지 여부입니다.</summary>
     public static bool HasBagSpace => Player.HasBagSpace;
+
+    /// <summary>가방에 담긴 수집품 ID 목록입니다. (CInventoryView 슬롯 갱신용, 읽기 전용)</summary>
+    public static IReadOnlyList<string> BagItems => Player.Runtime.bagItems;
 
     /// <summary>일반 수집품을 가방에 담습니다. 공간이 없으면 False</summary>
     /// <param name="collectibleId">수집품 ID</param>
