@@ -73,8 +73,9 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
             if (crashInfos.Count > 0 && _grabInfo.crashedObject == null)
             {
-                print("잡기 시도");
+               
                 _grabInfo = crashInfos.First();
+                print("잡기 시도"+_grabInfo.crashedObject.name);
                 Vector3 f1joint = Vector3.zero;
                 Vector3 f2joint = Vector3.zero;
                 if (_finger1.CrashObjects.TryGetValue(_grabInfo, out CFinger.CrashInfo f1data))
@@ -162,7 +163,9 @@ public class CTwizers : AFrameable, IUpdateFrameable
             CFinger.CrashInfo temp = _grabInfo;
             Destroy(_activeJoint);
             _activeJoint = null;
-
+            _finger1.RemoveCrashinfo(_grabInfo);
+            _finger2.RemoveCrashinfo(_grabInfo);
+            
             _grabInfo = default;
 
             return temp.crashedObject;
