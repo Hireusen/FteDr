@@ -134,14 +134,15 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 temp.x -= 5;
                 _finger2Real.transform.localRotation= Quaternion.Euler(temp);
                 // collision 무시
-                _objectCol=_grabInfo.crashedObject.GetComponent<BoxCollider>();
+                _objectCol=_grabInfo.crashedObject.GetComponent<Collider>();
                 Physics.IgnoreCollision(_finger1Col, _objectCol,true);
                 Physics.IgnoreCollision(_finger2Col, _objectCol, true);
                 Physics.IgnoreCollision(_finger1OutCollider, _objectCol, true);
                 Physics.IgnoreCollision(_finger2OutCollider, _objectCol, true);
 
 
-
+                //테스트용
+                Grabed = true;
                 //브레이크 포스 설정 물건에서 받아와야함
                 // activeJoint.breakForce = 50f;
 
@@ -171,6 +172,11 @@ public class CTwizers : AFrameable, IUpdateFrameable
     }
     public void GrabContinuous()
     {
+        if (Grabed == true)
+        {
+            StopAllCoroutines();
+            return;
+        }
         
         _grabTimer = 0;
         _finger1StartRot = _finger1Real.transform.localRotation;
@@ -261,8 +267,8 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private void Awake()
     {
         _twizersRG=GetComponent<Rigidbody>();
-        _finger1Col=_finger1.GetComponent<BoxCollider>();
-        _finger2Col=_finger2.GetComponent<BoxCollider>();
+        _finger1Col=_finger1.GetComponent<Collider>();
+        _finger2Col=_finger2.GetComponent<Collider>();
         _finger1OriginRot = _finger1Real.transform.localRotation;
         _finger2OriginRot = _finger2Real.transform.localRotation;
 
