@@ -14,8 +14,8 @@ public class CNewGrab : AMono
     [SerializeField] private GameObject _twizersAnchor;
     [SerializeField] private CTwizers _twizers;
     [SerializeField] private ConfigurableJoint _twizersJointToArm;
-    [SerializeField] private float _ShootForce = 10f;
-    [SerializeField] private float _ShrinkSpeed = 10f;
+    [SerializeField] private float _shootForce = 10f;
+    [SerializeField] private float _shrinkSpeed = 10f;
     [SerializeField] private float _twizersRotateSpeed = 1f;
 
     [SerializeField] private Transform _playerCam;
@@ -79,9 +79,7 @@ public class CNewGrab : AMono
     }
     private void ShootWristContinuous()
     {
-        _twizersRigidBody.AddForce(_aimDir* _ShootForce, ForceMode.Force);
-        
-
+        _twizersRigidBody.AddForce(_aimDir* _shootForce, ForceMode.Force);
 
         //거리제한되면 자동으로 그랩동작을 시행한 다음 상태변경한다. 
         if (!DistanceCk())
@@ -114,7 +112,7 @@ public class CNewGrab : AMono
     private void ShrinkArm()
     {
         Vector3 scale = _arm.transform.localScale;
-        scale.z -= _ShrinkSpeed * Time.deltaTime;
+        scale.z -= _shrinkSpeed * Time.deltaTime;
         _arm.transform.localScale = scale;
 
         //팔이 줄어드는 힘을 따로 구현하고 싶으면 이런식으로 구현해야 함.
@@ -145,6 +143,7 @@ public class CNewGrab : AMono
                     aimPos = ray.origin + ray.direction * _AIMDISTANCE;
                 }
                 _aimDir = (aimPos - _arm.transform.position).normalized;
+                _twizersRigidBody.constraints =RigidbodyConstraints.FreezeRotation;
                 _twizers.OpenGrabContinuous();
                 print("상태변경>shooting");
                 grabStatus= EGrabStatus.Shooting;
@@ -160,7 +159,7 @@ public class CNewGrab : AMono
             case EGrabStatus.Connect:
                 print("상태변경>connect");
                 _twizersRigidBody.isKinematic = false;
-                _armRigidBody.isKinematic = false;
+                //_armRigidBody.isKinematic = false;
                 JointOn(_twizersJointToArm, _armRigidBody);
                 JointOn(_armJoint, _shoulderRg);
                 _twizersJointToArm.connectedAnchor = _armEndPivot.transform.localPosition;
