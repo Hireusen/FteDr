@@ -106,6 +106,9 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 activeJoint.yMotion = ConfigurableJointMotion.Locked;
                 activeJoint.zMotion = ConfigurableJointMotion.Locked;
 
+                activeJoint.angularXMotion= ConfigurableJointMotion.Limited;
+                activeJoint.angularYMotion= ConfigurableJointMotion.Limited;
+                activeJoint.angularZMotion = ConfigurableJointMotion.Limited;
                 SoftJointLimit xlowLimit = activeJoint.lowAngularXLimit;
                 xlowLimit.limit = 0f;
                 activeJoint.lowAngularXLimit = xlowLimit;
