@@ -8,6 +8,7 @@ using UnityEngine;
 public class CNewGrab : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
+    [SerializeField] private CPlayerController _controller;
     [SerializeField] private GameObject _shoulder;
     [SerializeField] private GameObject _arm;
     [SerializeField] private GameObject _armEndPivot;
@@ -127,7 +128,7 @@ public class CNewGrab : AMono
         switch (status)
         {
             case EGrabStatus.Wait:
-                _twizers.CollisionOn();
+                _controller.IsControlLocked = false;
                 print("상태변경>wait");
                 grabStatus = EGrabStatus.Wait;
                 break;
@@ -144,6 +145,7 @@ public class CNewGrab : AMono
                 }
                 _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizersRigidBody.constraints =RigidbodyConstraints.FreezeRotation;
+                _controller.IsControlLocked = true;
                 _twizers.OpenGrabContinuous();
                 print("상태변경>shooting");
                 grabStatus= EGrabStatus.Shooting;
@@ -201,7 +203,7 @@ public class CNewGrab : AMono
         }
         _arm.transform.localRotation = Quaternion.Euler(3, -90, -90);
         _twizersAnchor.transform.SetParent(_shoulder.transform, true);
-        grabStatus = EGrabStatus.Wait;
+        ChangeStatus(EGrabStatus.Wait);
     }
   
     #endregion
