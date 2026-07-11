@@ -145,6 +145,15 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Collect"",
+                    ""type"": ""Button"",
+                    ""id"": ""a83ebca2-213a-48e2-b10b-ee1259e20e57"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -239,7 +248,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""aae73500-b1fc-4109-b2b8-9845e86b4f31"",
-                    ""path"": ""<Mouse>/rightButton"",
+                    ""path"": ""<Mouse>/leftButton"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";PC"",
@@ -250,7 +259,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                 {
                     ""name"": """",
                     ""id"": ""4717f5eb-a588-442e-a0c3-298665dba8b4"",
-                    ""path"": ""<Gamepad>/rightTrigger"",
+                    ""path"": ""<Gamepad>/leftTrigger"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": "";Gamepad"",
@@ -323,6 +332,17 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""action"": ""Cheat"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a2123988-6330-448e-9cea-952d3aa756a8"",
+                    ""path"": ""<Mouse>/rightButton"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Collect"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -370,6 +390,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         m_GameMap_Look = m_GameMap.FindAction("Look", throwIfNotFound: true);
         m_GameMap_Grab = m_GameMap.FindAction("Grab", throwIfNotFound: true);
         m_GameMap_Cheat = m_GameMap.FindAction("Cheat", throwIfNotFound: true);
+        m_GameMap_Collect = m_GameMap.FindAction("Collect", throwIfNotFound: true);
     }
 
     ~@InputDispatcher()
@@ -456,6 +477,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
     private readonly InputAction m_GameMap_Look;
     private readonly InputAction m_GameMap_Grab;
     private readonly InputAction m_GameMap_Cheat;
+    private readonly InputAction m_GameMap_Collect;
     /// <summary>
     /// Provides access to input actions defined in input action map "GameMap".
     /// </summary>
@@ -491,6 +513,10 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "GameMap/Cheat".
         /// </summary>
         public InputAction @Cheat => m_Wrapper.m_GameMap_Cheat;
+        /// <summary>
+        /// Provides access to the underlying input action "GameMap/Collect".
+        /// </summary>
+        public InputAction @Collect => m_Wrapper.m_GameMap_Collect;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -535,6 +561,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Cheat.started += instance.OnCheat;
             @Cheat.performed += instance.OnCheat;
             @Cheat.canceled += instance.OnCheat;
+            @Collect.started += instance.OnCollect;
+            @Collect.performed += instance.OnCollect;
+            @Collect.canceled += instance.OnCollect;
         }
 
         /// <summary>
@@ -564,6 +593,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Cheat.started -= instance.OnCheat;
             @Cheat.performed -= instance.OnCheat;
             @Cheat.canceled -= instance.OnCheat;
+            @Collect.started -= instance.OnCollect;
+            @Collect.performed -= instance.OnCollect;
+            @Collect.canceled -= instance.OnCollect;
         }
 
         /// <summary>
@@ -685,5 +717,12 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCheat(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Collect" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnCollect(InputAction.CallbackContext context);
     }
 }

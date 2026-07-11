@@ -1,21 +1,21 @@
 ﻿using System.Collections;
-using Unity.Mathematics;
 using UnityEngine;
 
 /// <summary>
 /// 클래스의 설계 의도입니다.
 /// </summary>
-public class CNewGrab : AMono
+public class CNewGrab : AFrameable, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
+    [SerializeField] private CPlayerController _controller;
     [SerializeField] private GameObject _shoulder;
     [SerializeField] private GameObject _arm;
     [SerializeField] private GameObject _armEndPivot;
     [SerializeField] private GameObject _twizersAnchor;
     [SerializeField] private CTwizers _twizers;
     [SerializeField] private ConfigurableJoint _twizersJointToArm;
-    [SerializeField] private float _ShootForce = 10f;
-    [SerializeField] private float _ShrinkSpeed = 10f;
+    [SerializeField] private float _shootForce = 10f;
+    [SerializeField] private float _shrinkSpeed = 10f;
     [SerializeField] private float _twizersRotateSpeed = 1f;
 
     [SerializeField] private Transform _playerCam;
@@ -34,7 +34,7 @@ public class CNewGrab : AMono
     private float _armOriginLength;
     private Quaternion _grabOffset;
     private Vector3 _aimDir;
-    private const float _AIMDISTANCE=10f;
+    private const float AIMDISTANCE=10f;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -79,9 +79,7 @@ public class CNewGrab : AMono
     }
     private void ShootWristContinuous()
     {
-        _twizersRigidBody.AddForce(_aimDir* _ShootForce, ForceMode.Force);
-        
-
+        _twizersRigidBody.AddForce(_aimDir* _shootForce, ForceMode.Force);
 
         //거리제한되면 자동으로 그랩동작을 시행한 다음 상태변경한다. 
         if (!DistanceCk())
@@ -94,7 +92,7 @@ public class CNewGrab : AMono
     private bool BringDistanceCk()
     {
         float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
-        if(distance<=_armOriginLength) return true;
+        if(distance<=_armOriginLength|| _arm.transform.localScale.z<2.2f) return true;
         else return false;
     }
     private void ExtendArm()
@@ -114,7 +112,7 @@ public class CNewGrab : AMono
     private void ShrinkArm()
     {
         Vector3 scale = _arm.transform.localScale;
-        scale.z -= _ShrinkSpeed * Time.deltaTime;
+        scale.z -= _shrinkSpeed * Time.deltaTime;
         _arm.transform.localScale = scale;
 
         //팔이 줄어드는 힘을 따로 구현하고 싶으면 이런식으로 구현해야 함.
@@ -129,22 +127,24 @@ public class CNewGrab : AMono
         switch (status)
         {
             case EGrabStatus.Wait:
-                _twizers.CollisionOn();
+                _controller.IsControlLocked = false;
                 print("상태변경>wait");
                 grabStatus = EGrabStatus.Wait;
                 break;
             case EGrabStatus.Shooting:
                 Ray ray=new Ray(_playerCam.transform.position, _playerCam.transform.forward);
                 Vector3 aimPos;
-                if(Physics.Raycast(ray, out RaycastHit hit, _AIMDISTANCE))
+                if(Physics.Raycast(ray, out RaycastHit hit, AIMDISTANCE))
                 {
                     aimPos = hit.point;
                 }
                 else
                 {
-                    aimPos = ray.origin + ray.direction * _AIMDISTANCE;
+                    aimPos = ray.origin + ray.direction * AIMDISTANCE;
                 }
                 _aimDir = (aimPos - _arm.transform.position).normalized;
+                _twizersRigidBody.constraints =RigidbodyConstraints.FreezeRotation;
+                _controller.IsControlLocked = true;
                 _twizers.OpenGrabContinuous();
                 print("상태변경>shooting");
                 grabStatus= EGrabStatus.Shooting;
@@ -160,7 +160,7 @@ public class CNewGrab : AMono
             case EGrabStatus.Connect:
                 print("상태변경>connect");
                 _twizersRigidBody.isKinematic = false;
-                _armRigidBody.isKinematic = false;
+                //_armRigidBody.isKinematic = false;
                 JointOn(_twizersJointToArm, _armRigidBody);
                 JointOn(_armJoint, _shoulderRg);
                 _twizersJointToArm.connectedAnchor = _armEndPivot.transform.localPosition;
@@ -182,6 +182,16 @@ public class CNewGrab : AMono
         }
         return item; 
     }
+    private void GrabInputHandler(OnInputGrab data)
+    {
+        if(grabStatus!=EGrabStatus.Wait) return;
+        ShootWrist();
+        ChangeStatus(EGrabStatus.Shooting);
+    }
+    private void CollectInputHandler(OnInputCollect data)
+    {
+        ChangeStatus(EGrabStatus.Grab);
+    }
     private void ArmToOriginPos()
     {
         _twizers.GrabToOriginContinuous();
@@ -202,7 +212,7 @@ public class CNewGrab : AMono
         }
         _arm.transform.localRotation = Quaternion.Euler(3, -90, -90);
         _twizersAnchor.transform.SetParent(_shoulder.transform, true);
-        grabStatus = EGrabStatus.Wait;
+        ChangeStatus(EGrabStatus.Wait);
     }
   
     #endregion
@@ -219,11 +229,14 @@ public class CNewGrab : AMono
         _armOriginLength= (_arm.transform.position - _armEndPivot.transform.position).magnitude;
        
         _grabOffset=Quaternion.Inverse(_arm.transform.localRotation)*_twizersAnchor.transform.localRotation;
+        CEventBus<OnInputGrab>.Subscribe(GrabInputHandler);
+        CEventBus<OnInputCollect>.Subscribe(CollectInputHandler);
 
     }
+    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
     //테스트용
-    private void Update()
-    {   
+    public void ExecuteUpdateFrame()
+    {
         switch(grabStatus){
             case EGrabStatus.Wait:
                 if (Input.GetKey(KeyCode.Q))
@@ -240,21 +253,18 @@ public class CNewGrab : AMono
                     _twizersAnchor.transform.localRotation = temp;
                     //오른집게회전
                 }
-                if (Input.GetKey(KeyCode.K))
-                {
-                    ShootWrist();
-                    ChangeStatus(EGrabStatus.Shooting);
-                }
                 break;
             case EGrabStatus.Shooting:
 
                 ShootWristContinuous();
                 ExtendArm();
+                /*
                 if (Input.GetKey(KeyCode.U))
                 {
                     
                     ChangeStatus(EGrabStatus.Grab);
                 }
+                */
                 break;
             case EGrabStatus.Grab:
                 //물건을 집거나, 집게를 다 닫으면 connect로 이동.
