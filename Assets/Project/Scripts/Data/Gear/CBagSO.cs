@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -10,6 +10,8 @@ public class CBagSO : AGearSO
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("가방 정보")]
     [SerializeField] protected int[] _capacities;
+    [Tooltip("레벨별 최대 허용 무게")]
+    [SerializeField] protected float[] _maxWeights;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -18,6 +20,12 @@ public class CBagSO : AGearSO
     /// </summary>
     /// <param name="level">장비 레벨 (1부터 시작)</param>
     public int Capacity(int level) => GetArrayValueSafely(_capacities, level, -1);
+
+    /// <summary>
+    /// 해당 레벨의 가방 최대 허용 무게를 반환합니다.
+    /// </summary>
+    /// <param name="level">장비 레벨 (1부터 시작)</param>
+    public float MaxWeight(int level) => GetArrayValueSafely(_maxWeights, level, 0f);
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -27,7 +35,9 @@ public class CBagSO : AGearSO
         base.CollectErrorMessage(errorList);
         if (_type != EDataType.Bag) errorList.Add($"{errorList.Count + 1}. 타입이 Bag이 아닙니다.");
         IncorrectArrayToAddError(errorList, _capacities, 0);
+        IncorrectArrayToAddError(errorList, _maxWeights, 0);
     }
+
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────

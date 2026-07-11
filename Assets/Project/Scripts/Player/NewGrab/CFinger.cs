@@ -37,6 +37,14 @@ public class CFinger : AMono
     //objects -> crashobject 교체 시도
     public HashSet<GameObject>Objects  { get; private set; }=new HashSet<GameObject>();
     public HashSet<CrashInfo> CrashObjects { get;private set; }=new HashSet<CrashInfo>();
+
+    public void RemoveCrashinfo(CrashInfo crashInfo)
+    {
+        if (CrashObjects.Contains(crashInfo))
+        {
+            CrashObjects.Remove(crashInfo);
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -85,6 +93,47 @@ public class CFinger : AMono
                 CrashObjects.Remove(temp);
             }
             
+        }
+    }
+    private void OnTriggerEnter(Collider collision)
+    {
+        //objects에 넣은걸 교체하기 위한, crashobjects 코드 추가
+        CrashInfo temp = new CrashInfo();
+        temp.crashedObject = collision.gameObject;
+        if (temp.crashedObject.CompareTag("Collectible"))
+        //if (collision.gameObject.CompareTag("Collectible"))
+        {
+            Objects.Add(collision.gameObject);
+
+            Collider myCollider = GetComponent<Collider>();
+            Vector3 contactPoint = collision.ClosestPoint(myCollider.bounds.center);
+            CrashInfo crashobject = new CrashInfo();
+            crashobject.crashedObject = collision.gameObject;
+            crashobject.crashPoint = contactPoint;
+
+            CrashObjects.Add(crashobject);
+            print(_testnum + "attach");
+
+        }
+    }
+    private void OnTriggerExit(Collider collision)
+    {
+        CrashInfo temp = new CrashInfo();
+        temp.crashedObject = collision.gameObject;
+        if (temp.crashedObject.CompareTag("Collectible"))
+        //if (collision.gameObject.CompareTag("Collectible"))
+        {
+            if (Objects.Contains(collision.gameObject))
+            {
+                Objects.Remove(collision.gameObject);
+                print(_testnum + "deattach");
+            }
+            temp.crashedObject = collision.gameObject;
+            if (CrashObjects.Contains(temp))
+            {
+                CrashObjects.Remove(temp);
+            }
+
         }
     }
     #endregion

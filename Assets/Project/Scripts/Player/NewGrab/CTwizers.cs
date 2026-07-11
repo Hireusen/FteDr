@@ -73,8 +73,9 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
             if (crashInfos.Count > 0 && _grabInfo.crashedObject == null)
             {
-                print("잡기 시도");
+               
                 _grabInfo = crashInfos.First();
+                print("잡기 시도"+_grabInfo.crashedObject.name);
                 Vector3 f1joint = Vector3.zero;
                 Vector3 f2joint = Vector3.zero;
                 if (_finger1.CrashObjects.TryGetValue(_grabInfo, out CFinger.CrashInfo f1data))
@@ -134,14 +135,15 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 temp.x -= 5;
                 _finger2Real.transform.localRotation= Quaternion.Euler(temp);
                 // collision 무시
-                _objectCol=_grabInfo.crashedObject.GetComponent<BoxCollider>();
+                _objectCol=_grabInfo.crashedObject.GetComponent<Collider>();
                 Physics.IgnoreCollision(_finger1Col, _objectCol,true);
                 Physics.IgnoreCollision(_finger2Col, _objectCol, true);
                 Physics.IgnoreCollision(_finger1OutCollider, _objectCol, true);
                 Physics.IgnoreCollision(_finger2OutCollider, _objectCol, true);
 
 
-
+                //테스트용
+                Grabed = true;
                 //브레이크 포스 설정 물건에서 받아와야함
                 // activeJoint.breakForce = 50f;
 
@@ -161,7 +163,9 @@ public class CTwizers : AFrameable, IUpdateFrameable
             CFinger.CrashInfo temp = _grabInfo;
             Destroy(_activeJoint);
             _activeJoint = null;
-
+            _finger1.RemoveCrashinfo(_grabInfo);
+            _finger2.RemoveCrashinfo(_grabInfo);
+            
             _grabInfo = default;
 
             return temp.crashedObject;
@@ -171,6 +175,11 @@ public class CTwizers : AFrameable, IUpdateFrameable
     }
     public void GrabContinuous()
     {
+        if (Grabed == true)
+        {
+            StopAllCoroutines();
+            return;
+        }
         
         _grabTimer = 0;
         _finger1StartRot = _finger1Real.transform.localRotation;
@@ -261,8 +270,8 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private void Awake()
     {
         _twizersRG=GetComponent<Rigidbody>();
-        _finger1Col=_finger1.GetComponent<BoxCollider>();
-        _finger2Col=_finger2.GetComponent<BoxCollider>();
+        _finger1Col=_finger1.GetComponent<Collider>();
+        _finger2Col=_finger2.GetComponent<Collider>();
         _finger1OriginRot = _finger1Real.transform.localRotation;
         _finger2OriginRot = _finger2Real.transform.localRotation;
 
