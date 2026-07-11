@@ -63,6 +63,12 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     public EPlayerState CurrentState => _currentState;
 
+    public bool IsControlLocked
+    {
+        get { return _controlLocked; }
+        set { _controlLocked = value; }
+    }
+
     /// <summary>
     /// 카메라가 시선 각도를 넘겨주는 창구입니다. 실제 회전은 FixedUpdate 에서 적용됩니다.
     /// </summary>
