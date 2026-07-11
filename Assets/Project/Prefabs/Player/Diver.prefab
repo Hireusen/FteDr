@@ -595,7 +595,7 @@ MonoBehaviour:
   _grab2OpenAngle: -40
   _grab2CloseAngle: 20
   _grabTime: 1.5
-  _grabOpenTime: 1
+  _grabOpenTime: 0.5
   _breakWaitTimeSetting: 1
 --- !u!54 &625193293044476767
 Rigidbody:
@@ -1249,7 +1249,6 @@ GameObject:
   - component: {fileID: 2114748805351314576}
   - component: {fileID: 505861631731399950}
   - component: {fileID: 365733235713035606}
-  - component: {fileID: 243836967530816513}
   m_Layer: 0
   m_Name: collider
   m_TagString: Untagged
@@ -1287,7 +1286,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1306,33 +1305,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _testnum: 0
---- !u!54 &243836967530816513
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4821148911018811471}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!1 &5237470892924658086
 GameObject:
   m_ObjectHideFlags: 0
@@ -1527,7 +1499,7 @@ MonoBehaviour:
   _twizersAnchor: {fileID: 2733369294622680521}
   _twizers: {fileID: 8287872184708301779}
   _twizersJointToArm: {fileID: 249347402678089730}
-  _shootForce: 40
+  _shootForce: 20
   _shrinkSpeed: 80
   _twizersRotateSpeed: 1
   _playerCam: {fileID: 0}
@@ -1783,7 +1755,6 @@ GameObject:
   - component: {fileID: 4245769918324513042}
   - component: {fileID: 5212097398552496620}
   - component: {fileID: 5569439592056652415}
-  - component: {fileID: 7064659080250091844}
   m_Layer: 0
   m_Name: collider
   m_TagString: Untagged
@@ -1821,7 +1792,7 @@ BoxCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
@@ -1840,33 +1811,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _testnum: 0
---- !u!54 &7064659080250091844
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6665037978415677799}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 1
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!1 &6758426414823448793
 GameObject:
   m_ObjectHideFlags: 0

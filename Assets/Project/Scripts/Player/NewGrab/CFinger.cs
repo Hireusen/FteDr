@@ -87,6 +87,41 @@ public class CFinger : AMono
             
         }
     }
+    private void OnTriggerEnter(Collider collision)
+    {
+        //objects에 넣은걸 교체하기 위한, crashobjects 코드 추가
+        if (collision.gameObject.CompareTag("Collectible"))
+        {
+            Objects.Add(collision.gameObject);
+
+            Collider myCollider = GetComponent<Collider>();
+            Vector3 contactPoint = collision.ClosestPoint(myCollider.bounds.center);
+            CrashInfo crashobject = new CrashInfo();
+            crashobject.crashedObject = collision.gameObject;
+            crashobject.crashPoint = contactPoint;
+
+            CrashObjects.Add(crashobject);
+            print(_testnum + "attach");
+        }
+    }
+    private void OnTriggerExit(Collider collision)
+    {
+        if (collision.gameObject.CompareTag("Collectible"))
+        {
+            if (Objects.Contains(collision.gameObject))
+            {
+                Objects.Remove(collision.gameObject);
+                print(_testnum + "deattach");
+            }
+            CrashInfo temp = new CrashInfo();
+            temp.crashedObject = collision.gameObject;
+            if (CrashObjects.Contains(temp))
+            {
+                CrashObjects.Remove(temp);
+            }
+
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
