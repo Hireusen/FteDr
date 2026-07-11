@@ -584,21 +584,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39fc228866974a142a302e303e7d7586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  customGravity: -10
   _finger1: {fileID: 5569439592056652415}
   _finger2: {fileID: 365733235713035606}
   _finger1Real: {fileID: 2524359359755276763}
   _finger2Real: {fileID: 4658465080042313822}
   _finger1OutCollider: {fileID: 7772061520700081778}
   _finger2OutCollider: {fileID: 3015443919550665294}
-  _grabSpeed: 10
   _grab1OpenAngle: 30
   _grab1CloseAngle: -16
   _grab2OpenAngle: -40
   _grab2CloseAngle: 20
-  grabTime: 1
-  grabOpenTime: 0.5
-  breakWaitTimeSetting: 1
+  _grabTime: 1.5
+  _grabOpenTime: 1
+  _breakWaitTimeSetting: 1
 --- !u!54 &625193293044476767
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1530,7 +1528,7 @@ MonoBehaviour:
   _twizers: {fileID: 8287872184708301779}
   _twizersJointToArm: {fileID: 249347402678089730}
   _shootForce: 40
-  _shrinkSpeed: 60
+  _shrinkSpeed: 80
   _twizersRotateSpeed: 1
   _playerCam: {fileID: 0}
   _maxdistance: 1
