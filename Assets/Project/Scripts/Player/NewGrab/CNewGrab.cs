@@ -1,11 +1,10 @@
 ﻿using System.Collections;
-using Unity.Mathematics;
 using UnityEngine;
 
 /// <summary>
 /// 클래스의 설계 의도입니다.
 /// </summary>
-public class CNewGrab : AMono
+public class CNewGrab : AFrameable, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [SerializeField] private CPlayerController _controller;
@@ -35,7 +34,7 @@ public class CNewGrab : AMono
     private float _armOriginLength;
     private Quaternion _grabOffset;
     private Vector3 _aimDir;
-    private const float _AIMDISTANCE=10f;
+    private const float AIMDISTANCE=10f;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -93,7 +92,7 @@ public class CNewGrab : AMono
     private bool BringDistanceCk()
     {
         float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
-        if(distance<=_armOriginLength) return true;
+        if(distance<=_armOriginLength|| _arm.transform.localScale.z<2.2f) return true;
         else return false;
     }
     private void ExtendArm()
@@ -135,13 +134,13 @@ public class CNewGrab : AMono
             case EGrabStatus.Shooting:
                 Ray ray=new Ray(_playerCam.transform.position, _playerCam.transform.forward);
                 Vector3 aimPos;
-                if(Physics.Raycast(ray, out RaycastHit hit, _AIMDISTANCE))
+                if(Physics.Raycast(ray, out RaycastHit hit, AIMDISTANCE))
                 {
                     aimPos = hit.point;
                 }
                 else
                 {
-                    aimPos = ray.origin + ray.direction * _AIMDISTANCE;
+                    aimPos = ray.origin + ray.direction * AIMDISTANCE;
                 }
                 _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizersRigidBody.constraints =RigidbodyConstraints.FreezeRotation;
@@ -183,6 +182,16 @@ public class CNewGrab : AMono
         }
         return item; 
     }
+    private void GrabInputHandler(OnInputGrab data)
+    {
+        if(grabStatus!=EGrabStatus.Wait) return;
+        ShootWrist();
+        ChangeStatus(EGrabStatus.Shooting);
+    }
+    private void CollectInputHandler(OnInputCollect data)
+    {
+        ChangeStatus(EGrabStatus.Grab);
+    }
     private void ArmToOriginPos()
     {
         _twizers.GrabToOriginContinuous();
@@ -220,11 +229,14 @@ public class CNewGrab : AMono
         _armOriginLength= (_arm.transform.position - _armEndPivot.transform.position).magnitude;
        
         _grabOffset=Quaternion.Inverse(_arm.transform.localRotation)*_twizersAnchor.transform.localRotation;
+        CEventBus<OnInputGrab>.Subscribe(GrabInputHandler);
+        CEventBus<OnInputCollect>.Subscribe(CollectInputHandler);
 
     }
+    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
     //테스트용
-    private void Update()
-    {   
+    public void ExecuteUpdateFrame()
+    {
         switch(grabStatus){
             case EGrabStatus.Wait:
                 if (Input.GetKey(KeyCode.Q))
@@ -241,21 +253,18 @@ public class CNewGrab : AMono
                     _twizersAnchor.transform.localRotation = temp;
                     //오른집게회전
                 }
-                if (Input.GetKey(KeyCode.K))
-                {
-                    ShootWrist();
-                    ChangeStatus(EGrabStatus.Shooting);
-                }
                 break;
             case EGrabStatus.Shooting:
 
                 ShootWristContinuous();
                 ExtendArm();
+                /*
                 if (Input.GetKey(KeyCode.U))
                 {
                     
                     ChangeStatus(EGrabStatus.Grab);
                 }
+                */
                 break;
             case EGrabStatus.Grab:
                 //물건을 집거나, 집게를 다 닫으면 connect로 이동.

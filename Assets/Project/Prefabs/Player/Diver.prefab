@@ -584,21 +584,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 39fc228866974a142a302e303e7d7586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  customGravity: -10
   _finger1: {fileID: 5569439592056652415}
   _finger2: {fileID: 365733235713035606}
   _finger1Real: {fileID: 2524359359755276763}
   _finger2Real: {fileID: 4658465080042313822}
   _finger1OutCollider: {fileID: 7772061520700081778}
   _finger2OutCollider: {fileID: 3015443919550665294}
-  _grabSpeed: 10
   _grab1OpenAngle: 30
   _grab1CloseAngle: -16
   _grab2OpenAngle: -40
   _grab2CloseAngle: 20
-  grabTime: 1
-  grabOpenTime: 0.5
-  breakWaitTimeSetting: 1
+  _grabTime: 1.5
+  _grabOpenTime: 1
+  _breakWaitTimeSetting: 1
 --- !u!54 &625193293044476767
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -644,9 +642,9 @@ ConfigurableJoint:
   m_XMotion: 2
   m_YMotion: 2
   m_ZMotion: 2
-  m_AngularXMotion: 2
-  m_AngularYMotion: 2
-  m_AngularZMotion: 2
+  m_AngularXMotion: 1
+  m_AngularYMotion: 1
+  m_AngularZMotion: 0
   m_LinearLimitSpring:
     spring: 0
     damper: 0
@@ -1522,14 +1520,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75fdc5110b6c09f45a1dbe2b2a6a6572, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _controller: {fileID: 3261221692145292238}
   _shoulder: {fileID: 8697206564099041932}
   _arm: {fileID: 1090154631313904629}
   _armEndPivot: {fileID: 3638508176884693699}
   _twizersAnchor: {fileID: 2733369294622680521}
   _twizers: {fileID: 8287872184708301779}
   _twizersJointToArm: {fileID: 249347402678089730}
-  _ShootForce: 3
-  _ShrinkSpeed: 20
+  _shootForce: 40
+  _shrinkSpeed: 80
   _twizersRotateSpeed: 1
   _playerCam: {fileID: 0}
   _maxdistance: 1
@@ -1567,11 +1566,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6dbdbd00a0d202418d5f3bfa07565b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _moveSpeed: 20
+  _moveSpeed: 40
   _groundMoveSpeed: 2
-  _jumpForce: 20
-  _ascendForce: 20
-  _waterGravity: 1
+  _jumpForce: 40
+  _ascendForce: 40
+  _waterGravity: 0
   _waterDrag: 3
   _cameraTransform: {fileID: 0}
   _cameraRoot: {fileID: 3944606512385391101}

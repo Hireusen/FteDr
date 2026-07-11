@@ -36,7 +36,7 @@ public class CFinger : AMono
 
     //objects -> crashobject 교체 시도
     public HashSet<GameObject>Objects  { get; private set; }=new HashSet<GameObject>();
-    public HashSet<CrashInfo> crashObjects { get;private set; }=new HashSet<CrashInfo>();
+    public HashSet<CrashInfo> CrashObjects { get;private set; }=new HashSet<CrashInfo>();
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -64,7 +64,7 @@ public class CFinger : AMono
             crashobject.crashedObject = collision.gameObject;
             crashobject.crashPoint = avgPoint;
 
-            crashObjects.Add(crashobject);
+            CrashObjects.Add(crashobject);
             print(_testnum + "attach");
         }
         
@@ -80,9 +80,9 @@ public class CFinger : AMono
             }
             CrashInfo temp=new CrashInfo();
             temp.crashedObject = collision.gameObject;
-            if (crashObjects.Contains(temp))
+            if (CrashObjects.Contains(temp))
             {
-                crashObjects.Remove(temp);
+                CrashObjects.Remove(temp);
             }
             
         }
