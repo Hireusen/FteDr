@@ -19,7 +19,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     [SerializeField] private float _twizersRotateSpeed = 1f;
 
     [SerializeField] private Transform _playerCam;
-    [SerializeField] private float _maxdistance=3f;
+   
     
     
 
@@ -49,6 +49,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
         BringComplete
     }
     public EGrabStatus grabStatus=EGrabStatus.Wait;
+    public float Maxdistance { get; private set; } = 3f;
     public void ShootWrist()
     {
         _twizersRigidBody.isKinematic = false;
@@ -74,7 +75,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     private bool DistanceCk()
     {
         float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
-        if (distance < _maxdistance) return true;
+        if (distance < Maxdistance) return true;
         else return false;
     }
     private void ShootWristContinuous()
@@ -142,6 +143,9 @@ public class CNewGrab : AFrameable, IUpdateFrameable
                 {
                     aimPos = ray.origin + ray.direction * AIMDISTANCE;
                 }
+                float aimDistance=(aimPos - _playerCam.transform.localPosition).magnitude;
+                if (aimDistance < 0.2f) return;
+                ShootWrist();
                 _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizersRigidBody.constraints =RigidbodyConstraints.FreezeRotation;
                 _controller.IsControlLocked = true;
@@ -185,12 +189,12 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     private void GrabInputHandler(OnInputGrab data)
     {
         if(grabStatus!=EGrabStatus.Wait) return;
-        ShootWrist();
+        
         ChangeStatus(EGrabStatus.Shooting);
     }
     private void CollectInputHandler(OnInputCollect data)
     {
-        ChangeStatus(EGrabStatus.Grab);
+        if(grabStatus==EGrabStatus.Shooting)ChangeStatus(EGrabStatus.Grab);
     }
     private void ArmToOriginPos()
     {
