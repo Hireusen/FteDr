@@ -6,6 +6,7 @@ using UnityEngine.UI;
 /// </summary>
 public class CAimShow : AFrameable, IUpdateFrameable
 {
+    [SerializeField] private CNewGrab _grabScript;
     [SerializeField] private Image _aimImg;
     [SerializeField] private Transform _cam;
     [SerializeField] private Transform _armTransform;
@@ -22,11 +23,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
         Reached
     }
 
-    // 잡을 수 있는 상태면 초록불, 아니면 빨간불, 물건을 조준하고 있지 않은 상태면 파란불
-    public void AimColorChange(float maxDistance,float distance)
-    {
-    }
-
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
     public void ShowOutLineInDistance()
     {
@@ -39,12 +35,22 @@ public class CAimShow : AFrameable, IUpdateFrameable
                 _currentAimObject=hit.collider.GetComponent<CCollectible>();
                 _currentAimObject.ShowOutline();
                 print("outlineshow");
+                
+            }
+            if ((_armTransform.position - hit.point).magnitude < _grabScript.Maxdistance)
+            {
+                ChangeState(EAimStatus.Reached);
+            }
+            else
+            {
+                ChangeState(EAimStatus.UnReached);
             }
         }
         else
         {
             if (_currentAimObject != null)
             {
+                ChangeState(EAimStatus.Normal);
                 _currentAimObject.HideOutline();
                 _currentAimObject = null;
             }
@@ -63,7 +69,22 @@ public class CAimShow : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-
+    private void ChangeState(EAimStatus status)
+    {
+        EAimStatus nextStatus = status;
+        switch (nextStatus)
+        {
+            case EAimStatus.Normal:
+                _aimImg.color = Color.white;
+                break;
+            case EAimStatus.UnReached:
+                _aimImg.color = Color.red;
+                break;
+            case EAimStatus.Reached:
+                _aimImg.color = Color.green;
+                break;
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────

@@ -19,7 +19,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     [SerializeField] private float _twizersRotateSpeed = 1f;
 
     [SerializeField] private Transform _playerCam;
-    [SerializeField] private float _maxdistance=3f;
+   
     
     
 
@@ -49,6 +49,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
         BringComplete
     }
     public EGrabStatus grabStatus=EGrabStatus.Wait;
+    public float Maxdistance { get; private set; } = 3f;
     public void ShootWrist()
     {
         _twizersRigidBody.isKinematic = false;
@@ -74,7 +75,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     private bool DistanceCk()
     {
         float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
-        if (distance < _maxdistance) return true;
+        if (distance < Maxdistance) return true;
         else return false;
     }
     private void ShootWristContinuous()
