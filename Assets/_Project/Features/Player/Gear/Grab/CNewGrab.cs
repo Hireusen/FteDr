@@ -142,6 +142,9 @@ public class CNewGrab : AFrameable, IUpdateFrameable
                 {
                     aimPos = ray.origin + ray.direction * AIMDISTANCE;
                 }
+                float aimDistance=(aimPos - _playerCam.transform.localPosition).magnitude;
+                if (aimDistance < 0.2f) return;
+                ShootWrist();
                 _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizersRigidBody.constraints =RigidbodyConstraints.FreezeRotation;
                 _controller.IsControlLocked = true;
@@ -185,7 +188,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     private void GrabInputHandler(OnInputGrab data)
     {
         if(grabStatus!=EGrabStatus.Wait) return;
-        ShootWrist();
+        
         ChangeStatus(EGrabStatus.Shooting);
     }
     private void CollectInputHandler(OnInputCollect data)

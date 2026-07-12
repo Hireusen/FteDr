@@ -30,6 +30,7 @@ public class COutline : AMono
     {
         _outline = gameObject.AddComponent<Outline>();
         _outline.enabled = false;
+        _outline.OutlineMode = Outline.Mode.OutlineVisible;
         switch (_outLineType)
         {
             case EOutLineType.Normal:
