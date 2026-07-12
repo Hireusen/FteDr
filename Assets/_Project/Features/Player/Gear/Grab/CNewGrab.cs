@@ -190,7 +190,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     }
     private void CollectInputHandler(OnInputCollect data)
     {
-        ChangeStatus(EGrabStatus.Grab);
+        if(grabStatus==EGrabStatus.Shooting)ChangeStatus(EGrabStatus.Grab);
     }
     private void ArmToOriginPos()
     {
