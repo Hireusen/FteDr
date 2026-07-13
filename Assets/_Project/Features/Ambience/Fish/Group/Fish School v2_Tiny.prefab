@@ -23,12 +23,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1712193693}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6023623886322974147}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6023623886322974145
 GameObject:
@@ -42,7 +43,7 @@ GameObject:
   - component: {fileID: 6023623886322974144}
   - component: {fileID: 624194975}
   m_Layer: 0
-  m_Name: Fish School
+  m_Name: Fish School v2_Tiny
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -55,13 +56,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6023623886322974145}
+  serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1712193694}
   m_Father: {fileID: 0}
-  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &6023623886322974144
 MonoBehaviour:
@@ -76,13 +78,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   fishPrefabs:
-  - {fileID: 3498951818301069886, guid: 4c22850fa43db6244866531d6c723aea, type: 3}
-  - {fileID: 609755293658269740, guid: 1ef5583172f4c05408c0d64359b3f3cc, type: 3}
-  - {fileID: 3895297913362526016, guid: e518ac867a11aed44a1c895ef554e7e3, type: 3}
+  - {fileID: 9183382367799312789, guid: 6bbaa3948cdc8144d9e0da23e82c16d9, type: 3}
+  - {fileID: 6343341569803274926, guid: ab809573628339040bc5f1c679191c84, type: 3}
+  - {fileID: 6413120399189643435, guid: 4cd8477d307541049a1317866b155b01, type: 3}
+  - {fileID: 996938285280007355, guid: 0efe42c1f37b81346b3da3fd8b8ee2f7, type: 3}
+  - {fileID: 3011251828267339229, guid: eafbbdb14d265d040998187be4604c14, type: 3}
   fishSchool: {fileID: 6023623886322974145}
-  wanderSize: 7
+  wanderSize: 2
   target: {fileID: 1712193693}
-  numFish: 10
+  numFish: 5
   allFish: []
 --- !u!114 &624194975
 MonoBehaviour:
@@ -97,5 +101,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveRange: 2
-  moveSpeed: 10
-  positionChangeSpeed: {x: 3, y: 4}
+  moveSpeed: 2
+  positionChangeSpeed: {x: 5, y: 8}

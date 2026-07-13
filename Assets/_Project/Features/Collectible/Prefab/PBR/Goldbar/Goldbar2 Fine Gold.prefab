@@ -58,7 +58,8 @@ GameObject:
   - component: {fileID: 3371276}
   - component: {fileID: 2312802}
   - component: {fileID: 7661162448256395029}
-  - component: {fileID: 8377669380588854363}
+  - component: {fileID: 996637801162242029}
+  - component: {fileID: 7772928754333645449}
   m_Layer: 9
   m_Name: Visual
   m_TagString: Collectible
@@ -144,9 +145,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _outLineType: 0
---- !u!64 &8377669380588854363
-MeshCollider:
+--- !u!114 &996637801162242029
+MonoBehaviour:
   m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 193712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0921f9e6d5955b04e8be53a1c3f70933, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 3371276}
+  isTrigger: 0
+  hideColliders: 1
+  physicMaterial: {fileID: 0}
+  parameters:
+    threshold: 0.05
+    preprocessMode: 0
+    preprocessResolution: 50
+    sampleResolution: 2000
+    mctsNodes: 20
+    mctsIteration: 150
+    mctsMaxDepth: 3
+    pca: 0
+    merge: 1
+    maxConvexHull: -1
+    seed: 0
+  _colliderData: {fileID: 11400000, guid: ee92b56fde3f3b240bf5445d7b577009, type: 2}
+  _colliders:
+  - {fileID: 7772928754333645449}
+--- !u!64 &7772928754333645449
+MeshCollider:
+  m_ObjectHideFlags: 2
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -163,6 +195,6 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: ce42b52260aac5a46b518998be782f94, type: 3}
+  m_Mesh: {fileID: -8610534216948590113, guid: ee92b56fde3f3b240bf5445d7b577009, type: 2}
