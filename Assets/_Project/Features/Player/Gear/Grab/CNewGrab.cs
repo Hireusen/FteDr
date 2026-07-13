@@ -49,7 +49,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
         BringComplete
     }
     public EGrabStatus grabStatus = EGrabStatus.Wait;
-    public float Maxdistance { get; private set; } = 3f;
+    public float Maxdistance { get; private set; } = 2f;
     public void ShootWrist()
     {
         _twizersRigidBody.isKinematic = false;
@@ -134,6 +134,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
                 break;
             case EGrabStatus.Shooting:
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
+                USound.PlaySfx("SFX_robotics2");
                 Vector3 aimPos;
                 if (Physics.Raycast(ray, out RaycastHit hit, AIMDISTANCE))
                 {
