@@ -33,7 +33,7 @@ public class CAssetLocker : AssetPostprocessor
         if (!Directory.Exists(path))
         {
             UDebug.Print($"현재 대용량 에셋을 담을 폴더가 존재하지 않습니다!" +
-                $"\nLargeCapacityAssets 폴더를 Assets 폴더 안에 생성해주세요!", LogType.Error);
+                $"\n{K.ASSETS_IGNORED_FOLDER_NAME} 폴더를 Assets 폴더 안에 생성해주세요!", LogType.Error);
             return;
         }
 
