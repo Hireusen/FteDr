@@ -154,6 +154,15 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Descent"",
+                    ""type"": ""Button"",
+                    ""id"": ""bfc684cc-509c-4c5c-aba8-4bf023b53aa1"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -343,6 +352,17 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""action"": ""Collect"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9de08b31-4982-4aac-a93b-f36d034030e8"",
+                    ""path"": ""<Keyboard>/ctrl"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Descent"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -391,6 +411,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         m_GameMap_Grab = m_GameMap.FindAction("Grab", throwIfNotFound: true);
         m_GameMap_Cheat = m_GameMap.FindAction("Cheat", throwIfNotFound: true);
         m_GameMap_Collect = m_GameMap.FindAction("Collect", throwIfNotFound: true);
+        m_GameMap_Descent = m_GameMap.FindAction("Descent", throwIfNotFound: true);
     }
 
     ~@InputDispatcher()
@@ -478,6 +499,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
     private readonly InputAction m_GameMap_Grab;
     private readonly InputAction m_GameMap_Cheat;
     private readonly InputAction m_GameMap_Collect;
+    private readonly InputAction m_GameMap_Descent;
     /// <summary>
     /// Provides access to input actions defined in input action map "GameMap".
     /// </summary>
@@ -517,6 +539,10 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "GameMap/Collect".
         /// </summary>
         public InputAction @Collect => m_Wrapper.m_GameMap_Collect;
+        /// <summary>
+        /// Provides access to the underlying input action "GameMap/Descent".
+        /// </summary>
+        public InputAction @Descent => m_Wrapper.m_GameMap_Descent;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -564,6 +590,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Collect.started += instance.OnCollect;
             @Collect.performed += instance.OnCollect;
             @Collect.canceled += instance.OnCollect;
+            @Descent.started += instance.OnDescent;
+            @Descent.performed += instance.OnDescent;
+            @Descent.canceled += instance.OnDescent;
         }
 
         /// <summary>
@@ -596,6 +625,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Collect.started -= instance.OnCollect;
             @Collect.performed -= instance.OnCollect;
             @Collect.canceled -= instance.OnCollect;
+            @Descent.started -= instance.OnDescent;
+            @Descent.performed -= instance.OnDescent;
+            @Descent.canceled -= instance.OnDescent;
         }
 
         /// <summary>
@@ -724,5 +756,12 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnCollect(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Descent" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnDescent(InputAction.CallbackContext context);
     }
 }

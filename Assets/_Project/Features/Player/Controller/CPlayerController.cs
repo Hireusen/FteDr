@@ -12,10 +12,9 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     [Tooltip("지상 이동 속도(m/s). 속도 직접 제어라 미끄러짐 없음")]
     [SerializeField] private float _groundMoveSpeed = 6f;
     [SerializeField] private float _jumpForce;
-    [SerializeField] private float _ascendForce;
+    [SerializeField] private float _verticalForce;
 
     [Header("수중 물리 세팅")]
-    [SerializeField] private float _waterGravity;
     [SerializeField] private float _waterDrag;
 
     [Header("이동 방향 참조")]
@@ -30,6 +29,8 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     [Header("바닥 감지 설정")]
     [SerializeField] private float _groundCheckDistance;
+    [Tooltip("바닥 판정 레이를 발 위치보다 살짝 위에서 쏘는 거리. 몸이 땅에 조금 파묻혀도 감지되게 함")]
+    [SerializeField] private float _groundCheckUpOffset = 0.3f;
     [SerializeField] private LayerMask _groundLayer;
 
     [Header("연료 상태")]
@@ -53,6 +54,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     private EPlayerState _currentState = EPlayerState.OnGround;
 
     private bool _isJumpPressed = false;
+    private bool _isDescentPressed = false;
 
     private float _fuelSpeedMultiplier = 1f;
 
@@ -68,6 +70,20 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     /// <summary>하나의 사유라도 서 있으면 조작이 잠깁니다.</summary>
     public bool IsControlLocked => _lockByGrab || _lockByFuel;
+
+    /// <summary>
+    /// 시선(회전)을 제외한 실제 이동 조작(이동/상승)이 들어오고 있는지 여부입니다.
+    /// 연료 소모 판정용이며, 조작이 잠긴 동안에는 실제 이동이 없으므로 false입니다.
+    /// </summary>
+    public bool HasMovementInput
+    {
+        get
+        {
+            if (IsControlLocked) return false;
+            if (_isJumpPressed) return true; // 상승(수중) / 점프
+            return _currentMoveInput.sqrMagnitude > 0.0001f;
+        }
+    }
 
     /// <summary>집게 사용 등으로 인한 조작 잠금 사유를 켜고 끕니다.</summary>
     public bool IsControlLockedByGrab
@@ -102,14 +118,17 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
         if (_currentState == EPlayerState.Swimming)
         {
-            // 수영: 힘 기반 이동 (물의 관성 유지)
+            // 수영: 힘 기반 이동 (물의 관성 유지). 수중 중력 없음 → 입력 없으면 그 자리에 부유
             _rb.AddForce(_moveDirection * (_moveSpeed * _fuelSpeedMultiplier), ForceMode.Force);
-
-            _rb.AddForce(Vector3.down * _waterGravity, ForceMode.Acceleration);
 
             if (_isJumpPressed && !IsControlLocked)
             {
-                _rb.AddForce(Vector3.up * (_ascendForce * _fuelSpeedMultiplier), ForceMode.Force);
+                _rb.AddForce(Vector3.up * (_verticalForce * _fuelSpeedMultiplier), ForceMode.Force);
+            }
+
+            if (_isDescentPressed && !IsControlLocked)
+            {
+                _rb.AddForce(Vector3.down * (_verticalForce * _fuelSpeedMultiplier), ForceMode.Force);
             }
         }
         else
@@ -120,7 +139,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
             if (_isJumpPressed && !IsControlLocked)
             {
-                if (_rb.velocity.y <= 0.1f && Physics.Raycast(transform.position, Vector3.down, _groundCheckDistance, _groundLayer))
+                if (_rb.velocity.y <= 0.1f && IsGrounded())
                 {
                     _rb.velocity = new Vector3(_rb.velocity.x, 0f, _rb.velocity.z);
                     _rb.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
@@ -157,7 +176,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     private void CheckWaterGround()
     {
-        bool isGround = Physics.Raycast(transform.position, Vector3.down, _groundCheckDistance, _groundLayer);
+        bool isGround = IsGrounded();
 
         if (isGround && _currentState == EPlayerState.Swimming)
         {
@@ -215,6 +234,15 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         return dir.normalized;
     }
 
+    // 지면 위에 있는지 판정합니다. 몸이 땅에 조금 파묻혀도 감지되도록
+    // 시작점을 살짝 위로 올리고, 그만큼 레이 길이를 늘려서 아래로 쏩니다.
+    private bool IsGrounded()
+    {
+        Vector3 origin = transform.position + Vector3.up * _groundCheckUpOffset;
+        float distance = _groundCheckUpOffset + _groundCheckDistance;
+        return Physics.Raycast(origin, Vector3.down, distance, _groundLayer);
+    }
+
     private void ApplyFuelState(EFuelState state)
     {
         switch (state)
@@ -245,6 +273,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         CEventBus<OnInputMove>.Unsubscribe(MoveHandler);
         CEventBus<OnInputJump>.Unsubscribe(JumpHandler);
         CEventBus<OnInputEsc>.Unsubscribe(EscHandler);
+        CEventBus<OnInputDescent>.Unsubscribe(DescentHandler);
         CEventBus<OnPlayerFuelStateChanged>.Unsubscribe(FuelStateHandler);
     }
 
@@ -267,6 +296,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         CEventBus<OnInputMove>.Subscribe(MoveHandler);
         CEventBus<OnInputJump>.Subscribe(JumpHandler);
         CEventBus<OnInputEsc>.Subscribe(EscHandler);
+        CEventBus<OnInputDescent>.Subscribe(DescentHandler);
         CEventBus<OnPlayerFuelStateChanged>.Subscribe(FuelStateHandler);
 
         ApplyFuelState(CPlayerManager.Ins.FuelState);
@@ -298,6 +328,13 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     private void JumpHandler(OnInputJump data)
     {
         _isJumpPressed = data.jumpPressed;
+        UDebug.Print($"[Jump] {data.jumpPressed}");
+    }
+
+    private void DescentHandler(OnInputDescent data)
+    {
+        _isDescentPressed = data.descentPressed;
+        UDebug.Print($"[Descent] {data.descentPressed}");
     }
 
     private void EscHandler(OnInputEsc data)

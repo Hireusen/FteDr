@@ -1503,7 +1503,6 @@ MonoBehaviour:
   _shrinkSpeed: 80
   _twizersRotateSpeed: 1
   _playerCam: {fileID: 0}
-  _maxdistance: 1
   grabStatus: 0
 --- !u!95 &3872504200272043507
 Animator:
@@ -1541,13 +1540,13 @@ MonoBehaviour:
   _moveSpeed: 40
   _groundMoveSpeed: 2
   _jumpForce: 40
-  _ascendForce: 40
-  _waterGravity: 0
+  _verticalForce: 30
   _waterDrag: 3
   _cameraTransform: {fileID: 0}
   _cameraRoot: {fileID: 3944606512385391101}
   _postureBlendSharpness: 8
   _groundCheckDistance: 0.1
+  _groundCheckUpOffset: 0.3
   _groundLayer:
     serializedVersion: 2
     m_Bits: 256

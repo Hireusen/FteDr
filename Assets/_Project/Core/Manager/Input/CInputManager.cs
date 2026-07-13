@@ -99,6 +99,17 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
             OnInputCheat.Publish();
         }
     }
+    public void OnDescent(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OnInputDescent.Publish(true);
+        }
+        else if (ctx.canceled)
+        {
+            OnInputDescent.Publish(false);
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
