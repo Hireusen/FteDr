@@ -10,7 +10,7 @@ public readonly struct OnInputDescent
         this.descentPressed = descentPressed;
     }
 
-    /// <param name="descentPressed">점프 입력 여부</param>
+    /// <param name="descentPressed">하강 입력 여부</param>
     public static void Publish(bool descentPressed)
     {
         CEventBus<OnInputDescent>.Publish(new OnInputDescent(descentPressed));

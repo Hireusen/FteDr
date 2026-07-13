@@ -328,13 +328,11 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     private void JumpHandler(OnInputJump data)
     {
         _isJumpPressed = data.jumpPressed;
-        UDebug.Print($"[Jump] {data.jumpPressed}");
     }
 
     private void DescentHandler(OnInputDescent data)
     {
         _isDescentPressed = data.descentPressed;
-        UDebug.Print($"[Descent] {data.descentPressed}");
     }
 
     private void EscHandler(OnInputEsc data)
