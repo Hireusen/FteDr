@@ -21,6 +21,8 @@ public class CTwizers : AFrameable, IUpdateFrameable
     [SerializeField] private float _grabTime = 3f;
     [SerializeField] private float _grabOpenTime = 1f;
     [SerializeField] private float _breakWaitTimeSetting = 1f;
+
+    public bool GrabOn { get; private set; } = false;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CFinger.CrashInfo _grabInfo = new CFinger.CrashInfo();
     private Rigidbody _twizersRG;
@@ -47,6 +49,10 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────]
     public bool Grabed { get; private set; } = false;
+    public void GrabSetting(bool vel)
+    {
+        GrabOn = vel;
+    }
     // 실행 우선순위 정의
     public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
     // 프레임 매니저에게 호출당할 함수
@@ -71,7 +77,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
 
 
-            if (crashInfos.Count > 0 && _grabInfo.crashedObject == null)
+            if (crashInfos.Count > 0 && _grabInfo.crashedObject == null && GrabOn==true)
             {
                
                 _grabInfo = crashInfos.First();
