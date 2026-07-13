@@ -152,7 +152,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
                 float aimDistance = (aimPos - _playerCam.transform.localPosition).magnitude;
                 if (aimDistance < 0.2f) return;
 
-                if (hit.rigidbody == null)
+                if (hit.collider!=null && hit.collider.gameObject.CompareTag("Collectible")&&hit.rigidbody == null)
                 {
                     hit.collider.AddComponent<Rigidbody>();
                 }
