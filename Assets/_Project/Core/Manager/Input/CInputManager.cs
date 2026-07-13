@@ -110,6 +110,13 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
             OnInputDescent.Publish(false);
         }
     }
+    public void OnNet(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OnInputNet.Publish();
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────

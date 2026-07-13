@@ -53,6 +53,7 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
             case EDataType.Thruster: return _progress.thrusterLevel;
             case EDataType.GrabTool: return _progress.grabToolLevel;
             case EDataType.Bag: return _progress.bagLevel;
+            case EDataType.Net: return _progress.netLevel;
             default:
                 UDebug.Print($"업그레이드 레벨 조회: 처리되지 않은 장비 타입({gearType})입니다.", LogType.Error);
                 return 1;
@@ -80,6 +81,7 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
             case EDataType.Thruster: ++_progress.thrusterLevel; break;
             case EDataType.GrabTool: ++_progress.grabToolLevel; break;
             case EDataType.Bag: ++_progress.bagLevel; break;
+            case EDataType.Net: ++_progress.netLevel; break;
             default:
                 UDebug.Print($"업그레이드: 처리되지 않은 장비 타입({gearType})입니다.", LogType.Warning);
                 return false;
@@ -101,6 +103,7 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
             case EDataType.Thruster: return UData.Thruster();
             case EDataType.GrabTool: return UData.GrabTool();
             case EDataType.Bag: return UData.Bag();
+            case EDataType.Net: return UData.Net();
             default:
                 UDebug.Print($"장비 SO 조회: 처리되지 않은 장비 타입({gearType})입니다.", LogType.Error);
                 return null;
