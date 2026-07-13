@@ -64,6 +64,12 @@ public static class UData
         => Address.Get<CThrusterSO>(Id.Thruster);
 
     /// <summary>
+    /// 문자열 ID로 그물 SO를 반환받습니다.
+    /// </summary>
+    public static CNetSO Net()
+        => Address.Get<CNetSO>(Id.Net);
+
+    /// <summary>
     /// 문자열 ID로 가방 SO를 반환받습니다.
     /// </summary>
     public static CBagSO Bag()

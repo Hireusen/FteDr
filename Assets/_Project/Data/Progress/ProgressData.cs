@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 /// <summary>
@@ -18,6 +18,7 @@ public class ProgressData
     public int bagLevel = 1;
     public int thrusterLevel = 1;
     public int grabToolLevel = 1;
+    public int netLevel = 1;
     #endregion
 
     #region ─────────────────────────▶ 진행 상황 ◀─────────────────────────

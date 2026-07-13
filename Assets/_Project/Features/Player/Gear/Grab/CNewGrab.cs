@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 /// <summary>
@@ -49,7 +50,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
         BringComplete
     }
     public EGrabStatus grabStatus = EGrabStatus.Wait;
-    public float Maxdistance { get; private set; } = 2f;
+    public float Maxdistance { get; private set; } = 4f;
     public void ShootWrist()
     {
         _twizersRigidBody.isKinematic = false;
@@ -128,15 +129,17 @@ public class CNewGrab : AFrameable, IUpdateFrameable
         switch (status)
         {
             case EGrabStatus.Wait:
+                _twizers.GrabSetting(false);
+                USound.PlaySfx("SFX_v2_metal_02");
                 _controller.IsControlLockedByGrab = false;
                 print("상태변경>wait");
                 grabStatus = EGrabStatus.Wait;
                 break;
             case EGrabStatus.Shooting:
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
-                USound.PlaySfx("SFX_robotics2");
+                RaycastHit hit;
                 Vector3 aimPos;
-                if (Physics.Raycast(ray, out RaycastHit hit, AIMDISTANCE))
+                if (Physics.Raycast(ray, out hit, AIMDISTANCE))
                 {
                     aimPos = hit.point;
                 }
@@ -144,8 +147,18 @@ public class CNewGrab : AFrameable, IUpdateFrameable
                 {
                     aimPos = ray.origin + ray.direction * AIMDISTANCE;
                 }
+
+                //너무 가까우면 안쏴지게 함.(각도 이상해져서)
                 float aimDistance = (aimPos - _playerCam.transform.localPosition).magnitude;
                 if (aimDistance < 0.2f) return;
+
+                if (hit.collider!=null && hit.collider.gameObject.CompareTag("Collectible")&&hit.rigidbody == null)
+                {
+                    hit.collider.AddComponent<Rigidbody>();
+                }
+                
+
+                USound.PlaySfx("SFX_robotics2");
                 ShootWrist();
                 _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizersRigidBody.constraints = RigidbodyConstraints.FreezeRotation;
@@ -156,6 +169,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
                 _twizersRigidBody.useGravity = false;
                 break;
             case EGrabStatus.Grab:
+                _twizers.GrabSetting(true);
                 print("상태변경>grab");
                 grabStatus = EGrabStatus.Grab;
                 _twizersRigidBody.isKinematic = true;
@@ -205,7 +219,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     private IEnumerator ArmToOriginCo()
     {
         yield return null;
-        float timeLimit = 2f;
+        float timeLimit = 0.5f;
         float timer = 0;
         _twizersAnchor.transform.localRotation = _arm.transform.localRotation * _grabOffset;
         _twizersAnchor.transform.SetParent(_arm.transform, true);
