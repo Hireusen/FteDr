@@ -55,7 +55,10 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     private bool _isJumpPressed = false;
 
     private float _fuelSpeedMultiplier = 1f;
-    private bool _controlLocked = false;
+
+    // 조작 잠금 사유들. 하나라도 true 면 잠금. (집게/고갈이 서로를 덮어쓰지 않도록 분리)
+    private bool _lockByGrab = false;
+    private bool _lockByFuel = false;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -63,14 +66,19 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     public EPlayerState CurrentState => _currentState;
 
-    public bool IsControlLocked
+    /// <summary>하나의 사유라도 서 있으면 조작이 잠깁니다.</summary>
+    public bool IsControlLocked => _lockByGrab || _lockByFuel;
+
+    /// <summary>집게 사용 등으로 인한 조작 잠금 사유를 켜고 끕니다.</summary>
+    public bool IsControlLockedByGrab
     {
-        get { return _controlLocked; }
-        set { _controlLocked = value; }
+        get { return _lockByGrab; }
+        set { _lockByGrab = value; }
     }
 
     /// <summary>
     /// 카메라가 시선 각도를 넘겨주는 창구입니다. 실제 회전은 FixedUpdate 에서 적용됩니다.
+    /// 집게 사용 중에는 카메라가 각도를 넘기지 않으므로 몸은 마지막 각도로 고정됩니다.
     /// </summary>
     public void SetLookAngles(float yaw, float pitch)
     {
@@ -90,7 +98,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         ApplyLookRotation();
 
         _moveDirection = CalcMoveDirection();
-        if (_controlLocked) _moveDirection = Vector3.zero; // 고갈: 조작 무시
+        if (IsControlLocked) _moveDirection = Vector3.zero; // 잠금: 이동 무시
 
         if (_currentState == EPlayerState.Swimming)
         {
@@ -99,7 +107,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
             _rb.AddForce(Vector3.down * _waterGravity, ForceMode.Acceleration);
 
-            if (_isJumpPressed && !_controlLocked)
+            if (_isJumpPressed && !IsControlLocked)
             {
                 _rb.AddForce(Vector3.up * (_ascendForce * _fuelSpeedMultiplier), ForceMode.Force);
             }
@@ -110,7 +118,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
             Vector3 horizontalVel = _moveDirection * (_groundMoveSpeed * _fuelSpeedMultiplier);
             _rb.velocity = new Vector3(horizontalVel.x, _rb.velocity.y, horizontalVel.z);
 
-            if (_isJumpPressed && !_controlLocked)
+            if (_isJumpPressed && !IsControlLocked)
             {
                 if (_rb.velocity.y <= 0.1f && Physics.Raycast(transform.position, Vector3.down, _groundCheckDistance, _groundLayer))
                 {
@@ -163,8 +171,15 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    /// <summary>
+    /// 몸과 CameraRoot 에 회전을 적용합니다.
+    /// 집게 사용 등으로 잠긴 동안에는 몸 회전을 갱신하지 않아 몸이 고정됩니다.
+    /// (카메라는 CFPPCamera 에서 독립적으로 회전)
+    /// </summary>
     private void ApplyLookRotation()
     {
+        if (IsControlLocked) return;
+
         float target = (_currentState == EPlayerState.Swimming) ? 1f : 0f;
         float t = 1f - Mathf.Exp(-_postureBlendSharpness * Time.fixedDeltaTime);
         _postureBlend = Mathf.Lerp(_postureBlend, target, t);
@@ -206,17 +221,17 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         {
             case EFuelState.Normal:
                 _fuelSpeedMultiplier = 1f;
-                _controlLocked = false;
+                _lockByFuel = false;
                 break;
 
             case EFuelState.Low:
                 _fuelSpeedMultiplier = _lowFuelSpeedMultiplier;
-                _controlLocked = false;
+                _lockByFuel = false;
                 break;
 
             case EFuelState.Depleted:
                 _fuelSpeedMultiplier = 0f;
-                _controlLocked = true;
+                _lockByFuel = true;
                 break;
         }
     }
