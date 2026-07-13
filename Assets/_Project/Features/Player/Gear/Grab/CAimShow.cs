@@ -27,7 +27,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     public void ShowOutLineInDistance()
     {
         RaycastHit hit;
-        if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 8, _collectibleLayout))
+        if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 4, _collectibleLayout))
         {
             CCollectible temp=hit.collider.gameObject.GetComponent<CCollectible>();
             if (temp != _currentAimObject)
