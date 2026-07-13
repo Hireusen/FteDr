@@ -664,9 +664,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 464463378}
-  - component: {fileID: 464463381}
   - component: {fileID: 464463382}
-  - component: {fileID: 464463383}
   m_Layer: 0
   m_Name: CamTest
   m_TagString: Untagged
@@ -689,18 +687,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &464463381
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 464463376}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f91bc5d74d0abd3408985836f3be1a18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &464463382
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -727,36 +713,6 @@ MonoBehaviour:
   _grabReturnDoneAngle: 0.5
   _grabTool: {fileID: 1064876946}
   _isCameraRotationLock: 0
---- !u!114 &464463383
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 464463376}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0921f9e6d5955b04e8be53a1c3f70933, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 0}
-  isTrigger: 0
-  hideColliders: 1
-  physicMaterial: {fileID: 0}
-  parameters:
-    threshold: 0.05
-    preprocessMode: 0
-    preprocessResolution: 50
-    sampleResolution: 2000
-    mctsNodes: 20
-    mctsIteration: 150
-    mctsMaxDepth: 3
-    pca: 0
-    merge: 1
-    maxConvexHull: -1
-    seed: 0
-  _colliderData: {fileID: 0}
-  _colliders: []
 --- !u!1 &711690888
 GameObject:
   m_ObjectHideFlags: 0
