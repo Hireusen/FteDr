@@ -19,16 +19,29 @@ public sealed class CInventorySlot : AMono, IPointerEnterHandler, IPointerExitHa
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     /// <summary>
+    /// 이 슬롯에 아이템이 있는지 여부를 반환합니다.
+    /// </summary>
+    public bool HasItem => _data != null;
+
+    /// <summary>
     /// 슬롯에 표시할 데이터를 바인딩합니다. (UI_InventoryView가 생성 직후 호출)
     /// </summary>
     /// <param name="collectibleId">수집품 ID</param>
     public void Setup(string collectibleId)
     {
+        if (collectibleId.IsBlank())
+        {
+            Clear();
+            return;
+        }
+
         _data = UData.Collectible(collectibleId);
 
         if (_data == null)
         {
             UDebug.Print($"UI_InventorySlot: 수집품 ID({collectibleId})에 해당하는 SO를 찾을 수 없습니다.", LogType.Error, gameObject);
+
+            Clear();
             return;
         }
 
@@ -38,6 +51,21 @@ public sealed class CInventorySlot : AMono, IPointerEnterHandler, IPointerExitHa
             _iconImage.enabled = _data.Icon != null;
         }
     }
+
+    /// <summary>
+    /// 슬롯을 빈 칸 상태로 비우고 아이콘 이미지를 숨깁니다.
+    /// </summary>
+    public void Clear()
+    {
+        _data = null;
+
+        if (_iconImage != null)
+        {
+            _iconImage.sprite = null;
+            _iconImage.enabled = false;
+        }
+    }
+
     #endregion
 
     #region ─────────────────────────▶ 이벤트 핸들러 ◀─────────────────────────

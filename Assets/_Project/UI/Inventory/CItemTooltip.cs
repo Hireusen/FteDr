@@ -9,7 +9,7 @@ using TMPro;
 /// 등급(ECollectibleRarity)에 따라 테두리/이름 색상을 실시간으로 매핑합니다.
 /// </summary>
 [DisallowMultipleComponent]
-public sealed class UI_ItemTooltip : AFrameable, IUpdateFrameable
+public sealed class CItemTooltip : AFrameable, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("툴팁 설정")]
@@ -134,7 +134,7 @@ public sealed class UI_ItemTooltip : AFrameable, IUpdateFrameable
             return visual;
         }
 
-        UDebug.Print($"UI_ItemTooltip: 등급({rarity})에 대한 색상 매핑이 없습니다.", LogType.Warning, gameObject);
+        UDebug.Print($"CItemTooltip: 등급({rarity})에 대한 색상 매핑이 없습니다.", LogType.Warning, gameObject);
         return new RarityVisualData { rarity = rarity, borderColor = Color.white, textColor = Color.white };
     }
 
