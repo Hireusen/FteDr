@@ -16,7 +16,7 @@ public sealed class CInventoryTester : AMono
     private string[] _testCollectibleIds =
     {
         Id.Collectible_Amulet1_Aged_Gold,
-        Id.Collectible_Amulet1_Aged_Mixed,
+        Id.Collectible_AmuletGem_Cyan_Heart,
         Id.Collectible_WF_GreekRelics_CorinthianHelmet,
         Id.Collectible_WF_GreekRelics_PaintedAmphora
     };
