@@ -12,8 +12,10 @@ GameObject:
   - component: {fileID: 3353286}
   - component: {fileID: 2349654}
   - component: {fileID: 4216041067230839446}
-  - component: {fileID: 8048251306870732884}
-  m_Layer: 0
+  - component: {fileID: 6132222415912632626}
+  - component: {fileID: 3084780810242697789}
+  - component: {fileID: 1248758343877318801}
+  m_Layer: 9
   m_Name: Visual
   m_TagString: Collectible
   m_Icon: {fileID: 0}
@@ -98,9 +100,41 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _outLineType: 0
---- !u!64 &8048251306870732884
-MeshCollider:
+--- !u!114 &6132222415912632626
+MonoBehaviour:
   m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 169296}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0921f9e6d5955b04e8be53a1c3f70933, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 3353286}
+  isTrigger: 0
+  hideColliders: 1
+  physicMaterial: {fileID: 0}
+  parameters:
+    threshold: 0.05
+    preprocessMode: 0
+    preprocessResolution: 50
+    sampleResolution: 2000
+    mctsNodes: 20
+    mctsIteration: 150
+    mctsMaxDepth: 3
+    pca: 0
+    merge: 1
+    maxConvexHull: -1
+    seed: 0
+  _colliderData: {fileID: 11400000, guid: 9ccb4eecbe9da33479f163b08f6ad72e, type: 2}
+  _colliders:
+  - {fileID: 3084780810242697789}
+  - {fileID: 1248758343877318801}
+--- !u!64 &3084780810242697789
+MeshCollider:
+  m_ObjectHideFlags: 2
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -117,9 +151,31 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 5bec7806132481e429758dae6c3d3f0c, type: 3}
+  m_Mesh: {fileID: -1597220045636163934, guid: 9ccb4eecbe9da33479f163b08f6ad72e, type: 2}
+--- !u!64 &1248758343877318801
+MeshCollider:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 169296}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 3308300831863807193, guid: 9ccb4eecbe9da33479f163b08f6ad72e, type: 2}
 --- !u!1 &182958
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,7 +186,7 @@ GameObject:
   m_Component:
   - component: {fileID: 451898}
   - component: {fileID: 1918863636834406048}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Amulet2 Aged Mixed
   m_TagString: Collectible
   m_Icon: {fileID: 0}

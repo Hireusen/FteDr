@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
-/// 가방 소지품 변경에 맞춰 슬롯 목록 전체를 다시 그리는 인벤토리 뷰입니다.
-/// (Grid Layout Group 하위에 Slot_Image 프리팹을 붙였다 뗐다 관리)
+/// 가로 7 * 세로 3 = 21칸의 고정 슬롯을 미리 생성해두고, 가방 소지품 변경에 맞춰
+/// 각 슬롯에 데이터를 채우거나 비우는 인벤토리 뷰입니다.
+/// (Grid Layout Group 하위 슬롯은 항상 21개 존재. 아이템 수만큼만 앞에서부터 채워짐)
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class CInventoryView : AMono
@@ -11,11 +13,22 @@ public sealed class CInventoryView : AMono
     [Header("인벤토리 설정")]
     [Tooltip("Grid Layout Group이 붙어있는 슬롯들의 부모")]
     [SerializeField] private Transform _slotContainer;
-    [Tooltip("슬롯 하나를 표현하는 프리펩")]
+    [Tooltip("슬롯 하나를 표현하는 프리팹")]
     [SerializeField] private CInventorySlot _slotPrefab;
+    [Tooltip("항상 존재하는 슬롯 칸 수 (7 x 3 = 21)")]
+    [SerializeField] private int _slotCount = 21;
+    #endregion
+
+    #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
+    private readonly List<CInventorySlot> _slots = new();
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
+    private void Awake()
+    {
+        BuildSlots();
+    }
+
     private void OnEnable()
     {
         CEventBus<OnPlayerBagChanged>.Subscribe(BagChangedHandler);
@@ -36,8 +49,8 @@ public sealed class CInventoryView : AMono
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    // 현재 UPlayer.BagItems 기준으로 슬롯을 전부 새로 그립니다.
-    private void RefreshSlots()
+    // 21개의 슬롯을 최초 1회만 생성합니다. (이후로는 재사용, Instantiate/Destroy 반복 없음)
+    private void BuildSlots()
     {
         if (_slotContainer == null || _slotPrefab == null)
         {
@@ -45,14 +58,33 @@ public sealed class CInventoryView : AMono
             return;
         }
 
-        UObject.DestroyChildren(_slotContainer);
+        if (_slots.Count > 0) return; // 이미 생성됨
 
-        var bagItems = UPlayer.BagItems;
-        int count = bagItems.Count;
-        for (int i = 0; i < count; ++i)
+        for (int i = 0; i < _slotCount; ++i)
         {
             CInventorySlot slot = Instantiate(_slotPrefab, _slotContainer);
-            slot.Setup(bagItems[i]);
+            slot.Clear();
+            _slots.Add(slot);
+        }
+    }
+
+    // 현재 UPlayer.BagItems 기준으로 앞에서부터 슬롯을 채우고, 나머지는 비웁니다.
+    private void RefreshSlots()
+    {
+        if (_slots.Count == 0) return;
+
+        var bagItems = UPlayer.BagItems;
+        int itemCount = bagItems.Count;
+        int slotCount = _slots.Count;
+
+        for (int i = 0; i < slotCount; ++i)
+        {
+            _slots[i].Setup(i < itemCount ? bagItems[i] : null);
+        }
+
+        if (itemCount > slotCount)
+        {
+            UDebug.Print($"CInventoryView: 소지품({itemCount})이 슬롯 수({slotCount})를 초과했습니다.", LogType.Warning, gameObject);
         }
     }
     #endregion

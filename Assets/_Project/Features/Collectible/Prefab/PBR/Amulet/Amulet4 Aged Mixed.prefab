@@ -12,8 +12,11 @@ GameObject:
   - component: {fileID: 3343872}
   - component: {fileID: 2353382}
   - component: {fileID: 2553891652710555641}
-  - component: {fileID: 2595243196964827138}
-  m_Layer: 0
+  - component: {fileID: 5717729841118338842}
+  - component: {fileID: 9202241628283616122}
+  - component: {fileID: 6580395590882929683}
+  - component: {fileID: 3784030254091115894}
+  m_Layer: 9
   m_Name: Visual
   m_TagString: Collectible
   m_Icon: {fileID: 0}
@@ -98,9 +101,42 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _outLineType: 0
---- !u!64 &2595243196964827138
-MeshCollider:
+--- !u!114 &5717729841118338842
+MonoBehaviour:
   m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 105302}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0921f9e6d5955b04e8be53a1c3f70933, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 3343872}
+  isTrigger: 0
+  hideColliders: 1
+  physicMaterial: {fileID: 0}
+  parameters:
+    threshold: 0.05
+    preprocessMode: 0
+    preprocessResolution: 50
+    sampleResolution: 2000
+    mctsNodes: 20
+    mctsIteration: 150
+    mctsMaxDepth: 3
+    pca: 0
+    merge: 1
+    maxConvexHull: -1
+    seed: 0
+  _colliderData: {fileID: 11400000, guid: 56a90a7caa51d7b4f8f67f162b36190f, type: 2}
+  _colliders:
+  - {fileID: 9202241628283616122}
+  - {fileID: 6580395590882929683}
+  - {fileID: 3784030254091115894}
+--- !u!64 &9202241628283616122
+MeshCollider:
+  m_ObjectHideFlags: 2
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -117,9 +153,53 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: ffceac70aa89499479d1bb4caf00334c, type: 3}
+  m_Mesh: {fileID: 2350096598732130030, guid: 56a90a7caa51d7b4f8f67f162b36190f, type: 2}
+--- !u!64 &6580395590882929683
+MeshCollider:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 105302}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 1790819914318389043, guid: 56a90a7caa51d7b4f8f67f162b36190f, type: 2}
+--- !u!64 &3784030254091115894
+MeshCollider:
+  m_ObjectHideFlags: 2
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 105302}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -5327240628926361334, guid: 56a90a7caa51d7b4f8f67f162b36190f, type: 2}
 --- !u!1 &196958
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,7 +210,7 @@ GameObject:
   m_Component:
   - component: {fileID: 408992}
   - component: {fileID: 5735075231688040270}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Amulet4 Aged Mixed
   m_TagString: Collectible
   m_Icon: {fileID: 0}

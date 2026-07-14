@@ -1,6 +1,4 @@
-﻿// todo : 연료 고갈 이벤트 + 플레이어 매니저에 연료 고갈 이벤트 발행
-
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 수중에서 연료를 틱 단위로 소모시키는 장비입니다.
@@ -52,7 +50,8 @@ public sealed class CFuelSystem : AGear, IUpdateFrameable
 
         if (CPlayerManager.Ins.CurrentFuel <= 0f) return;
 
-        if (_player.CurrentState == EPlayerState.OnGround)
+        // 지상이거나, 시선을 제외한 이동 조작이 없으면 소모하지 않습니다.
+        if (_player.CurrentState == EPlayerState.OnGround || !_player.HasMovementInput)
         {
             _tickTimer = 0f;
             return;

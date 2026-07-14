@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 410048}
   - component: {fileID: 2595022866229828808}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Goldbar1 Aged Bronze
   m_TagString: Collectible
   m_Icon: {fileID: 0}
@@ -58,8 +58,9 @@ GameObject:
   - component: {fileID: 3399106}
   - component: {fileID: 2369714}
   - component: {fileID: 5899674718251065499}
-  - component: {fileID: 4646045318751245299}
-  m_Layer: 0
+  - component: {fileID: 3879284695175237740}
+  - component: {fileID: 4860069056187061230}
+  m_Layer: 9
   m_Name: Visual
   m_TagString: Collectible
   m_Icon: {fileID: 0}
@@ -144,9 +145,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _outLineType: 0
---- !u!64 &4646045318751245299
-MeshCollider:
+--- !u!114 &3879284695175237740
+MonoBehaviour:
   m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 191938}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0921f9e6d5955b04e8be53a1c3f70933, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 3399106}
+  isTrigger: 0
+  hideColliders: 1
+  physicMaterial: {fileID: 0}
+  parameters:
+    threshold: 0.05
+    preprocessMode: 0
+    preprocessResolution: 50
+    sampleResolution: 2000
+    mctsNodes: 20
+    mctsIteration: 150
+    mctsMaxDepth: 3
+    pca: 0
+    merge: 1
+    maxConvexHull: -1
+    seed: 0
+  _colliderData: {fileID: 11400000, guid: b5cff68fd44821d41bd7675d71f310a8, type: 2}
+  _colliders:
+  - {fileID: 4860069056187061230}
+--- !u!64 &4860069056187061230
+MeshCollider:
+  m_ObjectHideFlags: 2
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -163,6 +195,6 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 68ce30bf5ab337047b272f72fe97899a, type: 3}
+  m_Mesh: {fileID: -7890653480845683762, guid: b5cff68fd44821d41bd7675d71f310a8, type: 2}

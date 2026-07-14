@@ -12,8 +12,9 @@ GameObject:
   - component: {fileID: 3399700}
   - component: {fileID: 2394822}
   - component: {fileID: 1943045488971625178}
-  - component: {fileID: 3894076457894980581}
-  m_Layer: 0
+  - component: {fileID: 3407323305741491338}
+  - component: {fileID: 1195598066908098412}
+  m_Layer: 9
   m_Name: Visual
   m_TagString: Collectible
   m_Icon: {fileID: 0}
@@ -98,9 +99,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _outLineType: 0
---- !u!64 &3894076457894980581
-MeshCollider:
+--- !u!114 &3407323305741491338
+MonoBehaviour:
   m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 135712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0921f9e6d5955b04e8be53a1c3f70933, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  target: {fileID: 3399700}
+  isTrigger: 0
+  hideColliders: 1
+  physicMaterial: {fileID: 0}
+  parameters:
+    threshold: 0.05
+    preprocessMode: 0
+    preprocessResolution: 50
+    sampleResolution: 2000
+    mctsNodes: 20
+    mctsIteration: 150
+    mctsMaxDepth: 3
+    pca: 0
+    merge: 1
+    maxConvexHull: -1
+    seed: 0
+  _colliderData: {fileID: 11400000, guid: fe52fbd0f0de7dd41971d835b83a94c1, type: 2}
+  _colliders:
+  - {fileID: 1195598066908098412}
+--- !u!64 &1195598066908098412
+MeshCollider:
+  m_ObjectHideFlags: 2
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -117,9 +149,9 @@ MeshCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 5
-  m_Convex: 0
+  m_Convex: 1
   m_CookingOptions: 30
-  m_Mesh: {fileID: 4300000, guid: 4b9fbab8704221c4487771f07a5169ff, type: 3}
+  m_Mesh: {fileID: 2802229639800980336, guid: fe52fbd0f0de7dd41971d835b83a94c1, type: 2}
 --- !u!1 &143764
 GameObject:
   m_ObjectHideFlags: 0
@@ -130,7 +162,7 @@ GameObject:
   m_Component:
   - component: {fileID: 427814}
   - component: {fileID: 4279779616814472753}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: Crystal4 Aged Black
   m_TagString: Collectible
   m_Icon: {fileID: 0}

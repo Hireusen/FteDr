@@ -15,6 +15,7 @@ public class CCollectibleSO : AUnitSO
     [SerializeField] protected float _weight;
     [SerializeField] protected float _sellPrice; // 판매 가격
     [SerializeField] protected ECollectibleRarity _rarity; // 등급
+    [SerializeField] protected bool _isAir; // 공중 여부
 
     [Header("크기 범위 (스폰 시 이 범위에서 랜덤)")]
     [SerializeField] protected float _minScale = 1f;
@@ -30,6 +31,7 @@ public class CCollectibleSO : AUnitSO
     public float MinScale => _minScale;
     public float MaxScale => _maxScale;
     public ECollectibleRarity CollectibleRarity => _rarity;
+    public bool IsAir => _isAir;
 
     /// <summary>Min ~ Max 범위에서 랜덤한 크기 배율을 반환합니다.</summary>
     public float GetRandomScale() => Random.Range(_minScale, _maxScale);
