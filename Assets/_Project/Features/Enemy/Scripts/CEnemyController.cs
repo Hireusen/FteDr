@@ -49,6 +49,10 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     [Tooltip("시야를 가로막는 장애물 레이어입니다. (가림 판정용)")]
     [SerializeField] private LayerMask _obstacleLayer;
 
+    [Header("충돌")]
+    [Tooltip("장애물 충돌 판정에 쓰는 몸통 반경. 이동 시 이 반경의 구로 벽을 감지해 관통을 막습니다. 0이면 얇은 선으로 판정.")]
+    [SerializeField, Min(0f)] private float _bodyRadius = 0.5f;
+
     [Header("회전")]
     [Tooltip("회전 부드러움/반응성. 클수록 빠르게 정렬(민첩), 작을수록 느긋하고 부드럽게 돕니다. 3~6 권장.")]
     [SerializeField, Min(0.01f)] private float _turnSharpness = 5f;
@@ -68,6 +72,14 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     [Header("돌진")]
     [Tooltip("돌진 중 플레이어에게 이 거리 안으로 닿으면 피해를 줍니다.")]
     [SerializeField, Min(0.1f)] private float _contactRange = 1.4f;
+
+    [Header("회피 (순찰 / 도주)")]
+    [Tooltip("감각 레이가 장애물을 감지하는 거리. 이 거리부터 벽/바닥에서 밀려나기 시작합니다.")]
+    [SerializeField, Min(0f)] private float _avoidDistance = 6f;
+    [Tooltip("장애물에서 밀려나는 척력의 세기. 클수록 목적지/도주 방향보다 장애물 회피를 우선합니다.")]
+    [SerializeField, Min(0f)] private float _avoidStrength = 2f;
+    [Tooltip("감각 레이 갱신 간격(초). 매 프레임 대신 이 간격으로만 다시 쏴 부하를 줄입니다. 0이면 매 프레임.")]
+    [SerializeField, Min(0f)] private float _avoidRefreshInterval = 0.1f;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -96,6 +108,9 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     private float _nextAttackTime;        // 이 시각 이후에만 새 공격 시작 가능
     private bool _dashHitApplied;         // 이번 돌진에서 피해를 이미 줬는지
     private bool _attackStateEntered;     // 공격 애니메이션 상태에 진입했는지
+
+    private Vector3 _cachedAvoidance;     // 감각 레이 결과 캐시
+    private float _avoidRefreshTimer;     // 캐시 갱신 타이머
 
     private readonly Collider[] _overlapBuffer = new Collider[8];
 
@@ -154,6 +169,8 @@ public class CEnemyController : AFrameable, IUpdateFrameable
         _repathTimer -= dt;
         MoveToward(_patrolDestination, _moveSpeed, dt);
 
+        // 장애물은 척력으로 돌아가므로 막혔다고 목적지를 버리지 않습니다.
+        // 목적지에 도착했거나, 오래 도달하지 못했을 때(끼임 방지)만 새로 뽑습니다.
         bool arrived = (_patrolDestination - transform.position).sqrMagnitude <= _arriveThreshold * _arriveThreshold;
         if (arrived || _repathTimer <= 0f)
         {
@@ -213,8 +230,8 @@ public class CEnemyController : AFrameable, IUpdateFrameable
 
     private void TickDash(float dt)
     {
-        // 커밋한 방향으로 직진 (재조준/경계 조향 없음 = 회피 가능한 돌진, 잠깐 경계를 넘어갈 수 있음)
-        transform.position += _dashDir * _dashSpeed * dt;
+        // 커밋한 방향으로 직진하되, 벽에 막히면 관통하지 않고 그 앞에서 멈춥니다.
+        bool blocked = MoveClamped(_dashDir, _dashSpeed, dt);
 
         // 접촉 피해 (돌진 1회당 최대 1번)
         if (!_dashHitApplied && _damage > 0f && TryGetPlayerWithin(_contactRange))
@@ -224,9 +241,9 @@ public class CEnemyController : AFrameable, IUpdateFrameable
             // TODO: 피격 사운드/이펙트 연동
         }
 
-        // 종료 판정: 공격 애니메이션 재생이 끝나면 도주로 전환
+        // 종료 판정: 벽에 막혔거나 공격 애니메이션이 끝나면 도주로 전환
         _stateTimer -= dt;
-        if (IsAttackAnimationFinished() || _stateTimer <= 0f)
+        if (blocked || IsAttackAnimationFinished() || _stateTimer <= 0f)
         {
             EnterFlee();
         }
@@ -262,16 +279,19 @@ public class CEnemyController : AFrameable, IUpdateFrameable
 
     private void TickFlee(float dt)
     {
-        // 플레이어(마지막 위치) 반대 방향으로 도주
+        // 기본 진행 방향: 플레이어(마지막 위치) 반대쪽
         Vector3 playerPos = _target != null ? _target.position : _lastPlayerPos;
         Vector3 away = transform.position - playerPos;
-        if (away.sqrMagnitude < K.SMALL_DISTANCE)
-        {
-            away = -transform.forward; // 겹쳐 있으면 뒤로
-        }
+        away = away.sqrMagnitude > K.SMALL_DISTANCE ? away.normalized : -transform.forward;
 
-        Vector3 fleeTarget = transform.position + away.normalized * 5f;
-        MoveToward(fleeTarget, _fleeSpeed, dt);
+        // 여기에 장애물 척력(감각 레이)을 더해 벽/바닥을 미리 피해 다른 경로로 흘러갑니다.
+        Vector3 dir = away + Avoidance(dt) * _avoidStrength;
+        dir = dir.sqrMagnitude > K.SMALL_DISTANCE ? dir.normalized : away;
+
+        // 회전(뱅킹 포함) 후 전진. 척력이 못 피한 경우 MoveClamped 가 최종적으로 관통을 막습니다.
+        Quaternion desired = ComputeLookRotation(dir) * Quaternion.AngleAxis(ComputeBankAngle(dir), Vector3.forward);
+        RotateToward(desired, dt);
+        MoveClamped(transform.forward, _fleeSpeed, dt);
 
         _stateTimer -= dt;
         if (_stateTimer <= 0f)
@@ -279,6 +299,44 @@ public class CEnemyController : AFrameable, IUpdateFrameable
             _nextAttackTime = Time.time + _attackCooldown; // 복귀 후 재공격 쿨다운 시작
             _target = null;
             EnterPatrol();
+        }
+    }
+
+    // 감각 레이 결과를 _avoidRefreshInterval 간격으로만 다시 계산해 재사용합니다. (부하 절감)
+    private Vector3 Avoidance(float dt)
+    {
+        _avoidRefreshTimer -= dt;
+        if (_avoidRefreshTimer <= 0f)
+        {
+            _cachedAvoidance = ComputeAvoidance();
+            _avoidRefreshTimer = _avoidRefreshInterval;
+        }
+        return _cachedAvoidance;
+    }
+
+    // 여러 방향으로 감각 레이(스피어캐스트)를 쏴서, 부딪힌 면의 법선을 가까울수록 크게 합산합니다.
+    // 바닥(법선이 위)이면 위로, 벽(법선이 수평)이면 옆으로 밀어내는 척력이 됩니다.
+    private Vector3 ComputeAvoidance()
+    {
+        if (_avoidDistance <= 0f) return Vector3.zero;
+
+        Vector3 sum = Vector3.zero;
+        AddFeeler(ref sum, transform.forward);
+        AddFeeler(ref sum, Quaternion.AngleAxis(35f, transform.up) * transform.forward);
+        AddFeeler(ref sum, Quaternion.AngleAxis(-35f, transform.up) * transform.forward);
+        AddFeeler(ref sum, Quaternion.AngleAxis(35f, transform.right) * transform.forward);
+        AddFeeler(ref sum, Quaternion.AngleAxis(-35f, transform.right) * transform.forward);
+        AddFeeler(ref sum, Vector3.down); // 바닥
+        return sum;
+    }
+
+    // 한 방향으로 감각 레이를 쏴서 장애물을 만나면 그 면 법선을 거리 가중치로 누적합니다.
+    private void AddFeeler(ref Vector3 sum, Vector3 dir)
+    {
+        if (Physics.SphereCast(transform.position, _bodyRadius, dir.normalized, out RaycastHit hit, _avoidDistance, _obstacleLayer))
+        {
+            float weight = 1f - hit.distance / _avoidDistance; // 가까울수록 1에 가까움
+            sum += hit.normal * weight;
         }
     }
     #endregion
@@ -292,8 +350,8 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 이동 / 회전 ◀─────────────────────────
-    // 목표를 향해 회전하면서 정면으로 전진합니다. (경계 복귀 조향 포함)
-    private void MoveToward(Vector3 targetPos, float speed, float dt)
+    // 목표를 향해 회전하면서 정면으로 전진합니다. (경계 복귀 조향 포함) 벽에 막히면 true 를 반환합니다.
+    private bool MoveToward(Vector3 targetPos, float speed, float dt)
     {
         Vector3 dir = targetPos - transform.position;
         dir = dir.sqrMagnitude > K.SMALL_DISTANCE ? dir.normalized : transform.forward;
@@ -301,10 +359,33 @@ public class CEnemyController : AFrameable, IUpdateFrameable
         // 경계 밖으로 나갈수록 안쪽으로 향하도록 방향을 섞습니다.
         dir += ContainmentBias() * _containmentStrength;
 
+        // 장애물 척력: 목적지로 향하되 벽/바닥을 만나면 돌아서 계속 찾아갑니다.
+        dir += Avoidance(dt) * _avoidStrength;
+
+        if (dir.sqrMagnitude < K.SMALL_DISTANCE) dir = transform.forward; // 상쇄되면 현 방향 유지
+
         // 도는 쪽으로 몸을 기울여(뱅킹) 제자리 회전이 아닌 선회 느낌을 줍니다.
         Quaternion desired = ComputeLookRotation(dir) * Quaternion.AngleAxis(ComputeBankAngle(dir), Vector3.forward);
         RotateToward(desired, dt);
-        transform.position += transform.forward * speed * dt;
+        return MoveClamped(transform.forward, speed, dt);
+    }
+
+    // 지정 방향으로 전진하되, _obstacleLayer 장애물을 스피어캐스트로 감지해 관통을 막습니다.
+    // 벽에 막혀 그 앞에서 멈췄으면 true 를 반환합니다. (_obstacleLayer 가 비어 있으면 항상 통과)
+    private bool MoveClamped(Vector3 dir, float speed, float dt)
+    {
+        float dist = speed * dt;
+        if (dist <= 0f) return false;
+
+        if (Physics.SphereCast(transform.position, _bodyRadius, dir, out RaycastHit hit, dist, _obstacleLayer))
+        {
+            float allowed = Mathf.Max(hit.distance - 0.01f, 0f); // 벽에 살짝 못 미치게
+            transform.position += dir * allowed;
+            return true;
+        }
+
+        transform.position += dir * dist;
+        return false;
     }
 
     // 목표를 향해 회전만 합니다. (피치 클램프 적용, 이동/뱅킹 없음 — 제자리 조준용)
