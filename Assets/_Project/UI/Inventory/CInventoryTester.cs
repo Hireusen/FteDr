@@ -2,7 +2,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 런타임에 인벤토리 상태를 확인하고 아이템을 테스트 획득해보는 개발용 미니 패널입니다.
+/// 런타임에 인벤토리 상태를 확인하고, 등록된 풀에서 무작위로 하나를 뽑아 테스트 획득해보는 개발용 미니 패널입니다.
 /// </summary>
 public sealed class CInventoryTester : AMono
 {
@@ -10,15 +10,22 @@ public sealed class CInventoryTester : AMono
     [Header("표시 설정")]
     [SerializeField] private int _fontSize = 24; // 글자 크기
 
-    [Header("인벤토리 테스트용 수집품 목록")]
-    [Tooltip("버튼으로 바로 가방에 넣어볼 수집품 ID 목록")]
-    [SerializeField] private string[] _testCollectibleIds = { Id.Collectible_Amulet1_Aged_Gold, Id.Collectible_Amulet1_Aged_Mixed, Id.Collectible_Amulet1_Fine_Bronze, Id.Collectible_Amulet1_Fine_Metal };
+    [Header("랜덤 획득 풀")]
+    [Tooltip("'랜덤 획득' 버튼을 누르면 이 중 하나를 무작위로 뽑아 가방에 넣습니다.")]
+    [SerializeField]
+    private string[] _testCollectibleIds =
+    {
+        Id.Collectible_Amulet1_Aged_Gold,
+        Id.Collectible_Amulet1_Aged_Mixed,
+        Id.Collectible_WF_GreekRelics_CorinthianHelmet,
+        Id.Collectible_WF_GreekRelics_PaintedAmphora
+    };
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private const int WINDOW_ID = 998811; // 인벤토리 테스터용 고유 ID
     private Vector2 _scroll;
-    private Rect _window = new Rect(20, 20, 450, 500); // 콤팩트해진 창 크기
+    private Rect _window = new Rect(20, 20, 420, 320); // 컴팩트한 창 크기
 
     private GUISkin _skin;
     private int _appliedFontSize = -1;
@@ -27,6 +34,10 @@ public sealed class CInventoryTester : AMono
     private bool _open;
     private int _bagCount, _bagCap;
     private float _weightCur, _weightMax;
+
+    // 마지막으로 뽑힌 아이템 정보 캐시 (결과 확인용)
+    private CCollectibleSO _lastPicked;
+    private bool _lastPickSucceeded;
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -58,50 +69,111 @@ public sealed class CInventoryTester : AMono
         GUI.skin = _skin;
     }
 
+    // CPlayerManager/UPlayer에 전용 메서드를 추가하지 않고, 이미 공개된 Runtime을 직접 비운다.
+    // 매니저의 Publish 경로를 거치지 않으므로, UI 갱신을 위해 이벤트를 직접 재발행한다.
+    private void ClearBagDebug()
+    {
+        CPlayerManager manager = CPlayerManager.Ins;
+        if (manager == null) return;
+
+        manager.Runtime.bagItems.Clear();
+
+        OnPlayerBagChanged.Publish(0, UPlayer.BagCapacity);
+        OnPlayerWeightChanged.Publish(0f, UPlayer.MaxWeight);
+    }
+
+    // 풀에서 하나를 무작위로 뽑아 획득을 시도하고, 결과를 캐시에 남긴다.
+    private void PickRandomAndAcquire()
+    {
+        if (_testCollectibleIds == null || _testCollectibleIds.Length == 0)
+        {
+            UDebug.Print("[인벤토리 테스터] 등록된 테스트 ID 풀이 비어있습니다.", LogType.Warning);
+            return;
+        }
+
+        string id = _testCollectibleIds[Random.Range(0, _testCollectibleIds.Length)];
+        _lastPicked = UData.Collectible(id);
+        _lastPickSucceeded = UPlayer.TryAddToBag(id);
+
+        if (!_lastPickSucceeded)
+        {
+            UDebug.Print($"[인벤토리 테스터] '{id}' 획득 실패 (슬롯 부족 또는 무게 초과)", LogType.Warning);
+        }
+    }
+
     private void DrawWindow(int id)
     {
         _scroll = GUILayout.BeginScrollView(_scroll);
 
-        // 1. 현재 상태 출력
+        // 1. 현재 가방 상태
         GUILayout.Box($"가방 칸: {_bagCount} / {_bagCap}\n무게: {_weightCur:F1} / {_weightMax:F1} KG");
         GUILayout.Space(10);
 
-        // 2. 가방 비우기 기능
-        if (GUILayout.Button("가방 전체 비우기"))
-        {
-            //UPlayer.ClearBag();
-        }
-        GUILayout.Space(15);
+        // 2. 조작 버튼
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("랜덤 획득")) PickRandomAndAcquire();
+        if (GUILayout.Button("가방 비우기")) ClearBagDebug();
+        GUILayout.EndHorizontal();
+        GUILayout.Space(10);
 
-        // 3. 아이템 생성 버튼 리스트
-        GUILayout.Label("── 테스트 아이템 생성 ──");
-        if (_testCollectibleIds == null || _testCollectibleIds.Length == 0)
-        {
-            GUILayout.Label("등록된 테스트 ID가 없습니다.");
-        }
-        else
-        {
-            int length = _testCollectibleIds.Length;
-            for (int i = 0; i < length; ++i)
-            {
-                string collectibleId = _testCollectibleIds[i];
-                if (collectibleId.IsBlank()) continue;
+        // 3. 풀 미리보기 (등급/무게가 안 바뀌는 것처럼 보일 때 원인 진단용)
+        DrawPoolPreviewSection();
+        GUILayout.Space(10);
 
-                CCollectibleSO so = UData.Collectible(collectibleId);
-                string btnLabel = so != null ? $"➕ {so.Name} ({so.Weight}KG)" : $"➕ {collectibleId} (SO 누락)";
-
-                if (GUILayout.Button(btnLabel))
-                {
-                    if (!UPlayer.TryAddToBag(collectibleId))
-                    {
-                        UDebug.Print($"[테스터] '{collectibleId}' 획득 실패 (슬롯 부족 또는 무게 초과)", LogType.Warning);
-                    }
-                }
-            }
-        }
+        // 4. 마지막으로 뽑힌 아이템 데이터 표시
+        DrawLastPickedSection();
 
         GUILayout.EndScrollView();
         GUI.DragWindow(new Rect(0, 0, 10000, 20)); // 상단 바 드래그 이동 가능
+    }
+
+    // 풀에 등록된 ID들이 실제로 어떤 데이터로 resolve되는지 보여준다.
+    // InstanceID가 겹치면 ID 등록 버그, 등급/무게 값 자체가 같으면 에셋에 데이터가 아직 다르게 입력되지 않은 것이다.
+    private void DrawPoolPreviewSection()
+    {
+        GUILayout.Label("── 풀 미리보기 (등급/무게가 안 바뀔 때 원인 확인용) ──");
+
+        if (_testCollectibleIds == null || _testCollectibleIds.Length == 0)
+        {
+            GUILayout.Label("등록된 테스트 ID가 없습니다.");
+            return;
+        }
+
+        int length = _testCollectibleIds.Length;
+        for (int i = 0; i < length; ++i)
+        {
+            string collectibleId = _testCollectibleIds[i];
+            if (collectibleId.IsBlank()) continue;
+
+            CCollectibleSO so = UData.Collectible(collectibleId);
+            if (so == null)
+            {
+                GUILayout.Label($"{collectibleId} → SO 없음");
+                continue;
+            }
+
+            GUILayout.Label($"{collectibleId} → {so.Name} | {so.CollectibleRarity} | {so.Weight}KG | InstanceID {so.GetInstanceID()}");
+        }
+    }
+
+    private void DrawLastPickedSection()
+    {
+        GUILayout.Label("── 마지막으로 뽑힌 아이템 ──");
+
+        if (_lastPicked == null)
+        {
+            GUILayout.Label("아직 뽑은 적이 없습니다.");
+            return;
+        }
+
+        string resultLabel = _lastPickSucceeded ? "획득 성공" : "획득 실패 (슬롯/무게 초과)";
+        GUILayout.Box(
+            $"{resultLabel}\n" +
+            $"이름: {_lastPicked.Name}\n" +
+            $"등급: {_lastPicked.CollectibleRarity}\n" +
+            $"무게: {_lastPicked.Weight} KG\n" +
+            $"판매가: {_lastPicked.SellPrice} G\n" +
+            $"설명: {_lastPicked.Description}");
     }
     #endregion
 
