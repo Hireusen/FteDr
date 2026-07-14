@@ -3,6 +3,8 @@ using UnityEngine;
 
 /// <summary>
 /// 씬 전체에서 공용으로 쓰이는 전역 UI의 생명주기를 관리하는 매니저입니다.
+/// 인스턴스가 IUIWindow를 구현하면 Open/Close를 호출해 공통 페이드 연출을 태우고,
+/// 구현하지 않았다면 예전처럼 즉시 SetActive로 처리합니다. (하위호환)
 /// </summary>
 public class CUIManager : AMono
 {
@@ -90,10 +92,10 @@ public class CUIManager : AMono
     {
         EUI targetUI = ctx.uIType;
 
-        // 1) 이미 생성된 인스턴스가 있으면 활성화만
+        // 1) 이미 생성된 인스턴스가 있으면 Open (IUIWindow 없으면 즉시 활성화)
         if (_uiInstanceDict.TryGetValue(targetUI, out GameObject instance) && instance != null)
         {
-            instance.SetActive(true);
+            OpenInstance(instance);
             return;
         }
 
@@ -101,7 +103,7 @@ public class CUIManager : AMono
         if (_uiPrefabDict.TryGetValue(targetUI, out GameObject prefab) && prefab != null)
         {
             GameObject newInstance = Instantiate(prefab);
-            newInstance.SetActive(true);
+            OpenInstance(newInstance);
             _uiInstanceDict[targetUI] = newInstance;
         }
         else
@@ -115,7 +117,27 @@ public class CUIManager : AMono
         EUI targetUI = ctx.uIType;
         if (_uiInstanceDict.TryGetValue(targetUI, out GameObject instance) && instance != null)
         {
-            instance.SetActive(false);
+            if (instance.TryGetComponent(out IUIWindow window))
+            {
+                window.Close();
+            }
+            else
+            {
+                instance.SetActive(false);
+            }
+        }
+    }
+
+    // IUIWindow가 있으면 페이드 인, 없으면 즉시 활성화. (신규 생성/재사용 공통 경로)
+    private void OpenInstance(GameObject instance)
+    {
+        if (instance.TryGetComponent(out IUIWindow window))
+        {
+            window.Open();
+        }
+        else
+        {
+            instance.SetActive(true);
         }
     }
     #endregion
