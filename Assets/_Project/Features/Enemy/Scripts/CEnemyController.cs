@@ -42,8 +42,10 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     [SerializeField, Min(0f)] private float _baseExcludeRadius = 12f;
 
     [Header("감지")]
-    [Tooltip("플레이어로 인식할 레이어입니다.")]
+    [Tooltip("플레이어 후보를 좁힐 레이어입니다. (성능용 1차 필터)")]
     [SerializeField] private LayerMask _playerLayer;
+    [Tooltip("플레이어로 최종 확정할 태그입니다. 비우면 레이어만으로 판정합니다.")]
+    [SerializeField] private string _playerTag = "Player";
     [Tooltip("켜면 시야 사이에 장애물이 있는지 레이캐스트로 확인해 벽 너머는 감지하지 않습니다.")]
     [SerializeField] private bool _useLineOfSight = true;
     [Tooltip("시야를 가로막는 장애물 레이어입니다. (가림 판정용)")]
@@ -124,15 +126,7 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     /// <summary>현재 적의 행동 상태입니다.</summary>
     public EEnemyState State => _state;
 
-    /// <summary>스포너가 스폰 직후 스탯을 주입할 때 사용합니다.</summary>
-    /// <param name="so">주입할 적 SO</param>
-    public void Initialize(CEnemySO so) => ApplyStats(so);
-
-    /// <summary>기지 참조를 외부에서 주입합니다.</summary>
-    /// <param name="baseTransform">기지 Transform</param>
-    public void SetBase(Transform baseTransform) => _base = baseTransform;
-
-    /// <summary>상어의 스폰위치를 외부에서 주입합니다.</summary>
+    /// <summary>상어의 스폰위치(배회 중심)를 외부에서 주입합니다. (보통은 인스펙터에서 직접 지정)</summary>
     /// <param name="spawnPoint"></param>
     public void SetSpawnPoint(Transform spawnPoint) => _spanwPoint = spawnPoint;
 
@@ -467,6 +461,9 @@ public class CEnemyController : AFrameable, IUpdateFrameable
             Collider col = _overlapBuffer[i];
             if (col == null) continue;
 
+            // 태그로 플레이어 최종 확정 (레이어로 좁힌 후 2차 필터)
+            if (!IsPlayer(col)) continue;
+
             Vector3 to = col.transform.position - transform.position;
             float sqr = to.sqrMagnitude;
             if (sqr >= bestSqr) continue;
@@ -495,7 +492,19 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     private bool TryGetPlayerWithin(float range)
     {
         int count = Physics.OverlapSphereNonAlloc(transform.position, range, _overlapBuffer, _playerLayer);
-        return count > 0;
+        for (int i = 0; i < count; ++i)
+        {
+            if (IsPlayer(_overlapBuffer[i])) return true;
+        }
+        return false;
+    }
+
+    // 콜라이더가 플레이어인지 태그로 확정합니다. (_playerTag 가 비어 있으면 레이어 통과만으로 인정)
+    private bool IsPlayer(Collider col)
+    {
+        if (col == null) return false;
+        if (_playerTag.IsBlank()) return true;
+        return col.CompareTag(_playerTag);
     }
     #endregion
 
