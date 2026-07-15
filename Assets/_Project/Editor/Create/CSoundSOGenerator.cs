@@ -8,7 +8,7 @@ using UnityEngine;
 public class CSoundSOGenerator : EditorWindow
 {
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    [MenuItem("Tools/사운드 SO 생성기")]
+    [MenuItem("Tools/Create/사운드 SO 생성기")]
     public static void ShowWindow()
     {
         GetWindow<CSoundSOGenerator>("Sound SO Generator");

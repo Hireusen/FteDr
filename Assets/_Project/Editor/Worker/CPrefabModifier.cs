@@ -67,7 +67,7 @@ public class CPrefabModifier : EditorWindow
     #endregion
 
     #region ─────────────────────────▶ 윈도우 ◀─────────────────────────
-    [MenuItem("Tools/프리팹 일괄 수정 도구")]
+    [MenuItem("Tools/Worker/프리팹 일괄 수정 도구")]
     public static void ShowWindow()
     {
         CPrefabModifier window = GetWindow<CPrefabModifier>("프리팹 일괄 수정");

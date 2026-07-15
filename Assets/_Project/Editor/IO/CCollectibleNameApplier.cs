@@ -16,7 +16,7 @@ public class CCollectibleNameApplier : EditorWindow
     #endregion
 
     #region ─────────────────────────▶ 윈도우 ◀─────────────────────────
-    [MenuItem("Tools/수집품 이름 적용기")]
+    [MenuItem("Tools/IO/수집품 이름 적용기")]
     public static void ShowWindow()
     {
         CCollectibleNameApplier window = GetWindow<CCollectibleNameApplier>("수집품 이름 적용기");

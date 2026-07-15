@@ -16,7 +16,7 @@ public class CAssetLocker : AssetPostprocessor
     }
 
     // 수동 실행
-    [MenuItem("Tools/대용량 에셋 읽기 전용 변경")]
+    [MenuItem("Tools/Worker/대용량 에셋 읽기 전용 변경")]
     public static void ShowWindow()
     {
         ScanAndLockLargeAssets();

@@ -15,7 +15,7 @@ public class CStringIdGenerator : EditorWindow
     private const string TARGET_FIELD_NAME = "_id";
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    [MenuItem("Tools/문자열 ID 생성기")]
+    [MenuItem("Tools/Create/문자열 ID 생성기")]
     public static void ShowWindow()
     {
         GetWindow<CStringIdGenerator>("String ID Generator");

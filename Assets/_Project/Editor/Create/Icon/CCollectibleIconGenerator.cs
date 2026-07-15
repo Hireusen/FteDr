@@ -52,7 +52,7 @@ public class CollectibleIconGenerator : EditorWindow
     #endregion
 
     #region ─────────────────────────▶ 메뉴 진입점 ◀─────────────────────────
-    [MenuItem("Tools/아이템 아이콘 생성기")]
+    [MenuItem("Tools/Create/아이템 아이콘 생성기")]
     private static void Open()
     {
         var window = GetWindow<CollectibleIconGenerator>("아이템 아이콘 생성기");

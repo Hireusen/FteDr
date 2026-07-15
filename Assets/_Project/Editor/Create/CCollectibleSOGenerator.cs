@@ -16,7 +16,7 @@ public class CCollectibleSOGenerator : EditorWindow
     #endregion
 
     #region ─────────────────────────▶ 윈도우 ◀─────────────────────────
-    [MenuItem("Tools/수집품 SO 생성기")]
+    [MenuItem("Tools/Create/수집품 SO 생성기")]
     public static void ShowWindow()
     {
         CCollectibleSOGenerator window = GetWindow<CCollectibleSOGenerator>("수집품 SO 생성기");

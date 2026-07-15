@@ -15,7 +15,7 @@ public class CCollectibleNameExporter : EditorWindow
     #endregion
 
     #region ─────────────────────────▶ 윈도우 ◀─────────────────────────
-    [MenuItem("Tools/수집품 이름 추출기")]
+    [MenuItem("Tools/IO/수집품 이름 추출기")]
     public static void ShowWindow()
     {
         CCollectibleNameExporter window = GetWindow<CCollectibleNameExporter>("수집품 이름 추출기");
