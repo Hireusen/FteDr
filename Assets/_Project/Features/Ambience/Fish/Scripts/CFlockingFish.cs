@@ -1,14 +1,14 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 군집 이동 행동을 하는 개별 물고기 클래스입니다.
+/// 군집 이동(Flocking) 행동을 하는 개별 물고기 클래스입니다.
 /// </summary>
 public sealed class CFlockingFish : AFrameable, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("이동 설정")]
     [SerializeField] private float _averageSpeed = 2f;
-    [SerializeField] private int _performance = 4; // 계산 프레임 분할 단위 (낮을수록 연산 자주함)
+    [SerializeField] private int _performance = 4;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -21,11 +21,17 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
 
-    /// <summary>이 물고기가 소속된 군집 제어 그룹입니다.</summary>
     public CFlockingGroup Flock
     {
         get => _flock;
         set => _flock = value;
+    }
+
+    /// <summary>외부 초기화 시 할당받을 평균 속도 프로퍼티입니다.</summary>
+    public float AverageSpeed
+    {
+        get => _averageSpeed;
+        set => _averageSpeed = value;
     }
     #endregion
 
@@ -35,9 +41,6 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
         _speed = Random.Range(0.5f, 1.5f) * _averageSpeed;
     }
 
-    /// <summary>
-    /// 프레임 매니저에 의해 매 프레임 호출되는 로직입니다.
-    /// </summary>
     public void ExecuteUpdateFrame()
     {
         ApplyTankBoundary();
