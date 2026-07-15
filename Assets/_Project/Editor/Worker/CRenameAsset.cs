@@ -16,7 +16,7 @@ public class CRenameAsset : EditorWindow
     #endregion
 
     #region ─────────────────────────▶ 윈도우 ◀─────────────────────────
-    [MenuItem("Tools/Worker/파일 이름 도구")]
+    [MenuItem("Tools/Worker/파일 이름 접미사 도구")]
     public static void ShowWindow()
     {
         CRenameAsset window = GetWindow<CRenameAsset>("이름 일괄 변경");
