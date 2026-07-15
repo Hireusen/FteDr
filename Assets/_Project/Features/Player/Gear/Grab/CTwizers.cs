@@ -162,7 +162,8 @@ public class CTwizers : AFrameable, IUpdateFrameable
 
     }
 
-    public GameObject GetItemInfo()
+    /// <summary>물건 정보 반환하고 손에서 놓기</summary>
+    public GameObject GetItemAndPutdown()
     {
         if (_grabInfo.crashedObject != null)
         {
@@ -171,11 +172,9 @@ public class CTwizers : AFrameable, IUpdateFrameable
             _activeJoint = null;
             _finger1.RemoveCrashinfo(_grabInfo);
             _finger2.RemoveCrashinfo(_grabInfo);
-            
             _grabInfo = default;
 
             return temp.crashedObject;
-            
         }
         return null;
     }

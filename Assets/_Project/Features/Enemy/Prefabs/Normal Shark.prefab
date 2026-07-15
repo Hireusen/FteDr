@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8377533082239868059}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Spine 3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -41,7 +41,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 3296067397796865047}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Head
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -74,7 +74,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7710912902862244963}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Upper Jaw
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -108,7 +108,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6043893368974928527}
   - component: {fileID: 156783609617597211}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Great White Shark
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -205,7 +205,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 839745252830983557}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Spine 4_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -236,7 +236,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7272945924238733450}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Spine 4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -268,7 +268,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7901032187077817198}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Lower Jaw_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -299,7 +299,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7741870206566394250}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Lower Jaw
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -331,7 +331,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2776497873691995254}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Left Fin_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -362,7 +362,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2651126401348098424}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Right Fin_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -393,7 +393,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9203703218642181344}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Left Fin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -425,7 +425,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8691923010117506313}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Upper Jaw_end
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -458,7 +458,7 @@ GameObject:
   - component: {fileID: 8698781312111437367}
   - component: {fileID: 3321994222718457285}
   - component: {fileID: 3293904807147770791}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Normal Shark
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -533,6 +533,7 @@ MonoBehaviour:
   _obstacleLayer:
     serializedVersion: 2
     m_Bits: 0
+  _bodyRadius: 0.5
   _turnSharpness: 1
   _maxPitchAngle: 60
   _maxBankAngle: 20
@@ -540,6 +541,9 @@ MonoBehaviour:
   _arriveThreshold: 2
   _repathInterval: 8
   _contactRange: 1.4
+  _avoidDistance: 6
+  _avoidStrength: 2
+  _avoidRefreshInterval: 0.1
 --- !u!1 &6256687867714860609
 GameObject:
   m_ObjectHideFlags: 0
@@ -549,7 +553,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 548701022561850997}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Right Fin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -581,7 +585,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2276013911220896900}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Spine 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -613,7 +617,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7941610241534637538}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Spine 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -647,7 +651,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8382253927332638339}
-  m_Layer: 0
+  m_Layer: 13
   m_Name: Great White Shark Bones
   m_TagString: Untagged
   m_Icon: {fileID: 0}
