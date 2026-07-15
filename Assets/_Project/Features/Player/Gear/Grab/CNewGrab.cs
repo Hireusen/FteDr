@@ -20,10 +20,6 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     [SerializeField] private float _twizersRotateSpeed = 1f;
 
     [SerializeField] private Transform _playerCam;
-
-
-
-
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -152,11 +148,11 @@ public class CNewGrab : AFrameable, IUpdateFrameable
                 float aimDistance = (aimPos - _playerCam.transform.localPosition).magnitude;
                 if (aimDistance < 0.2f) return;
 
-                if (hit.collider!=null && hit.collider.gameObject.CompareTag("Collectible")&&hit.rigidbody == null)
+                if (hit.collider != null && hit.collider.gameObject.CompareTag(K.TAG_GRABABLE) && hit.rigidbody == null)
                 {
                     hit.collider.AddComponent<Rigidbody>();
                 }
-                
+
 
                 USound.PlaySfx("SFX_robotics2");
                 ShootWrist();
@@ -193,11 +189,22 @@ public class CNewGrab : AFrameable, IUpdateFrameable
     private CCollectible GetItem()
     {
         CCollectible item = null;
-        GameObject itemObj = _twizers.GetItemInfo();
-        if (itemObj != null)
+        GameObject itemObj = _twizers.GetItemAndPutdown();
+        // 제대로 잡혀있는지 검사
+        if (itemObj == null) return null;
+
+        item = itemObj.GetComponent<CCollectible>();
+        var data = item.Data;
+        bool success = UPlayer.TryAddToBag(data.Id); // 배낭 입력 시도
+        // 배낭 입력 성공 및 아이템 삭제
+        if (success)
         {
-            item = itemObj.GetComponent<CCollectible>();
-            itemObj.SetActive(false);
+            Destroy(itemObj);
+        }
+        // 배낭 입력 실패 및 아이템 놓기
+        else
+        {
+            // 자동
         }
         return item;
     }
@@ -233,7 +240,6 @@ public class CNewGrab : AFrameable, IUpdateFrameable
         _twizersAnchor.transform.SetParent(_shoulder.transform, true);
         ChangeStatus(EGrabStatus.Wait);
     }
-
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -320,11 +326,5 @@ public class CNewGrab : AFrameable, IUpdateFrameable
         }
 
     }
-
-
-    #endregion
-
-    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
-
     #endregion
 }

@@ -55,7 +55,7 @@ public class CFinger : AMono
     private void OnCollisionEnter(Collision collision)
     {
         //objects에 넣은걸 교체하기 위한, crashobjects 코드 추가
-        if (collision.gameObject.CompareTag("Collectible"))
+        if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
         {
             Objects.Add(collision.gameObject);
 
@@ -79,7 +79,7 @@ public class CFinger : AMono
     }
     private void OnCollisionExit(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Collectible"))
+        if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
         {
             if (Objects.Contains(collision.gameObject))
             {
@@ -100,8 +100,8 @@ public class CFinger : AMono
         //objects에 넣은걸 교체하기 위한, crashobjects 코드 추가
         CrashInfo temp = new CrashInfo();
         temp.crashedObject = collision.gameObject;
-        if (temp.crashedObject.CompareTag("Collectible"))
-        //if (collision.gameObject.CompareTag("Collectible"))
+        if (temp.crashedObject.CompareTag(K.TAG_GRABABLE))
+        //if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
         {
             Objects.Add(collision.gameObject);
 
@@ -120,8 +120,8 @@ public class CFinger : AMono
     {
         CrashInfo temp = new CrashInfo();
         temp.crashedObject = collision.gameObject;
-        if (temp.crashedObject.CompareTag("Collectible"))
-        //if (collision.gameObject.CompareTag("Collectible"))
+        if (temp.crashedObject.CompareTag(K.TAG_GRABABLE))
+        //if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
         {
             if (Objects.Contains(collision.gameObject))
             {
