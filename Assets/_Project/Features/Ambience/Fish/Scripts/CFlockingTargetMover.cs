@@ -1,8 +1,8 @@
-﻿using System.IO;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 물고기 군집의 이동 형태(고정/자유)를 결정하고, SphereCast를 사용해 지형을 회피하며 이동하도록 제어하는 클래스입니다.
+/// Free 모드에서도 소속 군집(CFlockingGroup)의 경계 박스 안에서만 목표점을 선택합니다.
 /// </summary>
 public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
 {
@@ -27,11 +27,32 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
     private Vector3 _originalPosition; // 스폰 지점 (Anchor 모드 기준점)
     private Vector3 _targetPosition;
     private Transform _targetTransform;
+    private CFlockingGroup _flock;     // 경계 박스 참조용
     private bool _isInitialized = false;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
+
+    /// <summary>타겟이 한 스텝에 이동할 수 있는 최대 반경입니다.</summary>
+    public float MoveRange => _moveRange;
+    /// <summary>현재 이동 모드입니다.</summary>
+    public EMoveMode MoveMode => _moveMode;
+
+    /// <summary>
+    /// 기즈모용 기준점입니다. Anchor 모드는 스폰 원점을, Free 모드는 타겟 현재 위치를 반환합니다.
+    /// 비재생(에디터) 상태에서는 원점이 아직 잡히지 않았으므로 트랜스폼 위치로 대체합니다.
+    /// </summary>
+    public Vector3 GizmoBasePosition
+    {
+        get
+        {
+            if (_moveMode == EMoveMode.Free && _targetTransform != null)
+                return _targetTransform.position;
+            // Anchor: 재생 중이면 스폰 원점, 아니면 현재 위치.
+            return Application.isPlaying ? _originalPosition : transform.position;
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 초기화 ◀─────────────────────────
@@ -50,6 +71,8 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
     private void Awake()
     {
         _originalPosition = transform.position;
+        _flock = GetComponent<CFlockingGroup>();
+
         if (transform.childCount > 0)
         {
             _targetTransform = transform.GetChild(0);
@@ -87,6 +110,7 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
 
     /// <summary>
     /// 구형 레이캐스트(SphereCast)를 활용하여 지형이 없는 안전한 목적지를 탐색하여 반환합니다.
+    /// Free 모드에서도 최종 후보지는 군집 경계 박스 안으로 클램프됩니다.
     /// </summary>
     private Vector3 GetNextSafeTargetPosition()
     {
@@ -101,7 +125,7 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
         for (int i = 0; i < MAX_RETRIES; ++i)
         {
             Vector3 randomOffset = Random.insideUnitSphere * _moveRange;
-            candidatePos = basePos + randomOffset;
+            candidatePos = ClampToBounds(basePos + randomOffset);
 
             Vector3 origin = _targetTransform.position;
             Vector3 direction = candidatePos - origin;
@@ -127,10 +151,24 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
         // 뒤쪽 방향으로 강제 후퇴 좌표를 만들어 갇히지 않도록 탈출시킵니다.
         if (!pathIsClear)
         {
-            candidatePos = _targetTransform.position - _targetTransform.forward * (_moveRange * 0.5f);
+            candidatePos = ClampToBounds(
+                _targetTransform.position - _targetTransform.forward * (_moveRange * 0.5f));
         }
 
         return candidatePos;
+    }
+
+    /// <summary>후보 좌표를 군집 경계 박스 안으로 제한합니다. 군집 참조가 없으면 그대로 반환합니다.</summary>
+    private Vector3 ClampToBounds(Vector3 pos)
+    {
+        if (_flock == null) return pos;
+
+        Vector3 min = _flock.BoundsMin;
+        Vector3 max = _flock.BoundsMax;
+        pos.x = Mathf.Clamp(pos.x, min.x, max.x);
+        pos.y = Mathf.Clamp(pos.y, min.y, max.y);
+        pos.z = Mathf.Clamp(pos.z, min.z, max.z);
+        return pos;
     }
     #endregion
 
