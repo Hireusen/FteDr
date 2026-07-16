@@ -34,11 +34,9 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     [SerializeField, Min(0f)] private float _containmentStrength = 2f;
 
     [Header("기지(잠수함) 제외")]
-    [Tooltip("고정 기지 참조. 지정하면 태그 검색 대신 이걸 사용합니다. (추후 고정 참조 연동용)")]
-    [SerializeField] private Transform _baseOverride;
+    [Tooltip("고정 기지 참조.")]
+    [SerializeField] private Transform _baseTransform;
     [Tooltip("기지를 찾을 태그입니다.")]
-    [SerializeField] private string _baseTag = "Submarine";
-    [Tooltip("이 반경 안은 순찰 목적지에서 제외합니다. (기지 주변 안전지대)")]
     [SerializeField, Min(0f)] private float _baseExcludeRadius = 12f;
 
     [Header("감지")]
@@ -610,21 +608,14 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     // 기지 참조 확보: override 우선, 없으면 태그 검색.
     private void ResolveBase()
     {
-        if (_baseOverride != null)
+        if (_baseTransform != null)
         {
-            _base = _baseOverride;
+            _base = _baseTransform;
             return;
         }
-
-        if (!_baseTag.IsBlank())
+        else
         {
-            GameObject go = GameObject.FindWithTag(_baseTag);
-            if (go != null) _base = go.transform;
-        }
-
-        if (_base == null)
-        {
-            UDebug.Print($"기지(태그 '{_baseTag}')를 찾지 못했습니다. 기지 제외 없이 순찰합니다.", LogType.Warning, gameObject);
+            UDebug.Print("_baseTransform 비어있음, 참조 확인", LogType.Error);
         }
     }
     #endregion
