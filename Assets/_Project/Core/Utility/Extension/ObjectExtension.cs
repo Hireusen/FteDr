@@ -14,4 +14,22 @@ public static class ObjectExtension
     {
         return go.TryGetComponent(out T component) ? component : go.AddComponent<T>();
     }
+
+    /// <summary>
+    /// 게임 오브젝트가 해당 마스크에 포함되어있는지 확인합니다.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsInLayerMask(this GameObject go, LayerMask mask)
+    {
+        return (mask.value & (1 << go.layer)) != 0;
+    }
+
+    /// <summary>
+    /// 레이어가 해당 마스크에 포함되어있는지 확인합니다.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool IsInLayerMask(this int layer, LayerMask mask)
+    {
+        return (mask.value & (1 << layer)) != 0;
+    }
 }
