@@ -63,11 +63,13 @@ public class CReplaceAssetName : EditorWindow
             Object obj = selectedAssets[i];
             string path = AssetDatabase.GetAssetPath(obj);
 
+            /*
             // 폴더 제외
             if (AssetDatabase.IsValidFolder(path))
             {
                 continue;
             }
+            */
 
             string oldName = obj.name;
             string newName = ReplaceName(oldName);
