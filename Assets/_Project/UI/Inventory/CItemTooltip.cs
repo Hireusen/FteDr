@@ -70,6 +70,22 @@ public sealed class CItemTooltip : AFrameable, IUpdateFrameable
         Hide();
     }
 
+    // 인스펙터에서 새 등급 항목을 추가하면 Color 필드가 (0,0,0,0)으로 초기화되어
+    // 알파가 0인 채로 남는 경우가 많다. 편집 시점에 알파 0을 1로 자동 보정한다.
+    private void OnValidate()
+    {
+        int count = _rarityVisuals.Count;
+        for (int i = 0; i < count; ++i)
+        {
+            RarityVisualData visual = _rarityVisuals[i];
+
+            if (visual.borderColor.a <= 0f) visual.borderColor.a = 1f;
+            if (visual.textColor.a <= 0f) visual.textColor.a = 1f;
+
+            _rarityVisuals[i] = visual;
+        }
+    }
+
     protected override void OnEnable()
     {
         base.OnEnable();

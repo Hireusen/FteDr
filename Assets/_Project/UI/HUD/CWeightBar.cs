@@ -16,7 +16,7 @@ public sealed class CWeightBar : AMono
     [SerializeField] private TMP_Text _weightText;
 
     [Header("표시 형식")]
-    [SerializeField] private string _format = "{0:0.#} / {1:0.#} KG";
+    [SerializeField] private string _format = "총 무게 {0:0.#} / {1:0.#} KG";
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
