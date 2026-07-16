@@ -9,6 +9,7 @@ public class CEndingFuncs : AFrameable, IUpdateFrameable
     [SerializeField] private GameObject _arm;
     [SerializeField] private GameObject _armEndpivot;
     [SerializeField] private GameObject _twizers;
+    [SerializeField]
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
 
     #endregion
@@ -29,7 +30,11 @@ public class CEndingFuncs : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    
+
+    private void ConnectArmAndShip()
+    {
+
+    }
     private IEnumerator ArmToShipCo(float duration)
     {
         float timer = 0;
