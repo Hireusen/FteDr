@@ -11,4 +11,5 @@ public enum EUI
     ShopWindow,             // 상점창
     HudWindow,              // HUD창
     LoadingWindow,          // 로딩창
+    ResultWindow,           // 결과창
 }
