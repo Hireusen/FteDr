@@ -12,7 +12,6 @@ public class CCreditsController : AMono
     [Header("UI References")]
     [SerializeField] private RectTransform _creditsTextRect;         // 스크롤할 크레딧 텍스트 (Anchor: Top-Center, Pivot: Top)
     [SerializeField] private RectTransform _maskAreaRect;           // 텍스트가 노출될 마스크 영역 Rect (Pivot: Center)
-    [SerializeField] private Button _closeButton;                   // 닫기 버튼
 
     [Header("Scroll Setting")]
     [SerializeField] private float _scrollSpeed = 80f;              // 초당 이동 거리 (위로 상승)
@@ -26,14 +25,6 @@ public class CCreditsController : AMono
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    private void Awake()
-    {
-        if (_closeButton != null)
-        {
-            _closeButton.onClick.AddListener(OnClickClose);
-        }
-    }
-
     private void OnEnable()
     {
         StartCreditsScroll();
@@ -123,15 +114,7 @@ public class CCreditsController : AMono
         tempPosition.y = _startPositionY;
         _creditsTextRect.anchoredPosition = tempPosition;
 
-        // 전체 화면을 검은색으로 먼저 덮기
-        UFade.SetColor(Color.black);
-
-        // 0.5초 동안 화면을 밝혀서 첫 줄이 있는 크레딧 창을 노출
-        bool isFadeInComplete = false;
-        UFade.FadeIn(0.3f, blockRaycasts: true, onComplete: () => isFadeInComplete = true);
-        yield return new WaitUntil(() => isFadeInComplete);
-
-        // 정지 상태에서 2초간 대기
+        // 정지 상태에서 2초간 대기 (창 자체의 등장 페이드는 CUIWindow가 담당)
         yield return new WaitForSeconds(_delayBeforeScroll);
 
         // 위로 올라가려면 Y값이 증가해야 하므로, 종료 Y가 시작 Y보다 큽니다 (_endPositionY > _startPositionY)
@@ -162,21 +145,6 @@ public class CCreditsController : AMono
         _scrollCoroutine = null;
 
         UDebug.Print("[CCreditsController] 정방향 상승 스크롤 연출이 완전히 안착하여 종료되었습니다.");
-    }
-
-    /// <summary>
-    /// 닫기 버튼 클릭 시 호출
-    /// </summary>
-    private void OnClickClose()
-    {
-        _closeButton.interactable = false;
-
-        UFade.FadeOut(0.3f, blockRaycasts: true, onComplete: () =>
-        {
-            gameObject.SetActive(false);
-            _closeButton.interactable = true;
-            UFade.FadeIn(0.3f);
-        });
     }
     #endregion
 }
