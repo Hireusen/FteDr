@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 클래스의 설계 의도입니다.
 /// </summary>
-public class CNewGrab : AFrameable, IUpdateFrameable
+public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [SerializeField] private CPlayerController _controller;
@@ -282,7 +282,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable
                 break;
             case EGrabStatus.Shooting:
 
-                ShootWristContinuous();
+                
                 ExtendArm();
                 /*
                 if (Input.GetKey(KeyCode.U))
@@ -325,6 +325,14 @@ public class CNewGrab : AFrameable, IUpdateFrameable
 
         }
 
+    }
+    public EFixedUpdatePriority FixedUpdatePriority => EFixedUpdatePriority.Lv5;
+    public void ExecuteFixedUpdateFrame()
+    {
+        if (grabStatus == EGrabStatus.Shooting)
+        {
+            ShootWristContinuous();
+        }
     }
     #endregion
 }

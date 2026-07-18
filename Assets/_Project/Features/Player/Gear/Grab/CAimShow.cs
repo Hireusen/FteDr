@@ -29,14 +29,19 @@ public class CAimShow : AFrameable, IUpdateFrameable
         RaycastHit hit;
         if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 4, _collectibleLayout))
         {
+            //아웃라인용
             CCollectible temp=hit.collider.gameObject.GetComponent<CCollectible>();
             if (temp != _currentAimObject)
             {
+                if(_currentAimObject!=null)_currentAimObject.HideOutline();
+
                 _currentAimObject=hit.collider.GetComponent<CCollectible>();
                 _currentAimObject.ShowOutline();
                 print("outlineshow");
                 
             }
+
+            //에임용
             if ((_armTransform.position - hit.point).magnitude < _grabScript.Maxdistance)
             {
                 ChangeState(EAimStatus.Reached);
@@ -48,9 +53,9 @@ public class CAimShow : AFrameable, IUpdateFrameable
         }
         else
         {
+            ChangeState(EAimStatus.Normal);
             if (_currentAimObject != null)
             {
-                ChangeState(EAimStatus.Normal);
                 _currentAimObject.HideOutline();
                 _currentAimObject = null;
             }
