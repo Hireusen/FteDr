@@ -9,4 +9,7 @@ public interface IUIWindow
 
     /// <summary>퇴장 연출(페이드 아웃 등)을 마친 뒤 창을 비활성화합니다.</summary>
     void Close();
+
+    /// <summary>이 창이 열려있는 동안 HUD를 숨겨야 하는지 여부입니다.</summary>
+    bool HidesHud { get; }
 }
