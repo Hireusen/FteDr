@@ -836,6 +836,37 @@ Transform:
   - {fileID: 4362013332656687338}
   m_Father: {fileID: 8365220855643221026}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &5586887032022113331
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5595142303527870105}
+  m_Layer: 12
+  m_Name: SpawnPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5595142303527870105
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5586887032022113331}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -1.18, z: -8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8365220855643221026}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &6205295755260863977
 GameObject:
   m_ObjectHideFlags: 0
@@ -1481,6 +1512,7 @@ Transform:
   - {fileID: 2888289291647960710}
   - {fileID: 5305942593078045940}
   - {fileID: 3177044882153764911}
+  - {fileID: 5595142303527870105}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -67.956, z: 0}
 --- !u!114 &2638519478838934993
@@ -1495,9 +1527,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fff893b1554bb59478fc5c25ce97baec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  controlCam: {fileID: 5792109414570017238}
-  firstSceneIndex: 3
-  lastSceneIndex: 4
+  _controlCam: {fileID: 5792109414570017238}
+  _playerSpawnPoint: {fileID: 5595142303527870105}
+  _firstGameScene: 2
+  _lastGameScene: 7
 --- !u!33 &4620138123450359736
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -1613,7 +1646,6 @@ MonoBehaviour:
   m_Events:
     m_Signals:
     - {fileID: 11400000, guid: 3d3ca6908913d9f44be7db98733324cc, type: 2}
-    - {fileID: 11400000, guid: a72a6d1fba8c56348b8b64a77e881952, type: 2}
     - {fileID: 11400000, guid: 662d8dba917d0624fba159d78a8dfe11, type: 2}
     m_Events:
     - m_PersistentCalls:
@@ -1621,35 +1653,21 @@ MonoBehaviour:
         - m_Target: {fileID: 2638519478838934993}
           m_TargetAssemblyTypeName: CSubMarineUpDown, Assembly-CSharp
           m_MethodName: MoveSubmarine
-          m_Mode: 3
+          m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
             m_IntArgument: -1
             m_FloatArgument: 0
             m_StringArgument: 
-            m_BoolArgument: 0
-          m_CallState: 2
-    - m_PersistentCalls:
-        m_Calls:
-        - m_Target: {fileID: 2638519478838934993}
-          m_TargetAssemblyTypeName: CSubMarineUpDown, Assembly-CSharp
-          m_MethodName: ArriveSubmarine
-          m_Mode: 3
-          m_Arguments:
-            m_ObjectArgument: {fileID: 0}
-            m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
-            m_IntArgument: -1
-            m_FloatArgument: 0
-            m_StringArgument: 
-            m_BoolArgument: 0
+            m_BoolArgument: 1
           m_CallState: 2
     - m_PersistentCalls:
         m_Calls:
         - m_Target: {fileID: 2638519478838934993}
           m_TargetAssemblyTypeName: CSubMarineUpDown, Assembly-CSharp
           m_MethodName: MoveSubmarine
-          m_Mode: 3
+          m_Mode: 6
           m_Arguments:
             m_ObjectArgument: {fileID: 0}
             m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

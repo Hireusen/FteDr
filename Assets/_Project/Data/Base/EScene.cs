@@ -5,5 +5,11 @@ public enum EScene
 {
     Boot = 0,
     Title = 1,
-    Game = 2,
+    Stage_1 = 2,
+    Stage_2 = 3,
+    Stage_3 = 4,
+    Stage_4 = 5,
+    Stage_5 = 6,
+    Stage_6 = 7,
+    Ending = 8,
 }

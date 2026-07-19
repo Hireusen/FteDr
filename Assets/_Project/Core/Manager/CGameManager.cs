@@ -16,6 +16,11 @@ public sealed class CGameManager : ASingleton<CGameManager>
     // 루트 오브젝트
     private static Transform _normalObjectRoot;
     private static Transform _enableObjectRoot;
+
+    // 전역 액터
+    private static GameObject _player;
+    private static GameObject _submarine;
+    private static GameObject _uiManager;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -26,6 +31,9 @@ public sealed class CGameManager : ASingleton<CGameManager>
     // 루트 오브젝트
     public static Transform NormalObjectRoot => RootProvider(_normalObjectRoot, K.NAME_NORMAL_OBJECT_ROOT);
     public static Transform PoolingObjectRoot => RootProvider(_enableObjectRoot, K.NAME_POOLING_OBJECT_ROOT);
+    public static GameObject Player => _player;
+    public static GameObject SubmarineObject => _submarine;
+    public static GameObject UIManager => _uiManager;
 
     /// <summary>
     /// 해당 씬을 동기 로드합니다.
@@ -240,6 +248,25 @@ public sealed class CGameManager : ASingleton<CGameManager>
         StartCoroutine(DoLoadSceneAsyncWithFade
             (name, preRoutine, fadeOutTime, fadeInTime, callback, onProgress, loadSceneMode));
     }
+
+    /// <summary>
+    /// 전역 유지 오브젝트(플레이어·잠수함·UI 매니저)를 Resources에서 로드해 생성합니다.
+    /// 부트 시퀀스가 모든 매니저를 초기화한 직후 1회 호출합니다.
+    /// 플레이어·잠수함은 비활성 상태로 생성되며 씬별 토글 스크립트가 활성을 관리합니다.
+    /// UI 매니저는 활성 상태로 생성하고 이후 관리는 CUIManager가 담당합니다.
+    /// </summary>
+    public void SpawnGlobalActors()
+    {
+        if (_player != null || _submarine != null || _uiManager != null)
+        {
+            UDebug.Print("전역 액터가 이미 생성되었습니다.", LogType.Assert);
+            return;
+        }
+
+        _player = SpawnGlobalActor(K.RESOURCE_PLAYER_PATH, false);
+        _submarine = SpawnGlobalActor(K.RESOURCE_SUBMARINE_PATH, false);
+        _uiManager = SpawnGlobalActor(K.RESOURCE_UI_PATH, true);
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -248,6 +275,11 @@ public sealed class CGameManager : ASingleton<CGameManager>
     {
         // 생성 및 초기화
         _curScene = (EScene)SceneManager.GetActiveScene().buildIndex;
+
+        // 씬에 따라 전역 액터를 켜고 끄기 위해 구독한다.
+        // FirstLoadCo가 뿌리는 최초 이벤트도 받아야 하므로 코루틴 시작 전에 구독한다.
+        CEventBus<OnSceneLoadEnd>.Subscribe(SceneLoadEndHandler);
+
         // 초기 부팅 시 씬 전환 이벤트 뿌리기
         if (_bootCo == null)
         {
@@ -257,6 +289,31 @@ public sealed class CGameManager : ASingleton<CGameManager>
         {
             UDebug.Print($"부트 코루틴이 중복 호출되었습니다.", LogType.Assert);
         }
+    }
+
+    // 씬 로드 완료 시 게임플레이 씬이면 전역 액터를 켜고, 아니면 끈다.
+    private void SceneLoadEndHandler(OnSceneLoadEnd e)
+    {
+        bool active = e.nextScene.IsGameplay();
+        UObject.SetActive(_player, active);
+        UObject.SetActive(_submarine, active);
+    }
+
+    // Resources에서 프리팹을 로드해 인스턴스화하고 전역 유지시킵니다.
+    private GameObject SpawnGlobalActor(string resourcePath, bool active)
+    {
+        var prefab = Resources.Load<GameObject>(resourcePath);
+        if (prefab == null)
+        {
+            UDebug.Print($"전역 액터 프리팹을 찾지 못했습니다: {resourcePath}", LogType.Error);
+            return null;
+        }
+
+        GameObject instance = Instantiate(prefab);
+        instance.name = prefab.name; // "(Clone)" 접미사 제거
+        DontDestroyOnLoad(instance);
+        UObject.SetActive(instance, active);
+        return instance;
     }
 
     // 루트 오브젝트를 안전하게 가져오고 없으면 새로 생성
@@ -405,16 +462,30 @@ public sealed class CGameManager : ASingleton<CGameManager>
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    private static void ClearStaticMember()
+    private static void ClearObjectRoot()
     {
         _normalObjectRoot = null;
         _enableObjectRoot = null;
+    }
+
+    private static void ClearStaticMember()
+    {
+        ClearObjectRoot();
+        _player = null;
+        _submarine = null;
+        _uiManager = null;
     }
 
     // 플레이 모드가 종료될 경우 호출
     private void OnApplicationQuit()
     {
         ClearStaticMember();
+    }
+
+    protected override void OnDestroy()
+    {
+        CEventBus<OnSceneLoadEnd>.Unsubscribe(SceneLoadEndHandler);
+        base.OnDestroy();
     }
     #endregion
 }
