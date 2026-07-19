@@ -34,6 +34,10 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     [SerializeField] private float _groundCheckUpOffset = 0.3f;
     [SerializeField] private LayerMask _groundLayer;
 
+    [Header("잠수함 판정")]
+    [Tooltip("잠수함(내부) 판정에 사용할 레이어. 진입 시 지상, 이탈 시 수영 상태로 전환")]
+    [SerializeField] private LayerMask _submarineLayer;
+
     [Header("연료 상태")]
     [Tooltip("연료 부족(Low) 시 이동 속도 배율. 작을수록 급격히 느려짐")]
     [SerializeField, Range(0f, 1f)] private float _lowFuelSpeedMultiplier = 0.3f;
@@ -62,6 +66,8 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     // 조작 잠금 사유들. 하나라도 true 면 잠금. (집게/고갈이 서로를 덮어쓰지 않도록 분리)
     private bool _lockByGrab = false;
     private bool _lockByFuel = false;
+
+    private EMoveLockReason _uiLockReasons = EMoveLockReason.None;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -70,7 +76,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     public EPlayerState CurrentState => _currentState;
 
     /// <summary>하나의 사유라도 서 있으면 조작이 잠깁니다.</summary>
-    public bool IsControlLocked => _lockByGrab || _lockByFuel;
+    public bool IsControlLocked => _lockByGrab || _lockByFuel || _uiLockReasons != EMoveLockReason.None;
 
     /// <summary>
     /// 시선(회전)을 제외한 실제 이동 조작(이동/상승)이 들어오고 있는지 여부입니다.
@@ -277,9 +283,9 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
         CEventBus<OnInputMove>.Unsubscribe(MoveHandler);
         CEventBus<OnInputJump>.Unsubscribe(JumpHandler);
-        CEventBus<OnInputEsc>.Unsubscribe(EscHandler);
         CEventBus<OnInputDescent>.Unsubscribe(DescentHandler);
         CEventBus<OnPlayerFuelStateChanged>.Unsubscribe(FuelStateHandler);
+        CEventBus<OnSetMoveLockReason>.Unsubscribe(MoveLockHandler);
     }
 
     protected override void OnEnable()
@@ -300,16 +306,16 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
         CEventBus<OnInputMove>.Subscribe(MoveHandler);
         CEventBus<OnInputJump>.Subscribe(JumpHandler);
-        CEventBus<OnInputEsc>.Subscribe(EscHandler);
         CEventBus<OnInputDescent>.Subscribe(DescentHandler);
         CEventBus<OnPlayerFuelStateChanged>.Subscribe(FuelStateHandler);
+        CEventBus<OnSetMoveLockReason>.Subscribe(MoveLockHandler);
 
         ApplyFuelState(CPlayerManager.Ins.FuelState);
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Submarine"))
+        if (other.gameObject.IsInLayerMask(_submarineLayer))
         {
             SetState(EPlayerState.OnGround);
         }
@@ -317,7 +323,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Submarine"))
+        if (other.gameObject.IsInLayerMask(_submarineLayer))
         {
             SetState(EPlayerState.Swimming);
         }
@@ -340,17 +346,15 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         _isDescentPressed = data.descentPressed;
     }
 
-    private void EscHandler(OnInputEsc data)
-    {
-        // 커서는 입력 매니저가 단독 소유. 여기서는 메뉴 사유만 토글합니다.
-        CInputManager input = CInputManager.Ins;
-        bool menuOpen = input.IsCursorReasonActive(ECursorReason.Menu);
-        input.SetCursorReason(ECursorReason.Menu, !menuOpen);
-    }
-
     private void FuelStateHandler(OnPlayerFuelStateChanged e)
     {
         ApplyFuelState(e.state);
     }
+
+    private void MoveLockHandler(OnSetMoveLockReason ctx)
+    {
+        _uiLockReasons = ctx.active ? (_uiLockReasons | ctx.reason) : (_uiLockReasons & ~ctx.reason);
+    }
     #endregion
+
 }

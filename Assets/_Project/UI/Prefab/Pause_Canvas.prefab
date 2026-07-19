@@ -1049,14 +1049,16 @@ GameObject:
   - component: {fileID: 6130468561203815120}
   - component: {fileID: 2661498911774461161}
   - component: {fileID: 9032540991928279861}
+  - component: {fileID: 59865203873437268}
   - component: {fileID: 2586264340980879782}
+  - component: {fileID: 7405872525388579501}
   m_Layer: 5
   m_Name: Pause_Canvas
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4491068712418439429
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1140,6 +1142,18 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!225 &59865203873437268
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7464285864275530604}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
 --- !u!114 &2586264340980879782
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1156,6 +1170,25 @@ MonoBehaviour:
   _btnOptions: {fileID: 4626376525766677197}
   _btnTitle: {fileID: 3812064779237367983}
   _btnQuit: {fileID: 1935833105656889595}
+--- !u!114 &7405872525388579501
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7464285864275530604}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1eedb6e2b043974da129d7f6e2716bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _uiType: 2
+  _canvasGroup: {fileID: 59865203873437268}
+  _closeButton: {fileID: 0}
+  _fadeInDuration: 0.2
+  _fadeOutDuration: 0.2
+  _moveLockReason: 0
+  _hidesHud: 0
 --- !u!1 &7731634279605194939
 GameObject:
   m_ObjectHideFlags: 0

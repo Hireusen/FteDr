@@ -4,16 +4,19 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// UI 창 프리팹의 루트에 부착하는 공용 컴포넌트입니다.
+/// UI 창 프리팹/씬 오브젝트의 루트에 부착하는 공용 컴포넌트입니다.
 /// CUIManager가 SetActive 대신 이 컴포넌트의 Open/Close를 호출하여, 모든 창이 동일한 페이드 연출을 갖도록 합니다.
 /// Close 버튼은 OnRequestCloseUI를 발행해 CUIManager를 거쳐 닫히므로, 다른 시스템도 창이 닫힘을 일관되게 알 수 있습니다.
+///
+/// 인스펙터에서 이동 잠금 사유를 지정하면 열려있는 동안 플레이어 이동을 막습니다.
+/// (마우스 커서 표시는 여러 창이 겹칠 때의 참조 계수 문제 때문에 CUIManager가 스택 전체를 보고 중앙에서 관리합니다)
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class CUIWindow : AMono, IUIWindow
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("창 식별")]
-    [Tooltip("CUIRegistrySO에 등록된 것과 동일한 타입이어야 합니다. Close 버튼이 이 타입으로 닫기를 요청합니다.")]
+    [Tooltip("CUIRegistrySO/씬배치 목록에 등록된 것과 동일한 타입이어야 합니다. Close 버튼이 이 타입으로 닫기를 요청합니다.")]
     [SerializeField] private EUI _uiType;
 
     [Header("필수 연결")]
@@ -25,6 +28,12 @@ public sealed class CUIWindow : AMono, IUIWindow
     [Header("페이드 설정")]
     [SerializeField] private float _fadeInDuration = 0.2f;
     [SerializeField] private float _fadeOutDuration = 0.2f;
+
+    [Header("게임플레이 차단 (선택)")]
+    [Tooltip("이 창이 열려있는 동안 막을 플레이어 조작 사유. None이면 이동을 막지 않습니다 (예: Pause는 Time.timeScale로 이미 멈추므로 None).")]
+    [SerializeField] private EMoveLockReason _moveLockReason = EMoveLockReason.None;
+    [Tooltip("이 창이 열려있는 동안 HUD를 숨길지 여부")]
+    [SerializeField] private bool _hidesHud = false;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -32,10 +41,17 @@ public sealed class CUIWindow : AMono, IUIWindow
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    public bool HidesHud => _hidesHud;
+
     /// <summary>창을 활성화하고 페이드 인으로 등장시킵니다.</summary>
     public void Open()
     {
         gameObject.SetActive(true);
+
+        if (_moveLockReason != EMoveLockReason.None)
+        {
+            OnSetMoveLockReason.Publish(_moveLockReason, true);
+        }
 
         if (_canvasGroup == null)
         {
@@ -50,6 +66,11 @@ public sealed class CUIWindow : AMono, IUIWindow
     /// <summary>페이드 아웃 후 창을 비활성화합니다.</summary>
     public void Close()
     {
+        if (_moveLockReason != EMoveLockReason.None)
+        {
+            OnSetMoveLockReason.Publish(_moveLockReason, false);
+        }
+
         if (_canvasGroup == null)
         {
             gameObject.SetActive(false);
@@ -73,6 +94,27 @@ public sealed class CUIWindow : AMono, IUIWindow
             UDebug.Print($"CUIWindow({_uiType}): 닫기 버튼이 연결되지 않았습니다. 모든 창은 닫기 버튼을 가져야 합니다.", LogType.Warning, gameObject);
         }
     }
+
+    // CUIManager에 스스로를 등록한다. Awake가 아니라 Start에서 하는 이유: RegisterWindow가 즉시 SetActive(false)를
+    // 호출하는데, 같은 오브젝트의 다른 컴포넌트(예: CPauseMenuController)의 Awake가 아직 안 끝났다면
+    // 그 시점에 꺼져버려 이후 Awake가 통째로 스킵될 수 있다. Start는 씬의 모든 Awake가 끝난 뒤 호출되므로 안전하다.
+    private void Start()
+    {
+        CUIManager.Ins?.RegisterWindow(_uiType, gameObject);
+    }
+
+    // 창이 파괴될 때(씬 전환 등) 등록을 해제하고, 켜둔 이동잠금 사유가 남아버리는 것을 방지한다.
+    private void OnDestroy()
+    {
+        if (CInputManager.IsQuitting) return;
+
+        CUIManager.Ins?.UnregisterWindow(_uiType, gameObject);
+
+        if (_moveLockReason != EMoveLockReason.None)
+        {
+            OnSetMoveLockReason.Publish(_moveLockReason, false);
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -90,6 +132,17 @@ public sealed class CUIWindow : AMono, IUIWindow
 
     private void StartFade(float from, float to, float duration, Action onComplete)
     {
+        // 부모 오브젝트가 비활성 상태면 activeInHierarchy가 false라서 StartCoroutine이 조용히(혹은 에러와 함께) 실패한다.
+        // 여기서 미리 감지해서 원인을 바로 알 수 있게 하고, 페이드 없이도 최소한 켜짐/꺼짐은 즉시 반영한다.
+        if (!gameObject.activeInHierarchy)
+        {
+            UDebug.Print($"CUIWindow({_uiType}): 부모 오브젝트가 비활성 상태라 페이드를 시작할 수 없습니다. " +
+                $"이 창의 상위 오브젝트(예: UIManger)가 씬에서 꺼져있는지 확인해주세요.", LogType.Error, gameObject);
+            _canvasGroup.alpha = to;
+            onComplete?.Invoke();
+            return;
+        }
+
         if (_fadeCoroutine != null) StopCoroutine(_fadeCoroutine);
         _fadeCoroutine = StartCoroutine(CoFade(from, to, duration, onComplete));
     }
