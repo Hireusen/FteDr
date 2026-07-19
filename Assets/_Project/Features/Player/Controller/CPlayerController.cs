@@ -33,6 +33,10 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     [SerializeField] private float _groundCheckUpOffset = 0.3f;
     [SerializeField] private LayerMask _groundLayer;
 
+    [Header("잠수함 판정")]
+    [Tooltip("잠수함(내부) 판정에 사용할 레이어. 진입 시 지상, 이탈 시 수영 상태로 전환")]
+    [SerializeField] private LayerMask _submarineLayer;
+
     [Header("연료 상태")]
     [Tooltip("연료 부족(Low) 시 이동 속도 배율. 작을수록 급격히 느려짐")]
     [SerializeField, Range(0f, 1f)] private float _lowFuelSpeedMultiplier = 0.3f;
@@ -306,7 +310,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Submarine"))
+        if (other.gameObject.IsInLayerMask(_submarineLayer))
         {
             SetState(EPlayerState.OnGround);
         }
@@ -314,7 +318,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.CompareTag("Submarine"))
+        if (other.gameObject.IsInLayerMask(_submarineLayer))
         {
             SetState(EPlayerState.Swimming);
         }
