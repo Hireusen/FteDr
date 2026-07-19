@@ -147,13 +147,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
                 }
             }
         }
-        Debug.Log($"Input : {_currentMoveInput}");
-        Debug.Log($"MoveDir : {_moveDirection}");
-        Debug.Log($"Velocity : {_rb.velocity}");
-        Debug.Log($"Transform :{transform.position}");
-
-        Debug.Log($"RbPosition :{_rb.position}");
-
     }
     #endregion
 
@@ -213,7 +206,8 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         _postureBlend = Mathf.Lerp(_postureBlend, target, t);
 
         float bodyPitch = _pitch * _postureBlend;
-        _root.rotation=Quaternion.Euler(bodyPitch, _yaw, 0f);
+        transform.rotation = Quaternion.Euler(0f, _yaw, 0f);
+        _root.localRotation = Quaternion.Euler(bodyPitch, 0f, 0f);
 
         if (_cameraRoot != null)
         {
