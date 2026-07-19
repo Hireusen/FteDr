@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cinemachine;
+using UnityEngine;
 
 /// <summary>
 /// 1인칭 카메라입니다.
@@ -10,7 +11,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     [SerializeField] private CPlayerController _playerController;
     [Tooltip("컨트롤러가 회전을 넣는 눈높이 앵커. 평상시 카메라가 이 트랜스폼의 위치·회전을 복사")]
     [SerializeField] private Transform _cameraRoot;
-    [SerializeField] private Camera _camera;
+    [SerializeField] private CinemachineVirtualCamera _camera;
 
     [Header("회전 감도")]
     [Tooltip("기본 감도값. 설정에 감도 옵션이 생기기 전까지 사용되는 폴백 (Sensitivity 프로퍼티 참고)")]
@@ -253,14 +254,6 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
     private void Start()
     {
-        if (_camera == null)
-        {
-            GameObject mainCamGO = GameObject.FindGameObjectWithTag("MainCamera");
-            if (mainCamGO != null)
-            {
-                _camera = mainCamGO.GetComponent<Camera>();
-            }
-        }
 
         if (_playerController == null || _cameraRoot == null || _camera == null)
         {
