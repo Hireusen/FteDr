@@ -218,7 +218,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
     // 여러 창이 겹쳐 있다가 하나만 닫혀도 나머지가 남아있으면 커서가 계속 보이도록, 매번 전체 상태를 다시 계산해서 반영한다.
     private void RefreshCursor()
     {
-        bool needsCursor = _openStack.Count > 0 || UScene.Current != EScene.Game;
+        bool needsCursor = (_openStack.Count > 0) || (!UScene.Current.IsGameplay());
         CInputManager.Ins?.SetCursorReason(ECursorReason.Menu, needsCursor);
     }
     #endregion
