@@ -339,9 +339,11 @@ public sealed class CGameManager : ASingleton<CGameManager>
     private void PreProcessing(EScene prevScene, string nextScenePath)
     {
         IsSceneLoading = true;
-        ClearStaticMember();
+        //ClearStaticMember();
         EScene nextScene = (EScene)SceneUtility.GetBuildIndexByScenePath(nextScenePath);
+        _curScene = nextScene;
         OnSceneLoadStart.Publish(prevScene, nextScene);
+
     }
     // 씬 로드 후처리
     private void PostProcessing(EScene prevScene, string nextScenePath)
@@ -354,7 +356,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
             root = PoolingObjectRoot;
         }
         PublishLoadEnd(prevScene, nextScene);
-        _curScene = nextScene;
+        
         IsSceneLoading = false;
     }
 
