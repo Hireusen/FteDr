@@ -1057,6 +1057,67 @@ Transform:
   m_Children: []
   m_Father: {fileID: 8069301913100282416}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &3618260373997792503
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8375124982996474690}
+  - component: {fileID: 9121402766427477324}
+  m_Layer: 0
+  m_Name: CamTest
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8375124982996474690
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3618260373997792503}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -32.547108, y: -90.13066, z: 16.189198}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2728337266944006544}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9121402766427477324
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3618260373997792503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ddd93717aa47203448f2d093804c7bc7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  _playerController: {fileID: 3261221692145292238}
+  _cameraRoot: {fileID: 5546990443894001600}
+  _camera: {fileID: 4953018864619548196}
+  _lookSensitivity: 0.5
+  _swimPitchMin: -85
+  _swimPitchMax: 85
+  _groundPitchMin: -40
+  _groundPitchMax: 60
+  _grabYawRange: 60
+  _grabPitchRange: 50
+  _grabReturnSharpness: 10
+  _grabReturnDoneAngle: 0.5
+  _grabTool: {fileID: 4831748627744386585}
+  _isCameraRotationLock: 0
 --- !u!1 &3638508176884693699
 GameObject:
   m_ObjectHideFlags: 0
@@ -1592,6 +1653,7 @@ Transform:
   - {fileID: 2704735362725339065}
   - {fileID: 3944606512385391101}
   - {fileID: 8787990060147588291}
+  - {fileID: 8375124982996474690}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 31.866, y: 0, z: 0}
 --- !u!114 &4831748627744386585
@@ -1657,7 +1719,7 @@ MonoBehaviour:
   _jumpForce: 40
   _verticalForce: 30
   _waterDrag: 3
-  _cameraTransform: {fileID: 0}
+  _cameraTransform: {fileID: 5546990443894001600}
   _cameraRoot: {fileID: 5546990443894001600}
   _postureBlendSharpness: 8
   _groundCheckDistance: 0.1
