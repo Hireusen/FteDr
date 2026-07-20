@@ -32,7 +32,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
     public static Transform NormalObjectRoot => RootProvider(_normalObjectRoot, K.NAME_NORMAL_OBJECT_ROOT);
     public static Transform PoolingObjectRoot => RootProvider(_enableObjectRoot, K.NAME_POOLING_OBJECT_ROOT);
     public static GameObject Player => _player;
-    public static GameObject SubmarineObject => _submarine;
+    public static GameObject Submarine => _submarine;
     public static GameObject UIManager => _uiManager;
 
     /// <summary>
