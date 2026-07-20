@@ -226,6 +226,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
         UDebug.Print($"현재 게임플레이 = {UScene.Current.IsGameplay()}");
 
         bool needsCursor = (_openStack.Count > 0) || (!UScene.Current.IsGameplay());
+        UDebug.Print($"NeedsCursor = {needsCursor}");
         CInputManager.Ins?.SetCursorReason(ECursorReason.Menu, needsCursor);
     }
     #endregion
