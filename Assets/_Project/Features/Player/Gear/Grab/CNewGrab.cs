@@ -254,10 +254,22 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         _armOriginLength = (_arm.transform.position - _armEndPivot.transform.position).magnitude;
 
         _grabOffset = Quaternion.Inverse(_arm.transform.localRotation) * _twizersAnchor.transform.localRotation;
+    }
+
+    protected override void OnEnable()
+    {
+        base.OnEnable();
         CEventBus<OnInputGrab>.Subscribe(GrabInputHandler);
         CEventBus<OnInputCollect>.Subscribe(CollectInputHandler);
-
     }
+
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        CEventBus<OnInputGrab>.Unsubscribe(GrabInputHandler);
+        CEventBus<OnInputCollect>.Unsubscribe(CollectInputHandler);
+    }
+
     public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
     //테스트용
     public void ExecuteUpdateFrame()
