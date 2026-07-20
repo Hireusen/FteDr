@@ -17,11 +17,6 @@ public class CStageManager : AMono
     [SerializeField] private GameObject _upPos;
     #endregion
 
-    private const string NAME_DESTINATION = "Destination";
-    private const string NAME_UPPOS = "Uppos";
-    private const string NAME_DOWNPOS = "Downpos";
-    private const string NAME_ARRIVECAM = "ArriveCamera";
-
     #region ─────────────────────────▶ 공게 함수 ◀─────────────────────────
     public GameObject ArriveCam => _arriveCam;
     public GameObject Dest => _dest;
@@ -73,6 +68,8 @@ public class CStageManager : AMono
 
         CSubMarineUpDown submarine = GetSubmarine();
         if (submarine == null) yield break;
+        // 잠수함 위치 스냅
+        CGameManager.Submarine.transform.position = _dest.transform.position;
 
         submarine.SpawnPlayer();
     }
