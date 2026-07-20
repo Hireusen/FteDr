@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Cinemachine;
+using UnityEngine;
 
 /// <summary>
 /// 1인칭 카메라입니다.
@@ -6,11 +7,12 @@
 public class CFPPCamera : AFrameable, ILateUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
+    [SerializeField] private LayerMask _groundLayer;
     [Header("필수 연결")]
     [SerializeField] private CPlayerController _playerController;
     [Tooltip("컨트롤러가 회전을 넣는 눈높이 앵커. 평상시 카메라가 이 트랜스폼의 위치·회전을 복사")]
     [SerializeField] private Transform _cameraRoot;
-    [SerializeField] private Camera _camera;
+    [SerializeField] private CinemachineVirtualCamera _camera;
 
     [Header("회전 감도")]
     [Tooltip("기본 감도값. 설정에 감도 옵션이 생기기 전까지 사용되는 폴백 (Sensitivity 프로퍼티 참고)")]
@@ -137,7 +139,15 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     private void NormalLookTick()
     {
         _yaw += _currentLookInput.x * Sensitivity;
-        _pitch -= _currentLookInput.y * Sensitivity;
+        float lookY = _currentLookInput.y;
+        Debug.Log(lookY);
+        
+        if (IsArmCrashedGround() && lookY<0)
+        {
+            lookY = 0;
+        }
+        
+        _pitch -= lookY * Sensitivity;
 
         bool swimming = _playerController.CurrentState == EPlayerState.Swimming;
         float min = swimming ? _swimPitchMin : _groundPitchMin;
@@ -229,6 +239,15 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         if (euler > 180f) euler -= 360f;
         return euler;
     }
+
+    private bool IsArmCrashedGround()
+    {
+        bool result = true;
+        int mask = ~LayerMask.GetMask("Player");
+        result = Physics.CheckSphere(_cameraRoot.transform.position, 0.1f,mask);
+
+        return false;
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -253,14 +272,6 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
     private void Start()
     {
-        if (_camera == null)
-        {
-            GameObject mainCamGO = GameObject.FindGameObjectWithTag("MainCamera");
-            if (mainCamGO != null)
-            {
-                _camera = mainCamGO.GetComponent<Camera>();
-            }
-        }
 
         if (_playerController == null || _cameraRoot == null || _camera == null)
         {

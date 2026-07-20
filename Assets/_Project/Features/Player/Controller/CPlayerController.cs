@@ -6,6 +6,7 @@
 public class CPlayerController : AFrameable, IFixedUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
+    [SerializeField] private Transform _root;
     [Header("플레이어 세팅")]
     [Tooltip("수영 이동에 가하는 힘")]
     [SerializeField] private float _moveSpeed;
@@ -279,12 +280,14 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     {
         if (IsControlLocked) return;
 
-        float target = (_currentState == EPlayerState.Swimming) ? 1f : 0f;
+        //float target = (_currentState == EPlayerState.Swimming) ? 1f : 0f;
+        float target = 1;
         float t = 1f - Mathf.Exp(-_postureBlendSharpness * Time.fixedDeltaTime);
         _postureBlend = Mathf.Lerp(_postureBlend, target, t);
 
         float bodyPitch = _pitch * _postureBlend;
-        _rb.MoveRotation(Quaternion.Euler(bodyPitch, _yaw, 0f));
+        transform.rotation = Quaternion.Euler(0f, _yaw, 0f);
+        _root.localRotation = Quaternion.Euler(bodyPitch, 0f, 0f);
 
         if (_cameraRoot != null)
         {
@@ -300,12 +303,14 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         Vector3 forward = _cameraTransform.forward;
         Vector3 right = _cameraTransform.right;
 
+        
         if (_currentState != EPlayerState.Swimming)
         {
             // 지상 / 수중바닥: 수평 이동만
             forward.y = 0f;
             right.y = 0f;
         }
+        
 
         forward.Normalize();
         right.Normalize();
@@ -365,7 +370,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         _rb.interpolation = RigidbodyInterpolation.Interpolate;
 
         // 현재 몸 방향에서 yaw 초기화 (카메라가 이후 값을 덮어씀)
-        _yaw = transform.eulerAngles.y;
+        _yaw = _root.eulerAngles.y;
         _pitch = 0f;
         _postureBlend = 0f; // 지상 시작
 

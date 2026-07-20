@@ -368,7 +368,6 @@ GameObject:
   - component: {fileID: 856958592573525325}
   - component: {fileID: 6439520143340461519}
   - component: {fileID: 7257266147722997474}
-  - component: {fileID: 6971025916573163358}
   m_Layer: 12
   m_Name: Hatch Door
   m_TagString: Untagged
@@ -443,28 +442,6 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &6971025916573163358
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2898070445562821516}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 4300038, guid: 09f881e4000849a4e9e560552dece731, type: 3}
 --- !u!1 &3004655257033044436
 GameObject:
   m_ObjectHideFlags: 0
@@ -1360,6 +1337,68 @@ MonoBehaviour:
             m_StringArgument: 
             m_BoolArgument: 0
           m_CallState: 2
+--- !u!1 &8198136879232294302
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6370422040527441524}
+  - component: {fileID: 6231865838375086282}
+  - component: {fileID: 5334385514791545542}
+  m_Layer: 12
+  m_Name: Zone (2)
+  m_TagString: Submarine
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6370422040527441524
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8198136879232294302}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: 0.0037510546, z: -0, w: 0.99999297}
+  m_LocalPosition: {x: -0, y: 0.688, z: -4.69}
+  m_LocalScale: {x: 3.5403, y: 1, z: 9.609574}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 8365220855643221026}
+  m_LocalEulerAnglesHint: {x: 0, y: 0.43, z: 0}
+--- !u!33 &6231865838375086282
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8198136879232294302}
+  m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!65 &5334385514791545542
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8198136879232294302}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &8373565851813147400
 GameObject:
   m_ObjectHideFlags: 0
@@ -1498,7 +1537,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: -0.55887455, z: 0, w: 0.8292523}
   m_LocalPosition: {x: 23.9, y: 87.44, z: 72.1}
-  m_LocalScale: {x: 4.547411, y: 4.547409, z: 4.547411}
+  m_LocalScale: {x: 0.9631579, y: 0.9631574, z: 0.9631579}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 8065444923938086431}
@@ -1512,7 +1551,7 @@ Transform:
   - {fileID: 2888289291647960710}
   - {fileID: 5305942593078045940}
   - {fileID: 3177044882153764911}
-  - {fileID: 5595142303527870105}
+  - {fileID: 6370422040527441524}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: -67.956, z: 0}
 --- !u!114 &2638519478838934993
