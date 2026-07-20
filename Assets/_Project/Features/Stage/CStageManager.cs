@@ -12,6 +12,17 @@ public class CStageManager : AMono
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
+    private void Awake()
+    {
+        var player = CGameManager.Player;
+        EScene curScene = CGameManager.Ins.Scene;
+        if (curScene.IsGameplay())
+        {
+            CGameManager.Player.SetActive(true);
+            CGameManager.Submarine.SetActive(true);
+        }
+    }
+
     private void Start()
     {
         StartCoroutine(SpawnPlayerWhenReadyCo());
@@ -56,10 +67,10 @@ public class CStageManager : AMono
     // 전역 잠수함에서 CSubMarineUpDown을 가져온다.
     private CSubMarineUpDown GetSubmarine()
     {
-        GameObject submarineObj = CGameManager.SubmarineObject;
+        GameObject submarineObj = CGameManager.Submarine;
         if (submarineObj == null)
         {
-            UDebug.Print("전역 잠수함(CGameManager.SubmarineObject)이 존재하지 않습니다.", LogType.Error);
+            UDebug.Print("전역 잠수함(CGameManager.Submarine)이 존재하지 않습니다.", LogType.Error);
             return null;
         }
 
