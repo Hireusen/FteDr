@@ -70,7 +70,6 @@ public class CStageManager : AMono
         if (submarine == null) yield break;
         // 잠수함 위치 스냅
         CGameManager.Submarine.transform.position = _dest.transform.position;
-
         submarine.SpawnPlayer();
     }
 

@@ -32,7 +32,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
 
     private bool _lastHudVisible = true;
     #endregion
-
+    
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void OnEnable()
     {
@@ -218,6 +218,13 @@ public sealed class CUIManager : ASingleton<CUIManager>
     // 여러 창이 겹쳐 있다가 하나만 닫혀도 나머지가 남아있으면 커서가 계속 보이도록, 매번 전체 상태를 다시 계산해서 반영한다.
     private void RefreshCursor()
     {
+        int length = _openStack.Count;
+        for (int i = 0; i < length; ++i)
+        {
+            UDebug.Print($"현재 열려있는 {i}번째 UI = {_openStack[i]}");
+        }
+        UDebug.Print($"현재 게임플레이 = {UScene.Current.IsGameplay()}");
+
         bool needsCursor = (_openStack.Count > 0) || (!UScene.Current.IsGameplay());
         CInputManager.Ins?.SetCursorReason(ECursorReason.Menu, needsCursor);
     }

@@ -54,7 +54,7 @@ public class CSubMarineUpDown : AMono
         CPlayerController player = Player;
         if (player == null) return;
 
-        player.Teleport(_playerSpawnPoint);
+        player.Teleport(_playerSpawnPoint, Player.GetComponent<Rigidbody>());
     }
 
     /// <summary>
@@ -192,7 +192,7 @@ public class CSubMarineUpDown : AMono
         CPlayerController player = Player;
         if (player != null)
         {
-            if (_playerSpawnPoint != null) player.Teleport(_playerSpawnPoint);
+            if (_playerSpawnPoint != null) player.Teleport(_playerSpawnPoint, Player.GetComponent<Rigidbody>());
             player.Detach();
         }
 
