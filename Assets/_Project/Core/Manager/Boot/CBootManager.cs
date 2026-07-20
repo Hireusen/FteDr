@@ -42,6 +42,9 @@ public sealed class CBootManager : MonoBehaviour
         ManagerSpawner(root);
         UDebug.Print("▷ 글로벌 프리펩 생성을 시작합니다. ◁");
 
+        // 전역 액터 생성 (모든 매니저 초기화 이후)
+        CGameManager.Ins.SpawnGlobalActors();
+
         // 완료
         yield return null;
 
@@ -58,6 +61,8 @@ public sealed class CBootManager : MonoBehaviour
         inputManager.EntryInitialize();
         var frameManager = root.GetOrAddComponent<CFrameManager>();
         frameManager.EntryInitialize();
+        var databaseManager = root.GetOrAddComponent<CDatabaseManager>();
+        databaseManager.EntryInitialize();
         var gameManager = root.GetOrAddComponent<CGameManager>();
         gameManager.EntryInitialize();
         var optionManager = root.GetOrAddComponent<CLocalOptionManager>();
