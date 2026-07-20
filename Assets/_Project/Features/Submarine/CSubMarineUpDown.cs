@@ -18,11 +18,6 @@ public class CSubMarineUpDown : AMono
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private const string NAME_DESTINATION = "Destination";
-    private const string NAME_UPPOS = "Uppos";
-    private const string NAME_DOWNPOS = "Downpos";
-    private const string NAME_ARRIVECAM = "ArriveCamera";
-
     private const float MAX_SPEED = 10f;
     private const float ACCELERATION = 5f;
 
@@ -97,28 +92,23 @@ public class CSubMarineUpDown : AMono
         }
         _moveOn = true;
 
-        GameObject arriveCamObj = GameObject.Find(NAME_ARRIVECAM);
-        GameObject dest = GameObject.Find(NAME_DESTINATION);
-        GameObject downPos = GameObject.Find(NAME_DOWNPOS);
-        GameObject upPos = GameObject.Find(NAME_UPPOS);
-
-        // 씬에 배치된 기준 오브젝트를 이름으로 찾는다. 하나라도 없으면 연출을 중단한다.
-        if (arriveCamObj == null || dest == null || downPos == null || upPos == null)
+        var stage = UObject.FindComponent<CStageManager>();
+        if (stage.ArriveCam == null || stage.Dest == null || stage.DownPos == null || stage.UpPos == null)
         {
             UDebug.Print(
                 $"잠수함 도착 연출에 필요한 오브젝트를 찾지 못했습니다. " +
-                $"({NAME_ARRIVECAM}:{arriveCamObj != null}, {NAME_DESTINATION}:{dest != null}, " +
-                $"{NAME_DOWNPOS}:{downPos != null}, {NAME_UPPOS}:{upPos != null}) " +
+                $"(캠:{stage.ArriveCam != null}, 중간점:{stage.Dest != null}, " +
+                $"다운 포스:{stage.DownPos != null}, 업 포스:{stage.UpPos != null}) " +
                 $"오브젝트 이름 또는 대소문자를 계층과 일치시켜야 합니다.",
                 LogType.Error);
             _moveOn = false;
             return;
         }
 
-        _arriveCam = arriveCamObj.GetComponent<CinemachineVirtualCamera>();
+        _arriveCam = stage.ArriveCam.GetComponent<CinemachineVirtualCamera>();
         if (_arriveCam == null)
         {
-            UDebug.Print($"{NAME_ARRIVECAM}에 CinemachineVirtualCamera가 없습니다.", LogType.Error);
+            UDebug.Print($"{stage.ArriveCam}에 CinemachineVirtualCamera가 없습니다.", LogType.Error);
             _moveOn = false;
             return;
         }
@@ -134,8 +124,8 @@ public class CSubMarineUpDown : AMono
         _arriveCam.Priority = 20;
         _controlCam.Priority = 10;
 
-        Vector3 startPos = goDeeper ? upPos.transform.position : downPos.transform.position;
-        StartCoroutine(MoveStartToDestCo(startPos, dest.transform.position, duration));
+        Vector3 startPos = goDeeper ? stage.UpPos.transform.position : stage.DownPos.transform.position;
+        StartCoroutine(MoveStartToDestCo(startPos, stage.Dest.transform.position, duration));
     }
     #endregion
 

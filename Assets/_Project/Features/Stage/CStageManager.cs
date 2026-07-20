@@ -9,6 +9,24 @@ public class CStageManager : AMono
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Tooltip("플레이어 준비를 기다리는 최대 시간(초). 초과 시 스폰을 포기하고 에러 로그를 남깁니다.")]
     [SerializeField] private float _spawnWaitTimeout = 5f;
+
+    [Header("참조 연결")]
+    [SerializeField] private GameObject _arriveCam;
+    [SerializeField] private GameObject _dest;
+    [SerializeField] private GameObject _downPos;
+    [SerializeField] private GameObject _upPos;
+    #endregion
+
+    private const string NAME_DESTINATION = "Destination";
+    private const string NAME_UPPOS = "Uppos";
+    private const string NAME_DOWNPOS = "Downpos";
+    private const string NAME_ARRIVECAM = "ArriveCamera";
+
+    #region ─────────────────────────▶ 공게 함수 ◀─────────────────────────
+    public GameObject ArriveCam => _arriveCam;
+    public GameObject Dest => _dest;
+    public GameObject DownPos => _downPos;
+    public GameObject UpPos => _upPos;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -18,8 +36,12 @@ public class CStageManager : AMono
         EScene curScene = CGameManager.Ins.Scene;
         if (curScene.IsGameplay())
         {
+            UDebug.Print("게임 플레이 씬입니다!!!");
             CGameManager.Player.SetActive(true);
             CGameManager.Submarine.SetActive(true);
+        } else
+        {
+            UDebug.Print($"이외 씬입니다!!! {curScene}");
         }
     }
 
