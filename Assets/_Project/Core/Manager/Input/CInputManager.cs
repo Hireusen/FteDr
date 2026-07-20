@@ -128,6 +128,8 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
 
         // 리바인딩 매니저에 이 에셋을 등록 → 저장된 커스텀 키가 있으면 복원됨
         CRebindManager.Ins.SetAsset(_input.asset);
+
+        ApplyCursor(); // 초기 동기화
     }
 
     private void ApplyCursor()
@@ -135,6 +137,8 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
         bool gameplay = _cursorReasons == ECursorReason.None;
         Cursor.lockState = gameplay ? CursorLockMode.Locked : CursorLockMode.None;
         Cursor.visible = !gameplay;
+        UDebug.Print($"커서 표시 이유 = {_cursorReasons}");
+        UDebug.Print($"게임플레이 확정 = {gameplay}");
     }
     #endregion
 
