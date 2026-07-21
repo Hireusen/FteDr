@@ -221,7 +221,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
                 }
 
 
-                USound.PlaySfx("SFX_robotics2");
+                USound.PlaySfx(Id.SFX_robotics2);
                 ShootWrist();
                 _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizersRigidBody.constraints = RigidbodyConstraints.FreezeRotation;
@@ -285,6 +285,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     {
         if (grabStatus != EGrabStatus.Wait) return;
         if (_controller.CurrentState == EPlayerState.OnGround) return;
+        if (UPlayer.CurrentFuel <= 0f) return;
 
         ChangeStatus(EGrabStatus.Shooting);
     }
