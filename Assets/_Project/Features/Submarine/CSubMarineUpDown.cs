@@ -30,8 +30,12 @@ public class CSubMarineUpDown : AMono
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    /// <summary>현재 잠수함 이동/도착 연출이 진행 중인지 여부입니다.</summary>
+    public bool IsMoving => _moveOn;
+
     /// <summary>
-    /// 잠수함 이동 연출을 시작하는 진입점입니다.
+    /// 잠수함 이동 연출을 시작하는 진입점입니다. 외부(입력·UI 등)에서 호출합니다.
+    /// 방향에 맞는 타임라인을 활성화하면, 타임라인의 Signal이 MoveSubmarine을 자동 호출합니다.
     /// </summary>
     /// <param name="goDeeper">true면 하강, false면 상승</param>
     public void StartCutScene(bool goDeeper)
@@ -125,7 +129,21 @@ public class CSubMarineUpDown : AMono
         }
         _moveOn = true;
 
-        var stage = UObject.FindComponent<CStageManager>();
+        // 첫 진입(연출을 안 탄 경우)에는 플레이어가 아직 잠수함에 종속되지 않았으므로 여기서 종속시킨다.
+        // 연출 이동은 MoveSubmarine에서 이미 종속시켰고, 잠수함이 DontDestroyOnLoad라 씬을 넘어도 유지된다.
+        CPlayerController arrivePlayer = Player;
+        if (arrivePlayer != null && arrivePlayer.transform.parent != transform)
+        {
+            arrivePlayer.AttachTo(transform);
+        }
+
+        var stage = CStageManager.Current;
+        if (stage == null)
+        {
+            UDebug.Print("현재 씬에 CStageManager가 없습니다. 도착 연출을 중단합니다.", LogType.Error);
+            _moveOn = false;
+            return;
+        }
         if (stage.ArriveCam == null || stage.Dest == null || stage.DownPos == null || stage.UpPos == null)
         {
             UDebug.Print(

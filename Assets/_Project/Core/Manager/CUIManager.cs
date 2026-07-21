@@ -23,6 +23,16 @@ public sealed class CUIManager : ASingleton<CUIManager>
 
     /// <summary>현재 열려있는 창들을 연 순서대로 반환합니다. (가장 나중에 연 것이 마지막)</summary>
     public IReadOnlyList<EUI> OpenStack => _openStack;
+
+    public bool IsOpen(EUI ui)
+    {
+        int length = _openStack.Count;
+        for (int i = 0; i < length; ++i)
+        {
+            if (_openStack[i] == ui) return true;
+        }
+        return false;
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
