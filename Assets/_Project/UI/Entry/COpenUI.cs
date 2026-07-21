@@ -50,7 +50,6 @@ public class COpenUI : AFrameable,IUpdateFrameable
     private void InventoryHandler(OnInputInventory ctx)
     {
         OnRequestOpenUI.Publish(EUI.InventoryWindow);
-        
     }
     private void ShopHandler(OnInputGrab ctx)
     {
