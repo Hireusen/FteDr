@@ -18,7 +18,9 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     [SerializeField] private float _shootForce = 10f;
     [SerializeField] private float _shrinkSpeed = 10f;
     [SerializeField] private float _twizersRotateSpeed = 1f;
-
+    [SerializeField] private CGrabToolSO _grabToolSO;
+    [SerializeField] private int _currentDistantLevel=0;
+    [SerializeField] private int _currentSpeedLevel=0;
     [SerializeField] private Transform _playerCam;
     #endregion
 
@@ -332,6 +334,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         _armOriginLength = (_arm.transform.position - _armEndPivot.transform.position).magnitude;
 
         _grabOffset = Quaternion.Inverse(_arm.transform.localRotation) * _twizersAnchor.transform.localRotation;
+        Maxdistance = _grabToolSO.ReachDistance(_currentDistantLevel);
+        _shootForce = _grabToolSO.GrabSpeed(_currentSpeedLevel);
     }
 
     protected override void OnEnable()
@@ -350,6 +354,14 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         CEventBus<OnInputCollect>.Unsubscribe(CollectInputHandler);
         CEventBus<OnInputRotateTwizerLeft>.Unsubscribe(RotateLeftHandler);
         CEventBus<OnInputRotateTwizerRight>.Unsubscribe(RotateRightHandler);
+
+
+    }
+    private void OnValidate()
+    {
+        Maxdistance = _grabToolSO.ReachDistance(_currentDistantLevel);
+        _shootForce=_grabToolSO.GrabSpeed(_currentSpeedLevel);
+
     }
     #endregion
 
