@@ -1,25 +1,23 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
-/// 클래스의 설계 의도입니다.
+/// 프레임에이블 클래스의 설계 의도입니다.
 /// </summary>
-public class CTestInterect : AMono,IInterect
+public class NewFrameable : AFrameable, IUpdateFrameable
 {
-    #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
-    //[Header("주제")]
-    //[SerializeField] private Class _class;
-    #endregion
-
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
 
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    public void Interect()
-    {
-        print("상호작용 테스트");
-    }
+    // 실행 우선순위 정의
+    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
 
+    // 프레임 매니저에게 호출당할 함수
+    public void ExecuteUpdateFrame()
+    {
+        
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -27,10 +25,6 @@ public class CTestInterect : AMono,IInterect
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-
-    #endregion
-
-    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
-
+    
     #endregion
 }

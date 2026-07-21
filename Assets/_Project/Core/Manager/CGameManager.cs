@@ -32,7 +32,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
     public static Transform NormalObjectRoot => RootProvider(_normalObjectRoot, K.NAME_NORMAL_OBJECT_ROOT);
     public static Transform PoolingObjectRoot => RootProvider(_enableObjectRoot, K.NAME_POOLING_OBJECT_ROOT);
     public static GameObject Player => _player;
-    public static GameObject SubmarineObject => _submarine;
+    public static GameObject Submarine => _submarine;
     public static GameObject UIManager => _uiManager;
 
     /// <summary>
@@ -292,6 +292,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
     }
 
     // 씬 로드 완료 시 게임플레이 씬이면 전역 액터를 켜고, 아니면 끈다.
+    // 플레이어·잠수함의 씬별 활성화는 모든 씬 전환을 관장하는 이 매니저가 단독으로 담당한다.
     private void SceneLoadEndHandler(OnSceneLoadEnd e)
     {
         bool active = e.nextScene.IsGameplay();
@@ -339,9 +340,11 @@ public sealed class CGameManager : ASingleton<CGameManager>
     private void PreProcessing(EScene prevScene, string nextScenePath)
     {
         IsSceneLoading = true;
-        ClearStaticMember();
+        //ClearStaticMember();
         EScene nextScene = (EScene)SceneUtility.GetBuildIndexByScenePath(nextScenePath);
+        _curScene = nextScene;
         OnSceneLoadStart.Publish(prevScene, nextScene);
+
     }
     // 씬 로드 후처리
     private void PostProcessing(EScene prevScene, string nextScenePath)
@@ -354,7 +357,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
             root = PoolingObjectRoot;
         }
         PublishLoadEnd(prevScene, nextScene);
-        _curScene = nextScene;
+
         IsSceneLoading = false;
     }
 

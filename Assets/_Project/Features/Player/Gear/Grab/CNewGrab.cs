@@ -32,25 +32,92 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     private Quaternion _grabOffset;
     private Vector3 _aimDir;
     private const float AIMDISTANCE = 10f;
+
+    private bool _rotateLeftHeld;
+    private bool _rotateRightHeld;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    public enum EGrabStatus
-    {
-        Wait,
-        Shooting,
-        Connect,
-        Grab,
-        Bring,
-        AdjustArm,
-        BringComplete
-    }
     public EGrabStatus grabStatus = EGrabStatus.Wait;
     public float Maxdistance { get; private set; } = 4f;
     public void ShootWrist()
     {
         _twizersRigidBody.isKinematic = false;
         //twizersRigidBody.AddForce(ShootForce * playerCam.forward, ForceMode.Impulse);
+    }
+    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
+    //테스트용
+    public void ExecuteUpdateFrame()
+    {
+        switch (grabStatus)
+        {
+            case EGrabStatus.Wait:
+                if (_rotateLeftHeld)
+                {
+                    //왼쪽집게회전
+                    Quaternion temp = _twizersAnchor.transform.localRotation;
+                    temp.x -= _twizersRotateSpeed * Time.deltaTime;
+                    _twizersAnchor.transform.localRotation = temp;
+                }
+                if (_rotateRightHeld)
+                {
+                    Quaternion temp = _twizersAnchor.transform.localRotation;
+                    temp.x += _twizersRotateSpeed * Time.deltaTime;
+                    _twizersAnchor.transform.localRotation = temp;
+                    //오른집게회전
+                }
+                break;
+            case EGrabStatus.Shooting:
+                ExtendArm();
+                /*
+                if (Input.GetKey(KeyCode.U))
+                {
+                    
+                    ChangeStatus(EGrabStatus.Grab);
+                }
+                */
+                break;
+            case EGrabStatus.Grab:
+                //물건을 집거나, 집게를 다 닫으면 connect로 이동.
+                if (_twizers.Grabed == true)
+                {
+                    ChangeStatus(EGrabStatus.Connect);
+                }
+                break;
+            case EGrabStatus.Connect:
+                grabStatus = EGrabStatus.Bring;
+                break;
+            case EGrabStatus.Bring:
+                if (!BringDistanceCk())
+                {
+                    ShrinkArm();
+
+                }
+                else
+                {
+                    GetItem();
+                    JointFree(_armJoint);
+                    _armRigidBody.isKinematic = true;
+                    JointFree(_twizersJointToArm);
+                    _twizersRigidBody.isKinematic = true;
+                    ArmToOriginPos();
+                    ChangeStatus(EGrabStatus.AdjustArm);
+
+                }
+                break;
+            case EGrabStatus.AdjustArm:
+                break;
+
+        }
+
+    }
+    public EFixedUpdatePriority FixedUpdatePriority => EFixedUpdatePriority.Lv5;
+    public void ExecuteFixedUpdateFrame()
+    {
+        if (grabStatus == EGrabStatus.Shooting)
+        {
+            ShootWristContinuous();
+        }
     }
     #endregion
 
@@ -154,7 +221,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
                 }
 
 
-                USound.PlaySfx("SFX_robotics2");
+                USound.PlaySfx(Id.SFX_robotics2);
                 ShootWrist();
                 _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizersRigidBody.constraints = RigidbodyConstraints.FreezeRotation;
@@ -208,20 +275,23 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         }
         return item;
     }
-    private void GrabInputHandler(OnInputGrab data)
-    {
-        if (grabStatus != EGrabStatus.Wait) return;
-
-        ChangeStatus(EGrabStatus.Shooting);
-    }
-    private void CollectInputHandler(OnInputCollect data)
-    {
-        if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
-    }
     private void ArmToOriginPos()
     {
         _twizers.GrabToOriginContinuous();
         StartCoroutine(ArmToOriginCo());
+    }
+
+    private void GrabInputHandler(OnInputGrab ctx)
+    {
+        if (grabStatus != EGrabStatus.Wait) return;
+        if (_controller.CurrentState == EPlayerState.OnGround) return;
+        if (UPlayer.CurrentFuel <= 0f) return;
+
+        ChangeStatus(EGrabStatus.Shooting);
+    }
+    private void CollectInputHandler(OnInputCollect ctx)
+    {
+        if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
     }
     private IEnumerator ArmToOriginCo()
     {
@@ -240,6 +310,14 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         _twizersAnchor.transform.SetParent(_shoulder.transform, true);
         ChangeStatus(EGrabStatus.Wait);
     }
+    private void RotateLeftHandler(OnInputRotateTwizerLeft ctx)
+    {
+        _rotateLeftHeld = ctx.leftPressed;
+    }
+    private void RotateRightHandler(OnInputRotateTwizerRight ctx)
+    {
+        _rotateRightHeld = ctx.rightPressed;
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -254,85 +332,37 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         _armOriginLength = (_arm.transform.position - _armEndPivot.transform.position).magnitude;
 
         _grabOffset = Quaternion.Inverse(_arm.transform.localRotation) * _twizersAnchor.transform.localRotation;
+    }
+
+    protected override void OnEnable()
+    {
+        base.OnEnable();
         CEventBus<OnInputGrab>.Subscribe(GrabInputHandler);
         CEventBus<OnInputCollect>.Subscribe(CollectInputHandler);
-
+        CEventBus<OnInputRotateTwizerLeft>.Subscribe(RotateLeftHandler);
+        CEventBus<OnInputRotateTwizerRight>.Subscribe(RotateRightHandler);
     }
-    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
-    //테스트용
-    public void ExecuteUpdateFrame()
+
+    protected override void OnDisable()
     {
-        switch (grabStatus)
-        {
-            case EGrabStatus.Wait:
-                if (Input.GetKey(KeyCode.Q))
-                {
-                    //왼쪽집게회전
-                    Quaternion temp = _twizersAnchor.transform.localRotation;
-                    temp.x -= _twizersRotateSpeed * Time.deltaTime;
-                    _twizersAnchor.transform.localRotation = temp;
-                }
-                if (Input.GetKey(KeyCode.E))
-                {
-                    Quaternion temp = _twizersAnchor.transform.localRotation;
-                    temp.x += _twizersRotateSpeed * Time.deltaTime;
-                    _twizersAnchor.transform.localRotation = temp;
-                    //오른집게회전
-                }
-                break;
-            case EGrabStatus.Shooting:
-
-                
-                ExtendArm();
-                /*
-                if (Input.GetKey(KeyCode.U))
-                {
-                    
-                    ChangeStatus(EGrabStatus.Grab);
-                }
-                */
-                break;
-            case EGrabStatus.Grab:
-                //물건을 집거나, 집게를 다 닫으면 connect로 이동.
-                if (_twizers.Grabed == true)
-                {
-                    ChangeStatus(EGrabStatus.Connect);
-                }
-                break;
-            case EGrabStatus.Connect:
-                grabStatus = EGrabStatus.Bring;
-                break;
-            case EGrabStatus.Bring:
-                if (!BringDistanceCk())
-                {
-                    ShrinkArm();
-
-                }
-                else
-                {
-                    GetItem();
-                    JointFree(_armJoint);
-                    _armRigidBody.isKinematic = true;
-                    JointFree(_twizersJointToArm);
-                    _twizersRigidBody.isKinematic = true;
-                    ArmToOriginPos();
-                    ChangeStatus(EGrabStatus.AdjustArm);
-
-                }
-                break;
-            case EGrabStatus.AdjustArm:
-                break;
-
-        }
-
+        base.OnDisable();
+        CEventBus<OnInputGrab>.Unsubscribe(GrabInputHandler);
+        CEventBus<OnInputCollect>.Unsubscribe(CollectInputHandler);
+        CEventBus<OnInputRotateTwizerLeft>.Unsubscribe(RotateLeftHandler);
+        CEventBus<OnInputRotateTwizerRight>.Unsubscribe(RotateRightHandler);
     }
-    public EFixedUpdatePriority FixedUpdatePriority => EFixedUpdatePriority.Lv5;
-    public void ExecuteFixedUpdateFrame()
+    #endregion
+
+    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
+    public enum EGrabStatus
     {
-        if (grabStatus == EGrabStatus.Shooting)
-        {
-            ShootWristContinuous();
-        }
+        Wait,
+        Shooting,
+        Connect,
+        Grab,
+        Bring,
+        AdjustArm,
+        BringComplete
     }
     #endregion
 }

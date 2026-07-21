@@ -11,6 +11,8 @@ public class CSubMarineUpDown : AMono
     [Header("참조 연결")]
     [SerializeField] private CinemachineVirtualCamera _controlCam;
     [SerializeField] private Transform _playerSpawnPoint;
+    [SerializeField] private GameObject _timelineUp;
+    [SerializeField] private GameObject _timelineDown;
 
     [Header("필수 정보")]
     [SerializeField] private EScene _firstGameScene = EScene.Stage_1;
@@ -18,20 +20,46 @@ public class CSubMarineUpDown : AMono
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private const string NAME_DESTINATION = "Destination";
-    private const string NAME_UPPOS = "Uppos";
-    private const string NAME_DOWNPOS = "Downpos";
-    private const string NAME_ARRIVECAM = "ArriveCamera";
-
     private const float MAX_SPEED = 10f;
     private const float ACCELERATION = 5f;
 
     private bool _moveOn = false;
     private CinemachineVirtualCamera _arriveCam;
     private CPlayerController _playerCtrl;
+    private GameObject _activeTimeline; // StartCutScene에서 켠 타임라인. 도착 연출 종료 시 끈다.
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    /// <summary>
+    /// 잠수함 이동 연출을 시작하는 진입점입니다.
+    /// </summary>
+    /// <param name="goDeeper">true면 하강, false면 상승</param>
+    public void StartCutScene(bool goDeeper)
+    {
+        if (_moveOn)
+        {
+            UDebug.Print("이미 잠수함 연출이 진행 중입니다.", LogType.Warning);
+            return;
+        }
+
+        if (!CanMove(goDeeper))
+        {
+            UDebug.Print($"현재 씬에서 {(goDeeper ? "하강" : "상승")}할 수 없습니다.", LogType.Warning);
+            return;
+        }
+
+        // 방향에 맞는 타임라인을 켜면 Play On Awake로 재생되고,
+        // 타임라인 내부 Signal이 MoveSubmarine(goDeeper)을 호출한다.
+        _activeTimeline = goDeeper ? _timelineDown : _timelineUp;
+        if (_activeTimeline == null)
+        {
+            UDebug.Print($"{(goDeeper ? "_timelineDown" : "_timelineUp")}이 인스펙터에 할당되지 않았습니다.", LogType.Error);
+            return;
+        }
+
+        UObject.SetActive(_activeTimeline, true);
+    }
+
     /// <summary>
     /// 현재 씬에서 지정한 방향으로 잠수함을 이동시킬 수 있는지 검사합니다.
     /// </summary>
@@ -59,7 +87,7 @@ public class CSubMarineUpDown : AMono
         CPlayerController player = Player;
         if (player == null) return;
 
-        player.Teleport(_playerSpawnPoint);
+        player.Teleport(_playerSpawnPoint, Player.GetComponent<Rigidbody>());
     }
 
     /// <summary>
@@ -97,28 +125,23 @@ public class CSubMarineUpDown : AMono
         }
         _moveOn = true;
 
-        GameObject arriveCamObj = GameObject.Find(NAME_ARRIVECAM);
-        GameObject dest = GameObject.Find(NAME_DESTINATION);
-        GameObject downPos = GameObject.Find(NAME_DOWNPOS);
-        GameObject upPos = GameObject.Find(NAME_UPPOS);
-
-        // 씬에 배치된 기준 오브젝트를 이름으로 찾는다. 하나라도 없으면 연출을 중단한다.
-        if (arriveCamObj == null || dest == null || downPos == null || upPos == null)
+        var stage = UObject.FindComponent<CStageManager>();
+        if (stage.ArriveCam == null || stage.Dest == null || stage.DownPos == null || stage.UpPos == null)
         {
             UDebug.Print(
                 $"잠수함 도착 연출에 필요한 오브젝트를 찾지 못했습니다. " +
-                $"({NAME_ARRIVECAM}:{arriveCamObj != null}, {NAME_DESTINATION}:{dest != null}, " +
-                $"{NAME_DOWNPOS}:{downPos != null}, {NAME_UPPOS}:{upPos != null}) " +
+                $"(캠:{stage.ArriveCam != null}, 중간점:{stage.Dest != null}, " +
+                $"다운 포스:{stage.DownPos != null}, 업 포스:{stage.UpPos != null}) " +
                 $"오브젝트 이름 또는 대소문자를 계층과 일치시켜야 합니다.",
                 LogType.Error);
             _moveOn = false;
             return;
         }
 
-        _arriveCam = arriveCamObj.GetComponent<CinemachineVirtualCamera>();
+        _arriveCam = stage.ArriveCam.GetComponent<CinemachineVirtualCamera>();
         if (_arriveCam == null)
         {
-            UDebug.Print($"{NAME_ARRIVECAM}에 CinemachineVirtualCamera가 없습니다.", LogType.Error);
+            UDebug.Print($"{stage.ArriveCam}에 CinemachineVirtualCamera가 없습니다.", LogType.Error);
             _moveOn = false;
             return;
         }
@@ -134,8 +157,8 @@ public class CSubMarineUpDown : AMono
         _arriveCam.Priority = 20;
         _controlCam.Priority = 10;
 
-        Vector3 startPos = goDeeper ? upPos.transform.position : downPos.transform.position;
-        StartCoroutine(MoveStartToDestCo(startPos, dest.transform.position, duration));
+        Vector3 startPos = goDeeper ? stage.UpPos.transform.position : stage.DownPos.transform.position;
+        StartCoroutine(MoveStartToDestCo(startPos, stage.Dest.transform.position, duration));
     }
     #endregion
 
@@ -202,8 +225,15 @@ public class CSubMarineUpDown : AMono
         CPlayerController player = Player;
         if (player != null)
         {
-            if (_playerSpawnPoint != null) player.Teleport(_playerSpawnPoint);
+            if (_playerSpawnPoint != null) player.Teleport(_playerSpawnPoint, Player.GetComponent<Rigidbody>());
             player.Detach();
+        }
+
+        // 켜둔 타임라인을 끈다. (다음 재생을 위해 처음부터 다시 시작되도록)
+        if (_activeTimeline != null)
+        {
+            UObject.SetActive(_activeTimeline, false);
+            _activeTimeline = null;
         }
 
         _moveOn = false;

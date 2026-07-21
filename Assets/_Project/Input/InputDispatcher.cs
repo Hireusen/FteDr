@@ -172,6 +172,33 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Inventory"",
+                    ""type"": ""Button"",
+                    ""id"": ""4c0a2cf9-6c7f-4f00-bb95-57e31d44bbfb"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RotateTwizerLeft"",
+                    ""type"": ""Button"",
+                    ""id"": ""4feeff4e-0682-44ca-92a6-139d3dd1b1f7"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""RotateTwizerRight"",
+                    ""type"": ""Button"",
+                    ""id"": ""2177e2d7-24f9-4bba-8f4f-752d129455fd"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -383,6 +410,39 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""action"": ""Net"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""373d342a-7a04-446d-920b-2a9e5e04351a"",
+                    ""path"": ""<Keyboard>/tab"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Inventory"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""aaea3a1f-933d-4b44-838d-2af09fb61f2a"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""RotateTwizerLeft"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""f348eb15-a556-4a13-b3e7-e953060881be"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""RotateTwizerRight"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -433,6 +493,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         m_GameMap_Collect = m_GameMap.FindAction("Collect", throwIfNotFound: true);
         m_GameMap_Descent = m_GameMap.FindAction("Descent", throwIfNotFound: true);
         m_GameMap_Net = m_GameMap.FindAction("Net", throwIfNotFound: true);
+        m_GameMap_Inventory = m_GameMap.FindAction("Inventory", throwIfNotFound: true);
+        m_GameMap_RotateTwizerLeft = m_GameMap.FindAction("RotateTwizerLeft", throwIfNotFound: true);
+        m_GameMap_RotateTwizerRight = m_GameMap.FindAction("RotateTwizerRight", throwIfNotFound: true);
     }
 
     ~@InputDispatcher()
@@ -522,6 +585,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
     private readonly InputAction m_GameMap_Collect;
     private readonly InputAction m_GameMap_Descent;
     private readonly InputAction m_GameMap_Net;
+    private readonly InputAction m_GameMap_Inventory;
+    private readonly InputAction m_GameMap_RotateTwizerLeft;
+    private readonly InputAction m_GameMap_RotateTwizerRight;
     /// <summary>
     /// Provides access to input actions defined in input action map "GameMap".
     /// </summary>
@@ -569,6 +635,18 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "GameMap/Net".
         /// </summary>
         public InputAction @Net => m_Wrapper.m_GameMap_Net;
+        /// <summary>
+        /// Provides access to the underlying input action "GameMap/Inventory".
+        /// </summary>
+        public InputAction @Inventory => m_Wrapper.m_GameMap_Inventory;
+        /// <summary>
+        /// Provides access to the underlying input action "GameMap/RotateTwizerLeft".
+        /// </summary>
+        public InputAction @RotateTwizerLeft => m_Wrapper.m_GameMap_RotateTwizerLeft;
+        /// <summary>
+        /// Provides access to the underlying input action "GameMap/RotateTwizerRight".
+        /// </summary>
+        public InputAction @RotateTwizerRight => m_Wrapper.m_GameMap_RotateTwizerRight;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -622,6 +700,15 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Net.started += instance.OnNet;
             @Net.performed += instance.OnNet;
             @Net.canceled += instance.OnNet;
+            @Inventory.started += instance.OnInventory;
+            @Inventory.performed += instance.OnInventory;
+            @Inventory.canceled += instance.OnInventory;
+            @RotateTwizerLeft.started += instance.OnRotateTwizerLeft;
+            @RotateTwizerLeft.performed += instance.OnRotateTwizerLeft;
+            @RotateTwizerLeft.canceled += instance.OnRotateTwizerLeft;
+            @RotateTwizerRight.started += instance.OnRotateTwizerRight;
+            @RotateTwizerRight.performed += instance.OnRotateTwizerRight;
+            @RotateTwizerRight.canceled += instance.OnRotateTwizerRight;
         }
 
         /// <summary>
@@ -660,6 +747,15 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Net.started -= instance.OnNet;
             @Net.performed -= instance.OnNet;
             @Net.canceled -= instance.OnNet;
+            @Inventory.started -= instance.OnInventory;
+            @Inventory.performed -= instance.OnInventory;
+            @Inventory.canceled -= instance.OnInventory;
+            @RotateTwizerLeft.started -= instance.OnRotateTwizerLeft;
+            @RotateTwizerLeft.performed -= instance.OnRotateTwizerLeft;
+            @RotateTwizerLeft.canceled -= instance.OnRotateTwizerLeft;
+            @RotateTwizerRight.started -= instance.OnRotateTwizerRight;
+            @RotateTwizerRight.performed -= instance.OnRotateTwizerRight;
+            @RotateTwizerRight.canceled -= instance.OnRotateTwizerRight;
         }
 
         /// <summary>
@@ -802,5 +898,26 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnNet(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Inventory" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInventory(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RotateTwizerLeft" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRotateTwizerLeft(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "RotateTwizerRight" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnRotateTwizerRight(InputAction.CallbackContext context);
     }
 }

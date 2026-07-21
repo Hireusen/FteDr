@@ -140,7 +140,6 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     {
         _yaw += _currentLookInput.x * Sensitivity;
         float lookY = _currentLookInput.y;
-        Debug.Log(lookY);
         
         if (IsArmCrashedGround() && lookY<0)
         {
