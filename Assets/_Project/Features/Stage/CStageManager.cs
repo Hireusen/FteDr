@@ -57,7 +57,7 @@ public class CStageManager : AMono
             if (timer >= _spawnWaitTimeout)
             {
                 UDebug.Print(
-                    "플레이어가 제한 시간 내에 준비되지 않아 스폰을 포기합니다. " +
+                    "플레이어가 제한 시간 내에 준비되지 않아 스폰을 포기합니다." +
                     "게임플레이 씬에서 전역 플레이어가 활성화되는지 확인하세요.",
                     LogType.Error);
                 yield break;
@@ -68,6 +68,7 @@ public class CStageManager : AMono
 
         CSubMarineUpDown submarine = GetSubmarine();
         if (submarine == null) yield break;
+
         // 잠수함 위치 스냅
         CGameManager.Submarine.transform.position = _dest.transform.position;
         submarine.SpawnPlayer();

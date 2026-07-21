@@ -117,6 +117,13 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
             OnInputNet.Publish();
         }
     }
+    public void OnInventory(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OnInputInventory.Publish();
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────

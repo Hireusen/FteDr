@@ -172,6 +172,15 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Inventory"",
+                    ""type"": ""Button"",
+                    ""id"": ""4c0a2cf9-6c7f-4f00-bb95-57e31d44bbfb"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -383,6 +392,17 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""action"": ""Net"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""373d342a-7a04-446d-920b-2a9e5e04351a"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""Inventory"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -433,6 +453,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         m_GameMap_Collect = m_GameMap.FindAction("Collect", throwIfNotFound: true);
         m_GameMap_Descent = m_GameMap.FindAction("Descent", throwIfNotFound: true);
         m_GameMap_Net = m_GameMap.FindAction("Net", throwIfNotFound: true);
+        m_GameMap_Inventory = m_GameMap.FindAction("Inventory", throwIfNotFound: true);
     }
 
     ~@InputDispatcher()
@@ -522,6 +543,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
     private readonly InputAction m_GameMap_Collect;
     private readonly InputAction m_GameMap_Descent;
     private readonly InputAction m_GameMap_Net;
+    private readonly InputAction m_GameMap_Inventory;
     /// <summary>
     /// Provides access to input actions defined in input action map "GameMap".
     /// </summary>
@@ -569,6 +591,10 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "GameMap/Net".
         /// </summary>
         public InputAction @Net => m_Wrapper.m_GameMap_Net;
+        /// <summary>
+        /// Provides access to the underlying input action "GameMap/Inventory".
+        /// </summary>
+        public InputAction @Inventory => m_Wrapper.m_GameMap_Inventory;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -622,6 +648,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Net.started += instance.OnNet;
             @Net.performed += instance.OnNet;
             @Net.canceled += instance.OnNet;
+            @Inventory.started += instance.OnInventory;
+            @Inventory.performed += instance.OnInventory;
+            @Inventory.canceled += instance.OnInventory;
         }
 
         /// <summary>
@@ -660,6 +689,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Net.started -= instance.OnNet;
             @Net.performed -= instance.OnNet;
             @Net.canceled -= instance.OnNet;
+            @Inventory.started -= instance.OnInventory;
+            @Inventory.performed -= instance.OnInventory;
+            @Inventory.canceled -= instance.OnInventory;
         }
 
         /// <summary>
@@ -802,5 +834,12 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnNet(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Inventory" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnInventory(InputAction.CallbackContext context);
     }
 }
