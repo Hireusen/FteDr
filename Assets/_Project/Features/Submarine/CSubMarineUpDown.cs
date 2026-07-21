@@ -11,6 +11,8 @@ public class CSubMarineUpDown : AMono
     [Header("참조 연결")]
     [SerializeField] private CinemachineVirtualCamera _controlCam;
     [SerializeField] private Transform _playerSpawnPoint;
+    [SerializeField] private GameObject _timelineUp;
+    [SerializeField] private GameObject _timelineDown;
 
     [Header("필수 정보")]
     [SerializeField] private EScene _firstGameScene = EScene.Stage_1;
@@ -24,9 +26,40 @@ public class CSubMarineUpDown : AMono
     private bool _moveOn = false;
     private CinemachineVirtualCamera _arriveCam;
     private CPlayerController _playerCtrl;
+    private GameObject _activeTimeline; // StartCutScene에서 켠 타임라인. 도착 연출 종료 시 끈다.
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    /// <summary>
+    /// 잠수함 이동 연출을 시작하는 진입점입니다.
+    /// </summary>
+    /// <param name="goDeeper">true면 하강, false면 상승</param>
+    public void StartCutScene(bool goDeeper)
+    {
+        if (_moveOn)
+        {
+            UDebug.Print("이미 잠수함 연출이 진행 중입니다.", LogType.Warning);
+            return;
+        }
+
+        if (!CanMove(goDeeper))
+        {
+            UDebug.Print($"현재 씬에서 {(goDeeper ? "하강" : "상승")}할 수 없습니다.", LogType.Warning);
+            return;
+        }
+
+        // 방향에 맞는 타임라인을 켜면 Play On Awake로 재생되고,
+        // 타임라인 내부 Signal이 MoveSubmarine(goDeeper)을 호출한다.
+        _activeTimeline = goDeeper ? _timelineDown : _timelineUp;
+        if (_activeTimeline == null)
+        {
+            UDebug.Print($"{(goDeeper ? "_timelineDown" : "_timelineUp")}이 인스펙터에 할당되지 않았습니다.", LogType.Error);
+            return;
+        }
+
+        UObject.SetActive(_activeTimeline, true);
+    }
+
     /// <summary>
     /// 현재 씬에서 지정한 방향으로 잠수함을 이동시킬 수 있는지 검사합니다.
     /// </summary>
@@ -194,6 +227,13 @@ public class CSubMarineUpDown : AMono
         {
             if (_playerSpawnPoint != null) player.Teleport(_playerSpawnPoint, Player.GetComponent<Rigidbody>());
             player.Detach();
+        }
+
+        // 켜둔 타임라인을 끈다. (다음 재생을 위해 처음부터 다시 시작되도록)
+        if (_activeTimeline != null)
+        {
+            UObject.SetActive(_activeTimeline, false);
+            _activeTimeline = null;
         }
 
         _moveOn = false;

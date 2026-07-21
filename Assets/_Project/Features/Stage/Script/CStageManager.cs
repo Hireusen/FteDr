@@ -2,10 +2,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 각 게임플레이 씬에 하나씩 배치되어 스테이지 진입 시 초기화(플레이어 스폰)와
-/// 리스폰 연출을 담당하는 씬 소속 컴포넌트입니다.
-/// 씬을 넘어 유지되지 않으며, 외부 접근은 static Current로 합니다.
-/// 플레이어·잠수함의 씬별 활성/비활성 토글은 CGameManager가 전담합니다.
+/// 각 게임플레이 씬에 하나씩 배치되는 매니저
 /// </summary>
 public class CStageManager : AFrameable, IUpdateFrameable
 {
@@ -36,8 +33,9 @@ public class CStageManager : AFrameable, IUpdateFrameable
     public GameObject Dest => _dest;
     public GameObject DownPos => _downPos;
     public GameObject UpPos => _upPos;
+    public CSubMarineUpDown SubMarine => _submarine;
 
-    public EUpdatePriority UpdatePriority => throw new System.NotImplementedException();
+    public EUpdatePriority UpdatePriority => EUpdatePriority.First;
 
     public void ExecuteUpdateFrame()
     {
