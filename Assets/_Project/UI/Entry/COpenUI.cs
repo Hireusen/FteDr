@@ -12,7 +12,7 @@ public class COpenUI : AMono
 
     [Header("옵션")]
     [SerializeField] private LayerMask _interactorMask;
-    [SerializeField] private float _rayMaxDistance = 2f;
+    [SerializeField] private float _rayMaxDistance = 4f;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -32,12 +32,12 @@ public class COpenUI : AMono
     {
         if (_controller.CurrentState != EPlayerState.OnGround) return;
 
-        if (Physics.Raycast(transform.position, _cam.forward, _rayMaxDistance, )) // 상점에 마우스가 가있을 때
+        if (Physics.Raycast(transform.position, _cam.forward, _rayMaxDistance, _interactorMask)) // 상점에 마우스가 가있을 때
         {
+            if (!TryGetComponent(out CShopEntry comp)) return;
 
+            OnRequestOpenUI.Publish(EUI.ShopWindow);
         }
-
-        OnRequestOpenUI.Publish(EUI.InventoryWindow);
     }
     #endregion
 
@@ -56,15 +56,11 @@ public class COpenUI : AMono
 #if UNITY_EDITOR
     private void OnValidate()
     {
-        if(_interactorMask.)
+        if (_interactorMask.IsEmpty())
         {
             UDebug.Print($"레이어 마스크가 비어있습니다.", LogType.Error);
         }
     }
 #endif
-    #endregion
-
-    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
-
     #endregion
 }
