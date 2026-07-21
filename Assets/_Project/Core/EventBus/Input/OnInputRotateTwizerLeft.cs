@@ -1,18 +1,18 @@
 ﻿/// <summary>
-/// 점프 키를 눌렀을 때나 뗏을 때 1회 발행합니다.
+/// 집게 손 왼쪽 회전 키를 눌렀을 때나 뗏을 때 1회 발행합니다.
 /// </summary>
 public readonly struct OnInputRotateTwizerLeft
 {
-    public readonly bool jumpPressed;
+    public readonly bool leftPressed;
 
-    public OnInputRotateTwizerLeft(bool jumpPressed)
+    public OnInputRotateTwizerLeft(bool leftPressed)
     {
-        this.jumpPressed = jumpPressed;
+        this.leftPressed = leftPressed;
     }
 
-    /// <param name="jumpPressed">점프 입력 여부</param>
-    public static void Publish(bool jumpPressed)
+    /// <param name="leftPressed">키 누르기 여부</param>
+    public static void Publish(bool leftPressed)
     {
-        CEventBus<OnInputJump>.Publish(new OnInputJump(jumpPressed));
+        CEventBus<OnInputRotateTwizerLeft>.Publish(new OnInputRotateTwizerLeft(leftPressed));
     }
 }

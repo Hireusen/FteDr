@@ -128,11 +128,11 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
     {
         if (ctx.performed)
         {
-            OnInputJump.Publish(true);
+            OnInputRotateTwizerLeft.Publish(true);
         }
         else if (ctx.canceled)
         {
-            OnInputJump.Publish(false);
+            OnInputRotateTwizerLeft.Publish(false);
         }
     }
 
@@ -140,11 +140,11 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
     {
         if (ctx.performed)
         {
-            OnInputJump.Publish(true);
+            OnInputRotateTwizerRight.Publish(true);
         }
         else if (ctx.canceled)
         {
-            OnInputJump.Publish(false);
+            OnInputRotateTwizerRight.Publish(false);
         }
     }
     #endregion

@@ -27,6 +27,7 @@ public class COpenUI : AMono
     private void InventoryHandler(OnInputInventory ctx)
     {
         OnRequestOpenUI.Publish(EUI.InventoryWindow);
+        
     }
     private void ShopHandler(OnInputGrab ctx)
     {

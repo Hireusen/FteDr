@@ -32,6 +32,9 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     private Quaternion _grabOffset;
     private Vector3 _aimDir;
     private const float AIMDISTANCE = 10f;
+
+    private bool _rotateLeftHeld;
+    private bool _rotateRightHeld;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -49,14 +52,14 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         switch (grabStatus)
         {
             case EGrabStatus.Wait:
-                if (Input.GetKey(KeyCode.Q))
+                if (_rotateLeftHeld)
                 {
                     //왼쪽집게회전
                     Quaternion temp = _twizersAnchor.transform.localRotation;
                     temp.x -= _twizersRotateSpeed * Time.deltaTime;
                     _twizersAnchor.transform.localRotation = temp;
                 }
-                if (Input.GetKey(KeyCode.E))
+                if (_rotateRightHeld)
                 {
                     Quaternion temp = _twizersAnchor.transform.localRotation;
                     temp.x += _twizersRotateSpeed * Time.deltaTime;
@@ -65,8 +68,6 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
                 }
                 break;
             case EGrabStatus.Shooting:
-
-
                 ExtendArm();
                 /*
                 if (Input.GetKey(KeyCode.U))
@@ -274,20 +275,22 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         }
         return item;
     }
-    private void GrabInputHandler(OnInputGrab data)
-    {
-        if (grabStatus != EGrabStatus.Wait) return;
-
-        ChangeStatus(EGrabStatus.Shooting);
-    }
-    private void CollectInputHandler(OnInputCollect data)
-    {
-        if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
-    }
     private void ArmToOriginPos()
     {
         _twizers.GrabToOriginContinuous();
         StartCoroutine(ArmToOriginCo());
+    }
+
+    private void GrabInputHandler(OnInputGrab ctx)
+    {
+        if (grabStatus != EGrabStatus.Wait) return;
+        if (_controller.CurrentState == EPlayerState.OnGround) return;
+
+        ChangeStatus(EGrabStatus.Shooting);
+    }
+    private void CollectInputHandler(OnInputCollect ctx)
+    {
+        if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
     }
     private IEnumerator ArmToOriginCo()
     {
@@ -305,6 +308,14 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         _arm.transform.localRotation = Quaternion.Euler(3, -90, -90);
         _twizersAnchor.transform.SetParent(_shoulder.transform, true);
         ChangeStatus(EGrabStatus.Wait);
+    }
+    private void RotateLeftHandler(OnInputRotateTwizerLeft ctx)
+    {
+        _rotateLeftHeld = ctx.leftPressed;
+    }
+    private void RotateRightHandler(OnInputRotateTwizerRight ctx)
+    {
+        _rotateRightHeld = ctx.rightPressed;
     }
     #endregion
 
@@ -327,6 +338,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         base.OnEnable();
         CEventBus<OnInputGrab>.Subscribe(GrabInputHandler);
         CEventBus<OnInputCollect>.Subscribe(CollectInputHandler);
+        CEventBus<OnInputRotateTwizerLeft>.Subscribe(RotateLeftHandler);
+        CEventBus<OnInputRotateTwizerRight>.Subscribe(RotateRightHandler);
     }
 
     protected override void OnDisable()
@@ -334,6 +347,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         base.OnDisable();
         CEventBus<OnInputGrab>.Unsubscribe(GrabInputHandler);
         CEventBus<OnInputCollect>.Unsubscribe(CollectInputHandler);
+        CEventBus<OnInputRotateTwizerLeft>.Unsubscribe(RotateLeftHandler);
+        CEventBus<OnInputRotateTwizerRight>.Unsubscribe(RotateRightHandler);
     }
     #endregion
 
