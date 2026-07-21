@@ -197,6 +197,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     public void ExecuteFixedUpdateFrame()
     {
+        if (_rb.isKinematic) return;
         if (_rb == null) return;
 
         if (_currentState == EPlayerState.Swimming || _currentState == EPlayerState.WaterGround)
