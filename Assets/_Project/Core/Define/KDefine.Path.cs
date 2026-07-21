@@ -17,7 +17,7 @@ public static partial class K
     public const string RESOURCE_SO_PATH = "ScriptableObjects";
     public const string RESOURCE_PLAYER_PATH = "Prefab/Diver Variant";
     public const string RESOURCE_SUBMARINE_PATH = "Prefab/Large Submarine Variant";
-    public const string RESOURCE_UI_PATH = "Prefab/UIManager Variant";
+    public const string RESOURCE_UI_PATH = "Prefab/UI Variant";
 
     // 외부 대용량 에셋 경로
     public const string ASSETS_IGNORED_FOLDER_NAME = "ThirdPartyIgnored";
