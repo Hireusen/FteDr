@@ -276,6 +276,10 @@ public sealed class CGameManager : ASingleton<CGameManager>
         // 생성 및 초기화
         _curScene = (EScene)SceneManager.GetActiveScene().buildIndex;
 
+        // 씬에 따라 전역 액터를 켜고 끄기 위해 구독한다.
+        // FirstLoadCo가 뿌리는 최초 이벤트도 받아야 하므로 코루틴 시작 전에 구독한다.
+        CEventBus<OnSceneLoadEnd>.Subscribe(SceneLoadEndHandler);
+
         // 초기 부팅 시 씬 전환 이벤트 뿌리기
         if (_bootCo == null)
         {
@@ -285,6 +289,15 @@ public sealed class CGameManager : ASingleton<CGameManager>
         {
             UDebug.Print($"부트 코루틴이 중복 호출되었습니다.", LogType.Assert);
         }
+    }
+
+    // 씬 로드 완료 시 게임플레이 씬이면 전역 액터를 켜고, 아니면 끈다.
+    // 플레이어·잠수함의 씬별 활성화는 모든 씬 전환을 관장하는 이 매니저가 단독으로 담당한다.
+    private void SceneLoadEndHandler(OnSceneLoadEnd e)
+    {
+        bool active = e.nextScene.IsGameplay();
+        UObject.SetActive(_player, active);
+        UObject.SetActive(_submarine, active);
     }
 
     // Resources에서 프리팹을 로드해 인스턴스화하고 전역 유지시킵니다.
@@ -344,7 +357,7 @@ public sealed class CGameManager : ASingleton<CGameManager>
             root = PoolingObjectRoot;
         }
         PublishLoadEnd(prevScene, nextScene);
-        
+
         IsSceneLoading = false;
     }
 
@@ -470,6 +483,12 @@ public sealed class CGameManager : ASingleton<CGameManager>
     private void OnApplicationQuit()
     {
         ClearStaticMember();
+    }
+
+    protected override void OnDestroy()
+    {
+        CEventBus<OnSceneLoadEnd>.Unsubscribe(SceneLoadEndHandler);
+        base.OnDestroy();
     }
     #endregion
 }

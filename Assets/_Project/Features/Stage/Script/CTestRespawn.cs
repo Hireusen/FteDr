@@ -9,7 +9,7 @@ public class CTestRespawn : AMono
     {
         if (Input.GetKeyDown(KeyCode.N))
         {
-            CStageManager.Ins.RespawnPlayer();
+            CStageManager.Current.RespawnPlayer();
         }
     }
 }
