@@ -30,13 +30,19 @@ public class COpenUI : AMono
     }
     private void ShopHandler(OnInputGrab ctx)
     {
+        UDebug.Print("상점이 레이캐스트 검출 시도합니다.");
         if (_controller.CurrentState != EPlayerState.OnGround) return;
 
-        if (Physics.Raycast(transform.position, _cam.forward, _rayMaxDistance, _interactorMask)) // 상점에 마우스가 가있을 때
+        if (Physics.Raycast(_cam.position, _cam.forward, out RaycastHit hit, _rayMaxDistance, _interactorMask)) // 상점에 마우스가 가있을 때
         {
-            if (!TryGetComponent(out CShopEntry comp)) return;
+            if (!hit.collider.TryGetComponent(out CShopEntry comp)) return;
 
             OnRequestOpenUI.Publish(EUI.ShopWindow);
+            UDebug.Print("상점이 레이캐스트에 잡혔습니다~");
+        }
+        else
+        {
+            UDebug.Print("상점이 레이캐스트에 잡히지 않았습니다!");
         }
     }
     #endregion

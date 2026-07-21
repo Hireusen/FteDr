@@ -124,6 +124,29 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
             OnInputInventory.Publish();
         }
     }
+    public void OnRotateTwizerLeft(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OnInputJump.Publish(true);
+        }
+        else if (ctx.canceled)
+        {
+            OnInputJump.Publish(false);
+        }
+    }
+
+    public void OnRotateTwizerRight(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OnInputJump.Publish(true);
+        }
+        else if (ctx.canceled)
+        {
+            OnInputJump.Publish(false);
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────

@@ -95,6 +95,24 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "RotateTwizerLeft",
+                    "type": "Button",
+                    "id": "4feeff4e-0682-44ca-92a6-139d3dd1b1f7",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "RotateTwizerRight",
+                    "type": "Button",
+                    "id": "2177e2d7-24f9-4bba-8f4f-752d129455fd",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -310,11 +328,33 @@
                 {
                     "name": "",
                     "id": "373d342a-7a04-446d-920b-2a9e5e04351a",
-                    "path": "<Keyboard>/e",
+                    "path": "<Keyboard>/tab",
                     "interactions": "",
                     "processors": "",
                     "groups": ";PC",
                     "action": "Inventory",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "aaea3a1f-933d-4b44-838d-2af09fb61f2a",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "RotateTwizerLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "f348eb15-a556-4a13-b3e7-e953060881be",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": ";PC",
+                    "action": "RotateTwizerRight",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

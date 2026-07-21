@@ -1628,6 +1628,7 @@ GameObject:
   - component: {fileID: 3872504200272043507}
   - component: {fileID: 3261221692145292238}
   - component: {fileID: 8379305060406398257}
+  - component: {fileID: 7299053780813501599}
   m_Layer: 11
   m_Name: Diver
   m_TagString: Player
@@ -1758,6 +1759,24 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &7299053780813501599
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6173352775929118336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ee622b247227c34cacf81296c560669, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _cam: {fileID: 5546990443894001600}
+  _controller: {fileID: 3261221692145292238}
+  _interactorMask:
+    serializedVersion: 2
+    m_Bits: 16384
+  _rayMaxDistance: 3
 --- !u!1 &6367882447347074742
 GameObject:
   m_ObjectHideFlags: 0

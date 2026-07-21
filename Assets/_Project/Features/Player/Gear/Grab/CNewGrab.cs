@@ -35,22 +35,88 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    public enum EGrabStatus
-    {
-        Wait,
-        Shooting,
-        Connect,
-        Grab,
-        Bring,
-        AdjustArm,
-        BringComplete
-    }
     public EGrabStatus grabStatus = EGrabStatus.Wait;
     public float Maxdistance { get; private set; } = 4f;
     public void ShootWrist()
     {
         _twizersRigidBody.isKinematic = false;
         //twizersRigidBody.AddForce(ShootForce * playerCam.forward, ForceMode.Impulse);
+    }
+    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
+    //테스트용
+    public void ExecuteUpdateFrame()
+    {
+        switch (grabStatus)
+        {
+            case EGrabStatus.Wait:
+                if (Input.GetKey(KeyCode.Q))
+                {
+                    //왼쪽집게회전
+                    Quaternion temp = _twizersAnchor.transform.localRotation;
+                    temp.x -= _twizersRotateSpeed * Time.deltaTime;
+                    _twizersAnchor.transform.localRotation = temp;
+                }
+                if (Input.GetKey(KeyCode.E))
+                {
+                    Quaternion temp = _twizersAnchor.transform.localRotation;
+                    temp.x += _twizersRotateSpeed * Time.deltaTime;
+                    _twizersAnchor.transform.localRotation = temp;
+                    //오른집게회전
+                }
+                break;
+            case EGrabStatus.Shooting:
+
+
+                ExtendArm();
+                /*
+                if (Input.GetKey(KeyCode.U))
+                {
+                    
+                    ChangeStatus(EGrabStatus.Grab);
+                }
+                */
+                break;
+            case EGrabStatus.Grab:
+                //물건을 집거나, 집게를 다 닫으면 connect로 이동.
+                if (_twizers.Grabed == true)
+                {
+                    ChangeStatus(EGrabStatus.Connect);
+                }
+                break;
+            case EGrabStatus.Connect:
+                grabStatus = EGrabStatus.Bring;
+                break;
+            case EGrabStatus.Bring:
+                if (!BringDistanceCk())
+                {
+                    ShrinkArm();
+
+                }
+                else
+                {
+                    GetItem();
+                    JointFree(_armJoint);
+                    _armRigidBody.isKinematic = true;
+                    JointFree(_twizersJointToArm);
+                    _twizersRigidBody.isKinematic = true;
+                    ArmToOriginPos();
+                    ChangeStatus(EGrabStatus.AdjustArm);
+
+                }
+                break;
+            case EGrabStatus.AdjustArm:
+                break;
+
+        }
+
+    }
+    public EFixedUpdatePriority FixedUpdatePriority => EFixedUpdatePriority.Lv5;
+    public void ExecuteFixedUpdateFrame()
+    {
+        if (grabStatus == EGrabStatus.Shooting)
+        {
+            ShootWristContinuous();
+        }
     }
     #endregion
 
@@ -269,82 +335,18 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         CEventBus<OnInputGrab>.Unsubscribe(GrabInputHandler);
         CEventBus<OnInputCollect>.Unsubscribe(CollectInputHandler);
     }
+    #endregion
 
-    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
-    //테스트용
-    public void ExecuteUpdateFrame()
+    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
+    public enum EGrabStatus
     {
-        switch (grabStatus)
-        {
-            case EGrabStatus.Wait:
-                if (Input.GetKey(KeyCode.Q))
-                {
-                    //왼쪽집게회전
-                    Quaternion temp = _twizersAnchor.transform.localRotation;
-                    temp.x -= _twizersRotateSpeed * Time.deltaTime;
-                    _twizersAnchor.transform.localRotation = temp;
-                }
-                if (Input.GetKey(KeyCode.E))
-                {
-                    Quaternion temp = _twizersAnchor.transform.localRotation;
-                    temp.x += _twizersRotateSpeed * Time.deltaTime;
-                    _twizersAnchor.transform.localRotation = temp;
-                    //오른집게회전
-                }
-                break;
-            case EGrabStatus.Shooting:
-
-                
-                ExtendArm();
-                /*
-                if (Input.GetKey(KeyCode.U))
-                {
-                    
-                    ChangeStatus(EGrabStatus.Grab);
-                }
-                */
-                break;
-            case EGrabStatus.Grab:
-                //물건을 집거나, 집게를 다 닫으면 connect로 이동.
-                if (_twizers.Grabed == true)
-                {
-                    ChangeStatus(EGrabStatus.Connect);
-                }
-                break;
-            case EGrabStatus.Connect:
-                grabStatus = EGrabStatus.Bring;
-                break;
-            case EGrabStatus.Bring:
-                if (!BringDistanceCk())
-                {
-                    ShrinkArm();
-
-                }
-                else
-                {
-                    GetItem();
-                    JointFree(_armJoint);
-                    _armRigidBody.isKinematic = true;
-                    JointFree(_twizersJointToArm);
-                    _twizersRigidBody.isKinematic = true;
-                    ArmToOriginPos();
-                    ChangeStatus(EGrabStatus.AdjustArm);
-
-                }
-                break;
-            case EGrabStatus.AdjustArm:
-                break;
-
-        }
-
-    }
-    public EFixedUpdatePriority FixedUpdatePriority => EFixedUpdatePriority.Lv5;
-    public void ExecuteFixedUpdateFrame()
-    {
-        if (grabStatus == EGrabStatus.Shooting)
-        {
-            ShootWristContinuous();
-        }
+        Wait,
+        Shooting,
+        Connect,
+        Grab,
+        Bring,
+        AdjustArm,
+        BringComplete
     }
     #endregion
 }
