@@ -3,12 +3,13 @@
 /// <summary>
 /// 키 입력을 받아 UI를 여는 컴포넌트입니다.
 /// </summary>
-public class COpenUI : AMono
+public class COpenUI : AFrameable,IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("참조 연결")]
     [SerializeField] private Transform _cam;
     [SerializeField] private CPlayerController _controller;
+    [SerializeField] private CInterectPopup _interectPopup;
 
     [Header("옵션")]
     [SerializeField] private LayerMask _interactorMask;
@@ -20,7 +21,29 @@ public class COpenUI : AMono
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
+    public void ExecuteUpdateFrame()
+    {
+        if (_interectPopup.gameObject.activeSelf)
+        {
+            _interectPopup.gameObject.SetActive(false);
+        }
+        if (!_controller.IsControlLocked)
+        {
+            if (_controller.CurrentState != EPlayerState.OnGround) return;
+            
 
+            if (Physics.Raycast(_cam.position, _cam.forward, out RaycastHit hit, _rayMaxDistance, _interactorMask)) // 상점에 마우스가 가있을 때
+            {
+                if (hit.collider.TryGetComponent(out CShopEntry comp))
+                {
+                    _interectPopup.title.text = "Shop";
+                    _interectPopup.gameObject.SetActive(true);
+                }
+                
+            }
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -49,13 +72,15 @@ public class COpenUI : AMono
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    private void OnEnable()
+    protected override void OnEnable()
     {
+        base.OnEnable();
         CEventBus<OnInputInventory>.Subscribe(InventoryHandler);
         CEventBus<OnInputGrab>.Subscribe(ShopHandler);
     }
-    private void OnDisable()
+    protected override void OnDisable()
     {
+        base.OnDisable();
         CEventBus<OnInputInventory>.Unsubscribe(InventoryHandler);
         CEventBus<OnInputGrab>.Unsubscribe(ShopHandler);
     }
