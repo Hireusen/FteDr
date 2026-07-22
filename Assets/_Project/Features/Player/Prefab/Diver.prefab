@@ -1691,7 +1691,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 100
-  m_ScaleFactor: 1
+  m_ScaleFactor: 0.01
   m_ReferenceResolution: {x: 800, y: 600}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
@@ -1731,6 +1731,7 @@ GameObject:
   - component: {fileID: 3261221692145292238}
   - component: {fileID: 8379305060406398257}
   - component: {fileID: 7299053780813501599}
+  - component: {fileID: 219881649920188593}
   m_Layer: 11
   m_Name: Diver
   m_TagString: Player
@@ -1884,6 +1885,21 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 16384
   _rayMaxDistance: 3
+--- !u!114 &219881649920188593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6173352775929118336}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74596b62132ed484e954bd9081ead0e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _newGrab: {fileID: 4831748627744386585}
+  _arm: {fileID: 8395630184502326342}
+  _playerCam: {fileID: 5546990443894001600}
 --- !u!1 &6367882447347074742
 GameObject:
   m_ObjectHideFlags: 0

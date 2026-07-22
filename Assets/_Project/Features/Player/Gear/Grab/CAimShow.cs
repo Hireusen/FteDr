@@ -90,9 +90,19 @@ public class CAimShow : AFrameable, IUpdateFrameable
                 break;
         }
     }
+    private void SetReference()
+    {
+        var player = CGameManager.Player;
+        var comp=player.GetComponent<CDiverToAim>();
+        (_grabScript, _armTransform, _cam) = comp.GetReference();
+
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    
+    private void Awake()
+    {
+        SetReference();
+    }
     #endregion
 }
