@@ -285,9 +285,11 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
 
     private void GrabInputHandler(OnInputGrab ctx)
     {
-        if (grabStatus != EGrabStatus.Wait) return;
+        //if (grabStatus != EGrabStatus.Wait) return;
         if (_controller.CurrentState == EPlayerState.OnGround) return;
-        if (UPlayer.CurrentFuel <= 0f) return;
+       // if (UPlayer.CurrentFuel <= 0f) return;
+        if (_controller.IsControlLocked) return;
+        if (Time.timeScale == 0f) return;
 
         ChangeStatus(EGrabStatus.Shooting);
     }
