@@ -42,7 +42,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
             }
 
             //에임용
-            if ((_armTransform.position - hit.point).magnitude < _grabScript.Maxdistance)
+            if ((_armTransform.position - hit.point).magnitude < _grabScript.GetMaxDistance())
             {
                 ChangeState(EAimStatus.Reached);
             }
