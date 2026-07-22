@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 클래스의 설계 의도입니다.
 /// </summary>
-public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
+public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [SerializeField] private CPlayerController _controller;
@@ -20,8 +20,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     [SerializeField] private float _shrinkSpeed = 10f;
     [SerializeField] private float _twizersRotateSpeed = 1f;
     [SerializeField] private CGrabToolSO _grabToolSO;
-    [SerializeField] private int _currentDistantLevel=0;
-    [SerializeField] private int _currentSpeedLevel=0;
+    [SerializeField] private int _currentDistantLevel = 0;
+    [SerializeField] private int _currentSpeedLevel = 0;
     [SerializeField] private Transform _playerCam;
 
     //test모드가 활성화 중이면 테스트 데이터(스피드,거리)로 작동 
@@ -154,7 +154,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     private bool DistanceCk()
     {
         float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
-        float maxdistance = _testmode ? _maxdistance : UData.GrabTool().ReachDistance(CProgressManager.Ins.GetGearLevel(EDataType.GrabTool));
+        float maxdistance = GetMaxDistance();
         if (distance < maxdistance) return true;
         else return false;
     }
@@ -271,16 +271,12 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     }
     private CCollectible GetItem()
     {
+        CCollectible item = null;
         GameObject itemObj = _twizers.GetItemAndPutdown();
         // 제대로 잡혀있는지 검사
         if (itemObj == null) return null;
-<<<<<<< Updated upstream
-
-        CCollectible item = itemObj.GetComponent<CCollectible>();
-=======
         Debug.Log(itemObj);
         item = itemObj.GetComponent<CCollectible>();
->>>>>>> Stashed changes
         var data = item.Data;
         bool success = UPlayer.TryAddToBag(data.Id); // 배낭 입력 시도
         // 배낭 입력 성공 및 아이템 삭제
@@ -305,7 +301,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     {
         //if (grabStatus != EGrabStatus.Wait) return;
         if (_controller.CurrentState == EPlayerState.OnGround) return;
-       // if (UPlayer.CurrentFuel <= 0f) return;
+        // if (UPlayer.CurrentFuel <= 0f) return;
         if (_controller.IsControlLocked) return;
         if (Time.timeScale == 0f) return;
 
