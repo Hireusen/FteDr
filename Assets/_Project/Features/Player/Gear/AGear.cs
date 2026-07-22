@@ -34,6 +34,10 @@ public abstract class AGear : AFrameable
 
         _isActive = false;
         OnDeactivated();
+
+        int grabLevel = CProgressManager.Ins.GetGearLevel(EDataType.GrabTool);
+        var so = UData.GrabTool();
+        float grabSpeed = so.GrabSpeed(grabLevel);
     }
     #endregion
 
