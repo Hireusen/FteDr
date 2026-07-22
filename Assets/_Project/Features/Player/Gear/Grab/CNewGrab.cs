@@ -257,6 +257,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 break;
             case EGrabStatus.Connect:
                 print("상태변경>connect");
+                _twizers.GrabSetting(false);
                 _twizersRigidBody.isKinematic = false;
                 //_armRigidBody.isKinematic = false;
                 JointOn(_twizersJointToArm, _armRigidBody);
@@ -287,7 +288,10 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         // 배낭 입력 실패 및 아이템 놓기
         else
         {
-            // 자동
+            if (item != null)
+            {
+                _twizers.CollisionOn();
+            }
         }
         return item;
     }
