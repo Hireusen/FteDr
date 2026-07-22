@@ -141,12 +141,21 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 temp.x -= 5;
                 _finger2Real.transform.localRotation= Quaternion.Euler(temp);
                 // collision 무시
+                Collider[] _objectCols = _grabInfo.crashedObject.GetComponentsInChildren<Collider>();
+                foreach(Collider col in _objectCols)
+                {
+                    Physics.IgnoreCollision(_finger1Col, col, true);
+                    Physics.IgnoreCollision(_finger2Col, col, true);
+                    Physics.IgnoreCollision(_finger1OutCollider, col, true);
+                    Physics.IgnoreCollision(_finger2OutCollider, col, true);
+                }
+                /*
                 _objectCol=_grabInfo.crashedObject.GetComponent<Collider>();
                 Physics.IgnoreCollision(_finger1Col, _objectCol,true);
                 Physics.IgnoreCollision(_finger2Col, _objectCol, true);
                 Physics.IgnoreCollision(_finger1OutCollider, _objectCol, true);
                 Physics.IgnoreCollision(_finger2OutCollider, _objectCol, true);
-
+                */
 
                 //테스트용
                 Grabed = true;

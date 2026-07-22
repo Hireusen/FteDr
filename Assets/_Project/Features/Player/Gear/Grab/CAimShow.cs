@@ -30,12 +30,12 @@ public class CAimShow : AFrameable, IUpdateFrameable
         if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 4, _collectibleLayout))
         {
             //아웃라인용
-            CCollectible temp=hit.collider.gameObject.GetComponent<CCollectible>();
+            CCollectible temp=hit.transform.root.gameObject.GetComponent<CCollectible>();
             if (temp != _currentAimObject)
             {
                 if(_currentAimObject!=null)_currentAimObject.HideOutline();
 
-                _currentAimObject=hit.collider.GetComponent<CCollectible>();
+                _currentAimObject=temp;
                 _currentAimObject.ShowOutline();
                 print("outlineshow");
                 
