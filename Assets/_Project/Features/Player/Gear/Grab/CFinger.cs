@@ -69,7 +69,7 @@ public class CFinger : AMono
             }
             Vector3 avgPoint = sumPoint / contactCount;
             CrashInfo crashobject= new CrashInfo();
-            crashobject.crashedObject = collision.gameObject;
+            crashobject.crashedObject = collision.transform.root.gameObject;
             crashobject.crashPoint = avgPoint;
 
             CrashObjects.Add(crashobject);
@@ -81,13 +81,14 @@ public class CFinger : AMono
     {
         if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
         {
-            if (Objects.Contains(collision.gameObject))
+            GameObject crashedobj = collision.transform.root.gameObject;
+            if (Objects.Contains(crashedobj))
             {
-                Objects.Remove(collision.gameObject);
+                Objects.Remove(crashedobj);
                 print(_testnum + "deattach");
             }
             CrashInfo temp=new CrashInfo();
-            temp.crashedObject = collision.gameObject;
+            temp.crashedObject = crashedobj;
             if (CrashObjects.Contains(temp))
             {
                 CrashObjects.Remove(temp);
@@ -99,7 +100,7 @@ public class CFinger : AMono
     {
         //objects에 넣은걸 교체하기 위한, crashobjects 코드 추가
         CrashInfo temp = new CrashInfo();
-        temp.crashedObject = collision.gameObject;
+        temp.crashedObject = collision.transform.root.gameObject;
         if (temp.crashedObject.CompareTag(K.TAG_GRABABLE))
         //if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
         {
@@ -108,7 +109,7 @@ public class CFinger : AMono
             Collider myCollider = GetComponent<Collider>();
             Vector3 contactPoint = collision.ClosestPoint(myCollider.bounds.center);
             CrashInfo crashobject = new CrashInfo();
-            crashobject.crashedObject = collision.gameObject;
+            crashobject.crashedObject = temp.crashedObject;
             crashobject.crashPoint = contactPoint;
 
             CrashObjects.Add(crashobject);
@@ -119,7 +120,7 @@ public class CFinger : AMono
     private void OnTriggerExit(Collider collision)
     {
         CrashInfo temp = new CrashInfo();
-        temp.crashedObject = collision.gameObject;
+        temp.crashedObject = collision.transform.root.gameObject;
         if (temp.crashedObject.CompareTag(K.TAG_GRABABLE))
         //if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
         {
@@ -128,7 +129,7 @@ public class CFinger : AMono
                 Objects.Remove(collision.gameObject);
                 print(_testnum + "deattach");
             }
-            temp.crashedObject = collision.gameObject;
+           // temp.crashedObject = collision.gameObject;
             if (CrashObjects.Contains(temp))
             {
                 CrashObjects.Remove(temp);

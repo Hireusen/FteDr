@@ -231,9 +231,9 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
                 float aimDistance = (aimPos - _playerCam.transform.localPosition).magnitude;
                 if (aimDistance < 0.2f) return;
 
-                if (hit.collider != null && hit.collider.gameObject.CompareTag(K.TAG_GRABABLE) && hit.rigidbody == null)
+                if (hit.collider != null && hit.transform.root.CompareTag(K.TAG_GRABABLE) && hit.transform.root.GetComponent<Rigidbody>() == null)
                 {
-                    hit.collider.AddComponent<Rigidbody>();
+                    hit.transform.root.AddComponent<Rigidbody>();
                 }
 
 
@@ -274,8 +274,13 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         GameObject itemObj = _twizers.GetItemAndPutdown();
         // 제대로 잡혀있는지 검사
         if (itemObj == null) return null;
+<<<<<<< Updated upstream
 
         CCollectible item = itemObj.GetComponent<CCollectible>();
+=======
+        Debug.Log(itemObj);
+        item = itemObj.GetComponent<CCollectible>();
+>>>>>>> Stashed changes
         var data = item.Data;
         bool success = UPlayer.TryAddToBag(data.Id); // 배낭 입력 시도
         // 배낭 입력 성공 및 아이템 삭제
