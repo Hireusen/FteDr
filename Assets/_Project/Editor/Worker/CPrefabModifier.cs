@@ -386,9 +386,13 @@ public class CPrefabModifier : EditorWindow
                 return true;
 
             case EOperation.RemoveComponent:
-                Component comp = go.GetComponent(opType);
-                if (comp == null) return false;
-                DestroyImmediate(comp, true); // 에셋 편집 중이므로 즉시 파괴 허용
+                Component[] comps = go.GetComponents(opType);
+                if (comps.Length == 0) return false;
+                for (int i = 0; i < comps.Length; ++i)
+                {
+                    if (comps[i] == null) continue;
+                    DestroyImmediate(comps[i], true); // 에셋 편집 중이므로 즉시 파괴 허용
+                }
                 return true;
 
             case EOperation.RenameObject:
