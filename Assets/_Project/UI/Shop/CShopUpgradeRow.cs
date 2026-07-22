@@ -94,6 +94,7 @@ public sealed class CShopUpgradeRow : AMono, IPointerEnterHandler
 
         if (!UPlayer.TrySpendMoney(cost))
         {
+            OnRequestNotice.Publish("골드가 부족합니다.");
             UDebug.Print($"[상점] '{_displayName}' 구매 실패 (골드 부족)", LogType.Warning, gameObject);
             return;
         }
