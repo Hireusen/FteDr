@@ -271,12 +271,11 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     }
     private CCollectible GetItem()
     {
-        CCollectible item = null;
         GameObject itemObj = _twizers.GetItemAndPutdown();
         // 제대로 잡혀있는지 검사
         if (itemObj == null) return null;
 
-        item = itemObj.GetComponent<CCollectible>();
+        CCollectible item = itemObj.GetComponent<CCollectible>();
         var data = item.Data;
         bool success = UPlayer.TryAddToBag(data.Id); // 배낭 입력 시도
         // 배낭 입력 성공 및 아이템 삭제
