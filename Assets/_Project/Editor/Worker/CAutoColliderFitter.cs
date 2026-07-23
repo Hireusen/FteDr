@@ -25,7 +25,7 @@ public class CAutoColliderFitter : EditorWindow
     private float _capsuleRatio = 1.60f;
     private string _childName = "AutoCollider";
 
-    [MenuItem("Tools/Auto Collider Fitter")]
+    [MenuItem("Tools/Worker/Auto Collider Fitter")]
     private static void Open()
     {
         GetWindow<CAutoColliderFitter>("Auto Collider Fitter");
