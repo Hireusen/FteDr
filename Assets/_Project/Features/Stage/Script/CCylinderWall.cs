@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
 /// 프레임에이블 클래스의 설계 의도입니다.
 /// </summary>
 public class CCylinderWall : AFrameable, IFixedUpdateFrameable
 {
+    [SerializeField] private float _offset=1f;
+    [SerializeField] private Image _fogImage;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CapsuleCollider col;
     #endregion
@@ -41,7 +44,10 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
 
         float distance = dir.magnitude;
         float radius = col.radius * transform.localScale.x;
-
+        distance = Mathf.Clamp(distance, radius - _offset, radius);
+        Color tmp = _fogImage.color;
+        tmp.a =  Mathf.Clamp((1-((radius-distance)/_offset)),0,0.8f);
+        _fogImage.color = tmp;
         if (distance > radius)
         {
             Vector3 boundaryPos = center + dir.normalized * radius;
