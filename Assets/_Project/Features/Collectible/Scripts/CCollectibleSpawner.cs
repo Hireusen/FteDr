@@ -39,6 +39,16 @@ public sealed class CCollectibleSpawner : AMono
     [Tooltip("완전 랜덤 회전(끄면 Y축 회전만)")]
     [SerializeField] private bool _fullRandomRotation = true;
 
+    [Header("공중 수집품 (IsAir)")]
+    [Tooltip("바닥으로 판정할 지형 레이어")]
+    [SerializeField] private LayerMask _groundLayer;
+    [Tooltip("바닥을 찾기 위해 아래로 쏘는 레이의 최대 길이")]
+    [SerializeField] private float _airRayLength = 150f;
+    [Tooltip("바닥으로부터 최소 높이(m)")]
+    [SerializeField] private float _airMinHeight = 3f;
+    [Tooltip("바닥으로부터 최대 높이(m)")]
+    [SerializeField] private float _airMaxHeight = 8f;
+
     [Header("안정화 감지")]
     [Tooltip("이 속도(초당) 미만이면 정지로 간주")]
     [SerializeField] private float _sleepSpeed = 0.05f;
@@ -158,8 +168,20 @@ public sealed class CCollectibleSpawner : AMono
         return counts;
     }
 
-    // 개별 수집품 하나를 생성하고 낙하 코루틴을 시작한다.
+    // 개별 수집품 하나를 생성한다. 공중 수집품과 일반(낙하) 수집품을 분기한다.
     private void SpawnOne(CCollectibleSO so, Transform parent)
+    {
+        if (so.IsAir)
+        {
+            SpawnAir(so, parent);
+            return;
+        }
+
+        SpawnFalling(so, parent);
+    }
+
+    // 일반 수집품: 공중에서 생성해 중력으로 낙하시킨 뒤 안정화되면 Rigidbody를 제거한다.
+    private void SpawnFalling(CCollectibleSO so, Transform parent)
     {
         Vector3 pos = GetSpawnPosition();
         pos.y += _dropHeight + Random.Range(-_dropHeightJitter, _dropHeightJitter);
@@ -175,6 +197,30 @@ public sealed class CCollectibleSpawner : AMono
         rb.useGravity = true;
 
         StartCoroutine(SettleRoutine(go, rb));
+    }
+
+    // 공중 수집품: 바닥을 레이캐스트로 찾아 그 위 랜덤 높이에 Rigidbody 없이 떠 있게 생성한다.
+    private void SpawnAir(CCollectibleSO so, Transform parent)
+    {
+        Vector3 origin = GetSpawnPosition();
+
+        // 스폰 지점보다 살짝 위에서 아래로 _airRayLength 만큼 쏴서 바닥을 찾는다.
+        Vector3 rayStart = origin + Vector3.up * 1f;
+        if (!Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, _airRayLength, _groundLayer))
+        {
+            UDebug.Print(
+                $"CCollectibleSpawner: 공중 수집품({so.name})의 바닥을 찾지 못해 생성을 건너뜁니다. " +
+                $"레이 길이({_airRayLength})나 지형 레이어를 확인하세요.",
+                LogType.Error);
+            return;
+        }
+
+        Vector3 pos = hit.point + Vector3.up * Random.Range(_airMinHeight, _airMaxHeight);
+        Quaternion rot = _fullRandomRotation ? URandom.Rotation() : URandom.RotationYaw();
+
+        GameObject go = Instantiate(so.Prefab, pos, rot, parent);
+        go.transform.localScale *= so.GetRandomScale();
+        // 공중 수집품은 낙하하지 않으므로 Rigidbody를 붙이지 않는다.
     }
 
     // 형태에 따라 범위 내 랜덤 위치를 구한다.
