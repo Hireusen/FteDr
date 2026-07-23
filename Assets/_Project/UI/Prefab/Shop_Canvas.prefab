@@ -455,7 +455,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _gearType: 4
-  _displayName: "\uCD5C\uB300 \uC0B0\uC18C\uB7C9 \uC99D\uAC00"
+  _displayName: "\uCD5C\uB300 \uC5F0\uB8CC\uB7C9 \uC99D\uAC00"
+  _directGearOverride: {fileID: 0}
   _nameLevelText: {fileID: 4541830414263085607}
   _levelFillImage: {fileID: 6478094229859354780}
   _priceText: {fileID: 6027277903936438446}
@@ -1110,8 +1111,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fb36d8f8fcef8a428382eb3a6c1e948, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gearType: 3
-  _displayName: "\uADF8\uB7A9 \uAC15\uD654"
+  _gearType: 9
+  _displayName: "\uAC00\uBC29 \uC800\uC7A5\uB7C9 \uC99D\uAC00"
+  _directGearOverride: {fileID: 0}
   _nameLevelText: {fileID: 3203488815423123820}
   _levelFillImage: {fileID: 5990745482463949671}
   _priceText: {fileID: 5008267566410575828}
@@ -1832,8 +1834,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fb36d8f8fcef8a428382eb3a6c1e948, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gearType: 6
-  _displayName: "\uC720\uBB3C \uD0D0\uC9C0\uAE30 \uAC15\uD654"
+  _gearType: 5
+  _displayName: "\uCD94\uC2E0\uAE30 \uBC94\uC704 \uC99D\uAC00"
+  _directGearOverride: {fileID: 0}
   _nameLevelText: {fileID: 173612271758444660}
   _levelFillImage: {fileID: 275292205278655691}
   _priceText: {fileID: 2945238101093315000}
@@ -3751,8 +3754,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fb36d8f8fcef8a428382eb3a6c1e948, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gearType: 5
-  _displayName: "\uCD94\uC2E0\uAE30 \uBC94\uC704 \uC99D\uAC00"
+  _gearType: 13
+  _displayName: "\uC7A0\uC218\uD568 \uC5C5\uADF8\uB808\uC774\uB4DC"
+  _directGearOverride: {fileID: 11400000, guid: 0ef569f5d6764884890602a01f413ae3,
+    type: 2}
   _nameLevelText: {fileID: 6134139844711481416}
   _levelFillImage: {fileID: 5386115746670064989}
   _priceText: {fileID: 1804210498958573451}
@@ -4317,8 +4322,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fb36d8f8fcef8a428382eb3a6c1e948, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gearType: 9
-  _displayName: "\uAC00\uBC29 \uC800\uC7A5\uB7C9 \uC99D\uAC00"
+  _gearType: 3
+  _displayName: "\uADF8\uB7A9 \uC0AC\uAC70\uB9AC \uC99D"
+  _directGearOverride: {fileID: 0}
   _nameLevelText: {fileID: 5013599396840313300}
   _levelFillImage: {fileID: 2070614294921175981}
   _priceText: {fileID: 8995065821654359098}
@@ -4722,10 +4728,25 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
+      propertyPath: m_Type
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 6b14b5f889962c74fa45d72ab6e15cf4,
         type: 3}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillAmount
+      value: 0.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillMethod
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3641917831849373512, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
       propertyPath: m_Type
@@ -4935,10 +4956,25 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
+      propertyPath: m_Type
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 6b14b5f889962c74fa45d72ab6e15cf4,
         type: 3}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillAmount
+      value: 0.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillMethod
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3641917831849373512, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
       propertyPath: m_Type
@@ -5148,10 +5184,25 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
+      propertyPath: m_Type
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 6b14b5f889962c74fa45d72ab6e15cf4,
         type: 3}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillAmount
+      value: 0.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillMethod
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3641917831849373512, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
       propertyPath: m_Type
@@ -5361,10 +5412,25 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
+      propertyPath: m_Type
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 6b14b5f889962c74fa45d72ab6e15cf4,
         type: 3}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillAmount
+      value: 0.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillMethod
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3641917831849373512, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
       propertyPath: m_Type
@@ -5574,10 +5640,25 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
+      propertyPath: m_Type
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 21300000, guid: 6b14b5f889962c74fa45d72ab6e15cf4,
         type: 3}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillAmount
+      value: 0.58
+      objectReference: {fileID: 0}
+    - target: {fileID: 3641497769653503564, guid: 5f672c38771d1064e9b13a572801ada9,
+        type: 3}
+      propertyPath: m_FillMethod
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3641917831849373512, guid: 5f672c38771d1064e9b13a572801ada9,
         type: 3}
       propertyPath: m_Type
