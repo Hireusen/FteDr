@@ -7,13 +7,14 @@ using UnityEngine;
 /// 씬을 넘어 유지되지 않으며, 외부 접근은 static Current로 합니다.
 /// 플레이어·잠수함의 씬별 활성/비활성 토글은 CGameManager가 전담합니다.
 /// </summary>
-public class CStageManager : AFrameable,IUpdateFrameable
+public class CStageManager : AFrameable, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Tooltip("플레이어 준비를 기다리는 최대 시간(초). 초과 시 스폰을 포기하고 에러 로그를 남깁니다.")]
     [SerializeField] private float _spawnWaitTimeout = 5f;
 
     [Header("리스폰 연출")]
+    [SerializeField] private CUnderwaterEffect _camEffect;
     [Tooltip("리스폰 시 화면이 어두워지는 시간(초)")]
     [SerializeField] private float _respawnFadeOutTime = 0.5f;
     [Tooltip("리스폰 시 화면이 다시 밝아지는 시간(초)")]
@@ -73,6 +74,7 @@ public class CStageManager : AFrameable,IUpdateFrameable
             if (_submarine == null) yield break;
 
             // 화면을 어둡게 덮는다. 완료될 때까지 대기.
+            _camEffect.StartDeath();
             UFade.FadeOut(_respawnFadeOutTime, true);
             while (UFade.IsFading) yield return null;
 
@@ -81,6 +83,7 @@ public class CStageManager : AFrameable,IUpdateFrameable
             UPlayer.ResetForNew();
 
             // 다시 화면을 밝힌다.
+            _camEffect.StopDeath();
             UFade.FadeIn(_respawnFadeInTime, true);
             while (UFade.IsFading) yield return null;
         }
@@ -182,9 +185,16 @@ public class CStageManager : AFrameable,IUpdateFrameable
 
     public void ExecuteUpdateFrame()
     {
-        if (UPlayer.CurrentFuel <= 0)
+        if (UPlayer.IsFuelLow)
         {
+            _camEffect.SetOxygenCrisis(true);
+            if (UPlayer.CurrentFuel > 0) return;
+
             RespawnPlayer();
+        }
+        else
+        {
+            _camEffect.SetOxygenCrisis(false);
         }
     }
     #endregion

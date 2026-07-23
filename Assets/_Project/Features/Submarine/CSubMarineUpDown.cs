@@ -91,7 +91,7 @@ public class CSubMarineUpDown : AMono
         CPlayerController player = Player;
         if (player == null) return;
 
-        player.Teleport(_playerSpawnPoint, Player.GetComponent<Rigidbody>());
+        player.Teleport(_playerSpawnPoint);
     }
 
     /// <summary>

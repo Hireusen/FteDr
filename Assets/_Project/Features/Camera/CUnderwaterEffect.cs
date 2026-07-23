@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 카메라에 부착해 화면 전체에 수중 포스트 이펙트(물색 틴트·비네팅·물결 왜곡·채도)를 적용합니다.
@@ -10,10 +10,26 @@ public sealed class CUnderwaterEffect : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("물색 틴트")]
-    [Tooltip("화면 전체에 섞을 물 색상")]
+    [Tooltip("화면 전체에 섞을 물 색상 (깊이 자동 조정을 끄면 이 값 사용)")]
     [SerializeField] private Color _tintColor = new Color(0.1f, 0.4f, 0.55f, 1f);
-    [Tooltip("물색을 섞는 정도")]
+    [Tooltip("물색을 섞는 정도 (깊이 자동 조정을 끄면 이 값 사용)")]
     [SerializeField, Range(0f, 1f)] private float _tintStrength = 0.3f;
+
+    [Header("깊이(Y) 자동 틴트")]
+    [Tooltip("켜면 카메라 y값에 따라 얕은/깊은 틴트를 자동 보간한다")]
+    [SerializeField] private bool _depthTintEnabled = true;
+    [Tooltip("이 y값 이상이면 얕은 물로 간주")]
+    [SerializeField] private float _maxY = 0f;
+    [Tooltip("이 y값 이하이면 깊은 물로 간주")]
+    [SerializeField] private float _minY = -50f;
+    [Tooltip("얕은 물 색")]
+    [SerializeField] private Color _shallowTintColor = new Color(0.2f, 0.55f, 0.65f, 1f);
+    [Tooltip("얕은 물 틴트 강도")]
+    [SerializeField, Range(0f, 1f)] private float _shallowTintStrength = 0.2f;
+    [Tooltip("깊은 물 색")]
+    [SerializeField] private Color _deepTintColor = new Color(0.02f, 0.1f, 0.25f, 1f);
+    [Tooltip("깊은 물 틴트 강도")]
+    [SerializeField, Range(0f, 1f)] private float _deepTintStrength = 0.6f;
 
     [Header("비네팅")]
     [Tooltip("화면 가장자리를 덮는 색")]
@@ -34,10 +50,51 @@ public sealed class CUnderwaterEffect : AMono
     [Header("색감")]
     [Tooltip("채도 (1 미만이면 탈색되어 수중 느낌)")]
     [SerializeField, Range(0f, 2f)] private float _saturation = 0.9f;
+
+    [Header("죽음 연출 (눈 감기/뜨기)")]
+    [Tooltip("죽음 시 목표 비네팅 강도")]
+    [SerializeField, Range(0f, 2f)] private float _deathVignetteStrength = 1.8f;
+    [Tooltip("눈 감기/뜨기 보간 속도(클수록 빠름)")]
+    [SerializeField] private float _deathBlendSpeed = 2f;
+
+    [Header("산소 위기 연출 (붉은 맥동)")]
+    [Tooltip("위기 시 테두리 색")]
+    [SerializeField] private Color _crisisColor = new Color(0.5f, 0f, 0f, 1f);
+    [Tooltip("위기 맥동의 최소 강도")]
+    [SerializeField, Range(0f, 2f)] private float _crisisMinStrength = 0.4f;
+    [Tooltip("위기 맥동의 최대 강도")]
+    [SerializeField, Range(0f, 2f)] private float _crisisMaxStrength = 0.9f;
+    [Tooltip("위기 맥동 속도")]
+    [SerializeField] private float _crisisPulseSpeed = 4f;
+    #endregion
+
+    #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    /// <summary>죽음 연출을 시작합니다. 비네팅이 서서히 깊어져 눈을 감는 듯한 효과를 냅니다.</summary>
+    public void StartDeath() => _deathActive = true;
+
+    /// <summary>죽음 연출을 해제합니다. 비네팅이 서서히 얕아져 눈을 뜨는 듯한 효과를 냅니다.</summary>
+    public void StopDeath() => _deathActive = false;
+
+    /// <summary>산소 위기 연출을 켜거나 끕니다. 켜져 있는 동안 테두리가 붉게 맥동합니다.</summary>
+    /// <param name="active">켤지(true) 끌지(false)</param>
+    public void SetOxygenCrisis(bool active) => _crisisActive = active;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private Material _material;
+
+    private bool _deathActive = false;
+    private bool _crisisActive = false;
+
+    // 죽음 비네팅 강도의 현재 보간값(평상시 강도 ↔ 죽음 강도 사이).
+    private float _deathVignetteCurrent;
+    private bool _initialized = false;
+
+    // OnRenderImage에서 셰이더로 넘길 최종 계산값. Update가 여기에만 쓰고 인스펙터 필드는 건드리지 않는다.
+    private Color _computedTintColor;
+    private float _computedTintStrength;
+    private Color _computedVignetteColor;
+    private float _computedVignetteStrength;
 
     // 셰이더 프로퍼티 ID 캐싱
     private static readonly int ID_Tint = Shader.PropertyToID("_TintColor");
@@ -52,6 +109,66 @@ public sealed class CUnderwaterEffect : AMono
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
+    private void OnEnable()
+    {
+        // 죽음 보간 시작값을 인스펙터 비네팅 강도로 초기화.
+        _deathVignetteCurrent = _vignetteStrength;
+        // 계산값도 인스펙터 값으로 초기화(첫 프레임 렌더가 Update보다 먼저 불릴 경우 대비).
+        _computedTintColor = _tintColor;
+        _computedTintStrength = _tintStrength;
+        _computedVignetteColor = _vignetteColor;
+        _computedVignetteStrength = _vignetteStrength;
+        _initialized = true;
+    }
+
+    private void Update()
+    {
+        if (!_initialized)
+        {
+            _deathVignetteCurrent = _vignetteStrength;
+            _initialized = true;
+        }
+
+        // 1) 틴트 계산: 깊이 자동이 켜져 있으면 y로 얕은/깊은 값을 보간, 아니면 인스펙터 값 그대로.
+        if (_depthTintEnabled)
+        {
+            // y가 maxY(얕음)~minY(깊음). depth01: 0=얕음, 1=깊음.
+            float depth01 = Mathf.InverseLerp(_maxY, _minY, transform.position.y);
+            _computedTintColor = Color.Lerp(_shallowTintColor, _deepTintColor, depth01);
+            _computedTintStrength = Mathf.Lerp(_shallowTintStrength, _deepTintStrength, depth01);
+        }
+        else
+        {
+            _computedTintColor = _tintColor;
+            _computedTintStrength = _tintStrength;
+        }
+
+        // 2) 비네팅 계산: 죽음(우선) > 위기 > 평상시 순으로 결정. 인스펙터 필드는 건드리지 않는다.
+        float deathTarget = _deathActive ? _deathVignetteStrength : _vignetteStrength;
+        _deathVignetteCurrent = Mathf.Lerp(
+            _deathVignetteCurrent, deathTarget, 1f - Mathf.Exp(-_deathBlendSpeed * Time.deltaTime));
+
+        if (_deathActive)
+        {
+            // 죽음: 보간된 강도 + 평상시 비네팅 색.
+            _computedVignetteStrength = _deathVignetteCurrent;
+            _computedVignetteColor = _vignetteColor;
+        }
+        else if (_crisisActive)
+        {
+            // 위기: 붉은 색 + 사인파 맥동 강도.
+            float pulse = (Mathf.Sin(Time.time * _crisisPulseSpeed) + 1f) * 0.5f; // 0~1
+            _computedVignetteStrength = Mathf.Lerp(_crisisMinStrength, _crisisMaxStrength, pulse);
+            _computedVignetteColor = _crisisColor;
+        }
+        else
+        {
+            // 평상시: 인스펙터 값 그대로. (죽음이 막 풀렸다면 _deathVignetteCurrent가 평상시로 수렴 중)
+            _computedVignetteStrength = _deathVignetteCurrent;
+            _computedVignetteColor = _vignetteColor;
+        }
+    }
+
     private void OnRenderImage(RenderTexture src, RenderTexture dest)
     {
         if (!EnsureMaterial())
@@ -61,10 +178,10 @@ public sealed class CUnderwaterEffect : AMono
             return;
         }
 
-        _material.SetColor(ID_Tint, _tintColor);
-        _material.SetFloat(ID_TintStr, _tintStrength);
-        _material.SetColor(ID_Vig, _vignetteColor);
-        _material.SetFloat(ID_VigStr, _vignetteStrength);
+        _material.SetColor(ID_Tint, _computedTintColor);
+        _material.SetFloat(ID_TintStr, _computedTintStrength);
+        _material.SetColor(ID_Vig, _computedVignetteColor);
+        _material.SetFloat(ID_VigStr, _computedVignetteStrength);
         _material.SetFloat(ID_VigSoft, _vignetteSoftness);
         _material.SetFloat(ID_DistStr, _distortStrength);
         _material.SetFloat(ID_DistSpd, _distortSpeed);
