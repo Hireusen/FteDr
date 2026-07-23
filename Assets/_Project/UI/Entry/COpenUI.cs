@@ -24,6 +24,7 @@ public class COpenUI : AFrameable,IUpdateFrameable
     public EUpdatePriority UpdatePriority => EUpdatePriority.Lv5;
     public void ExecuteUpdateFrame()
     {
+        // 마우스를 갖다댔을때 상호작용이 가능하다는 팝업 표시용 코드
         if (_interectPopup.gameObject.activeSelf)
         {
             _interectPopup.gameObject.SetActive(false);
