@@ -11,20 +11,20 @@ public static class USound
     #region ─────────────────────────▶ SFX ◀─────────────────────────
     /// <summary>메인 카메라 위치에서 효과음을 재생합니다.</summary>
     /// <param name="id">사운드 ID (Id.Sfx_*)</param>
-    public static void PlaySfx(string id) => Manager.PlaySfx(id);
+    public static CSoundEmitter PlaySfx(string id) => Manager.PlaySfx(id);
 
     /// <summary>지정한 좌표에서 3D 효과음을 재생합니다. (SO 기본 거리)</summary>
-    public static void PlaySfx(string id, Vector3 pos) => Manager.PlaySfx(id, pos);
+    public static CSoundEmitter PlaySfx(string id, Vector3 pos) => Manager.PlaySfx(id, pos);
 
     /// <summary>지정한 좌표에서 3D 효과음을 재생합니다. (거리 덮어쓰기)</summary>
-    public static void PlaySfx(string id, Vector3 pos, float minDistance, float maxDistance)
+    public static CSoundEmitter PlaySfx(string id, Vector3 pos, float minDistance, float maxDistance)
         => Manager.PlaySfx(id, pos, minDistance, maxDistance);
 
     /// <summary>지정한 대상을 따라다니며 3D 효과음을 재생합니다. (SO 기본 거리)</summary>
-    public static void PlaySfx(string id, Transform target) => Manager.PlaySfx(id, target);
+    public static CSoundEmitter PlaySfx(string id, Transform target) => Manager.PlaySfx(id, target);
 
     /// <summary>지정한 대상을 따라다니며 3D 효과음을 재생합니다. (거리 덮어쓰기)</summary>
-    public static void PlaySfx(string id, Transform target, float minDistance, float maxDistance)
+    public static CSoundEmitter PlaySfx(string id, Transform target, float minDistance, float maxDistance)
         => Manager.PlaySfx(id, target, minDistance, maxDistance);
 
     /// <summary>재생 중인 모든 3D 효과음을 즉시 중단합니다.</summary>

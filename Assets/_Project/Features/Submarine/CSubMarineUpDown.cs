@@ -16,7 +16,7 @@ public class CSubMarineUpDown : AMono
 
     [Header("필수 정보")]
     [SerializeField] private EScene _firstGameScene = EScene.Stage_1;
-    [SerializeField] private EScene _lastGameScene = EScene.Stage_6;
+    [SerializeField] private EScene _lastGameScene = EScene.Stage_4;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -91,7 +91,7 @@ public class CSubMarineUpDown : AMono
         CPlayerController player = Player;
         if (player == null) return;
 
-        player.Teleport(_playerSpawnPoint, Player.GetComponent<Rigidbody>());
+        player.Teleport(_playerSpawnPoint);
     }
 
     /// <summary>
@@ -102,16 +102,16 @@ public class CSubMarineUpDown : AMono
         if (_moveOn) return;
         _moveOn = true;
 
-        // 연출 동안 플레이어를 잠수함에 종속시켜 함께 이동하도록 한다.
-        Player?.AttachTo(transform);
+        // 연출 동안 플레이어를 통째로 숨긴다. (플레이어 카메라도 함께 꺼져 연출 카메라만 남는다)
+        if (CGameManager.Player != null) CGameManager.Player.SetActive(false);
 
         StartCoroutine(MoveSubmarineSlowStartCo(goDeeper, 1.5f));
         UFade.FadeOut(1.5f, true);
 
         if (goDeeper)
-            UScene.NextLoad(delay: 2f, onComplete: () => ArriveSubmarine(3f, goDeeper));
+            UScene.NextLoad(delay: 2f);
         else
-            UScene.PrevLoad(delay: 2f, onComplete: () => ArriveSubmarine(3f, goDeeper));
+            UScene.PrevLoad(delay: 2f);
     }
 
     /// <summary>
@@ -128,14 +128,6 @@ public class CSubMarineUpDown : AMono
             return;
         }
         _moveOn = true;
-
-        // 첫 진입(연출을 안 탄 경우)에는 플레이어가 아직 잠수함에 종속되지 않았으므로 여기서 종속시킨다.
-        // 연출 이동은 MoveSubmarine에서 이미 종속시켰고, 잠수함이 DontDestroyOnLoad라 씬을 넘어도 유지된다.
-        CPlayerController arrivePlayer = Player;
-        if (arrivePlayer != null && arrivePlayer.transform.parent != transform)
-        {
-            arrivePlayer.AttachTo(transform);
-        }
 
         var stage = CStageManager.Current;
         if (stage == null)
@@ -174,6 +166,9 @@ public class CSubMarineUpDown : AMono
         _arriveCam.LookAt = transform;
         _arriveCam.Priority = 20;
         _controlCam.Priority = 10;
+
+        // 도착 연출 동안 플레이어를 숨긴다. (첫 진입 경로에서도 확실히 꺼지도록)
+        if (CGameManager.Player != null) CGameManager.Player.SetActive(false);
 
         Vector3 startPos = goDeeper ? stage.UpPos.transform.position : stage.DownPos.transform.position;
         StartCoroutine(MoveStartToDestCo(startPos, stage.Dest.transform.position, duration));
@@ -239,12 +234,12 @@ public class CSubMarineUpDown : AMono
         if (_arriveCam != null) _arriveCam.Priority = 10;
         if (_controlCam != null) _controlCam.Priority = 20;
 
-        // 연출 종료: 플레이어를 SpawnPoint에 정확히 앉히고 종속을 해제한다.
-        CPlayerController player = Player;
-        if (player != null)
+        // 연출 종료: 플레이어를 SpawnPoint 위치에 놓고 다시 활성화한다.
+        if (_playerSpawnPoint != null && CGameManager.Player != null)
         {
-            if (_playerSpawnPoint != null) player.Teleport(_playerSpawnPoint, Player.GetComponent<Rigidbody>());
-            player.Detach();
+            CGameManager.Player.transform.SetPositionAndRotation(
+                _playerSpawnPoint.position, _playerSpawnPoint.rotation);
+            CGameManager.Player.SetActive(true);
         }
 
         // 켜둔 타임라인을 끈다. (다음 재생을 위해 처음부터 다시 시작되도록)

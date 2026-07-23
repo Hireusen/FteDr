@@ -34,7 +34,7 @@ public class CUIRegistrySO : ABaseSO
     {
         base.CollectErrorMessage(errorList);
 
-        if (errorList != null || _uiList.Count == 0)
+        if (errorList == null || _uiList.Count == 0)
         {
             errorList.Add($"{errorList.Count + 1}. 등록된 UI 매핑 목록이 비어있습니다.");
             return;

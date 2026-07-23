@@ -7,13 +7,14 @@ using UnityEngine;
 /// 씬을 넘어 유지되지 않으며, 외부 접근은 static Current로 합니다.
 /// 플레이어·잠수함의 씬별 활성/비활성 토글은 CGameManager가 전담합니다.
 /// </summary>
-public class CStageManager : AMono
+public class CStageManager : AFrameable, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Tooltip("플레이어 준비를 기다리는 최대 시간(초). 초과 시 스폰을 포기하고 에러 로그를 남깁니다.")]
     [SerializeField] private float _spawnWaitTimeout = 5f;
 
     [Header("리스폰 연출")]
+    [SerializeField] private CUnderwaterEffect _camEffect;
     [Tooltip("리스폰 시 화면이 어두워지는 시간(초)")]
     [SerializeField] private float _respawnFadeOutTime = 0.5f;
     [Tooltip("리스폰 시 화면이 다시 밝아지는 시간(초)")]
@@ -44,6 +45,8 @@ public class CStageManager : AMono
     public GameObject UpPos => _upPos;
     public CSubMarineUpDown SubMarine => _submarine;
 
+    public EUpdatePriority UpdatePriority => EUpdatePriority.First;
+
     /// <summary>
     /// 화면을 어둡게 한 뒤 플레이어를 스폰 지점으로 되돌리고 다시 밝히는 리스폰 연출을 실행합니다.
     /// 사망 처리·디버그 강제 귀환 등 외부에서 호출합니다.
@@ -71,6 +74,7 @@ public class CStageManager : AMono
             if (_submarine == null) yield break;
 
             // 화면을 어둡게 덮는다. 완료될 때까지 대기.
+            _camEffect.StartDeath();
             UFade.FadeOut(_respawnFadeOutTime, true);
             while (UFade.IsFading) yield return null;
 
@@ -79,6 +83,7 @@ public class CStageManager : AMono
             UPlayer.ResetForNew();
 
             // 다시 화면을 밝힌다.
+            _camEffect.StopDeath();
             UFade.FadeIn(_respawnFadeInTime, true);
             while (UFade.IsFading) yield return null;
         }
@@ -153,8 +158,9 @@ public class CStageManager : AMono
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     // 씬에 진입할 때 자신을 현재 스테이지 매니저로 등록한다.
     // 나중에 활성화된 것이 Current가 되므로, 씬 전환 방향과 자연히 일치한다.
-    private void OnEnable()
+    protected override void OnEnable()
     {
+        base.OnEnable();
         Current = this;
     }
 
@@ -175,6 +181,21 @@ public class CStageManager : AMono
 
         // 자신이 현재 등록된 매니저일 때만 해제한다.
         if (Current == this) Current = null;
+    }
+
+    public void ExecuteUpdateFrame()
+    {
+        if (UPlayer.IsFuelLow)
+        {
+            _camEffect.SetOxygenCrisis(true);
+            if (UPlayer.CurrentFuel > 0) return;
+
+            RespawnPlayer();
+        }
+        else
+        {
+            _camEffect.SetOxygenCrisis(false);
+        }
     }
     #endregion
 }

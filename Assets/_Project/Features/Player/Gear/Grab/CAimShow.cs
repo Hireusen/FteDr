@@ -30,19 +30,19 @@ public class CAimShow : AFrameable, IUpdateFrameable
         if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 4, _collectibleLayout))
         {
             //아웃라인용
-            CCollectible temp=hit.collider.gameObject.GetComponent<CCollectible>();
+            CCollectible temp=hit.transform.root.gameObject.GetComponent<CCollectible>();
             if (temp != _currentAimObject)
             {
                 if(_currentAimObject!=null)_currentAimObject.HideOutline();
 
-                _currentAimObject=hit.collider.GetComponent<CCollectible>();
+                _currentAimObject=temp;
                 _currentAimObject.ShowOutline();
                 print("outlineshow");
                 
             }
 
             //에임용
-            if ((_armTransform.position - hit.point).magnitude < _grabScript.Maxdistance)
+            if ((_armTransform.position - hit.point).magnitude < _grabScript.GetMaxDistance())
             {
                 ChangeState(EAimStatus.Reached);
             }
@@ -90,9 +90,19 @@ public class CAimShow : AFrameable, IUpdateFrameable
                 break;
         }
     }
+    private void SetReference()
+    {
+        var player = CGameManager.Player;
+        var comp=player.GetComponent<CDiverToAim>();
+        (_grabScript, _armTransform, _cam) = comp.GetReference();
+
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    
+    private void Awake()
+    {
+        SetReference();
+    }
     #endregion
 }

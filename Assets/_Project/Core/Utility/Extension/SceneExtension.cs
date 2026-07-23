@@ -20,7 +20,7 @@ public static class ESceneExtension
         }
         else
         {
-            return scene >= EScene.Stage_1 && scene <= EScene.Stage_6;
+            return scene >= EScene.Stage_1 && scene <= EScene.Stage_4;
         }
     }
 }

@@ -46,10 +46,17 @@ public sealed class CCollectibleSpawner : AMono
     [SerializeField] private float _sleepHoldTime = 0.4f;
     [Tooltip("이 시간(초)을 넘기면 안정화와 무관하게 강제로 Rigidbody 제거")]
     [SerializeField] private float _maxSettleTime = 6f;
+
+    [Header("스폰 중 숨김 (컬링)")]
+    [Tooltip("수집품 생성·배치 동안 컬링할 대상 카메라")]
+    [SerializeField] private Camera _cullCamera;
+    [Tooltip("생성·배치 동안 이 카메라에서 숨길 레이어")]
+    [SerializeField] private LayerMask _hideLayer;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private bool _spawned; // 최초 1회 보장
+    private int _settlingCount; // 낙하 안정화 진행 중인 수집품 수. 0이 되면 컬링 복원.
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -97,6 +104,9 @@ public sealed class CCollectibleSpawner : AMono
 
         int[] counts = DecideCounts(entries);
 
+        // 생성·배치 동안 수집품 레이어를 카메라에서 숨긴다.
+        SetLayerHidden(true);
+
         for (int i = 0; i < entries.Count; ++i)
         {
             CCollectibleSO so = entries[i].Collectible;
@@ -107,8 +117,29 @@ public sealed class CCollectibleSpawner : AMono
 
             for (int n = 0; n < counts[i]; ++n)
             {
-                SpawnOne(so, parent);
+                SpawnOne(so);
             }
+        }
+
+        // 낙하 안정화 중인 수집품이 하나도 없으면(전부 공중 수집품 등) 바로 복원한다.
+        if (_settlingCount <= 0)
+        {
+            SetLayerHidden(false);
+        }
+    }
+
+    // 카메라 컬링 마스크에서 대상 레이어를 끄거나(hidden=true) 다시 켠다.
+    private void SetLayerHidden(bool hidden)
+    {
+        if (_cullCamera == null) return;
+
+        if (hidden)
+        {
+            _cullCamera.cullingMask &= ~_hideLayer.value;
+        }
+        else
+        {
+            _cullCamera.cullingMask |= _hideLayer.value;
         }
     }
 
@@ -159,14 +190,14 @@ public sealed class CCollectibleSpawner : AMono
     }
 
     // 개별 수집품 하나를 생성하고 낙하 코루틴을 시작한다.
-    private void SpawnOne(CCollectibleSO so, Transform parent)
+    private void SpawnOne(CCollectibleSO so)
     {
         Vector3 pos = GetSpawnPosition();
         pos.y += _dropHeight + Random.Range(-_dropHeightJitter, _dropHeightJitter);
 
         Quaternion rot = _fullRandomRotation ? URandom.Rotation() : URandom.RotationYaw();
 
-        GameObject go = Instantiate(so.Prefab, pos, rot, parent);
+        GameObject go = Instantiate(so.Prefab, pos, rot);
         go.transform.localScale *= so.GetRandomScale(); // SO의 min~max 범위 랜덤 크기
 
         // 낙하용 Rigidbody 부착 (질량은 수집품 무게 반영)
@@ -174,6 +205,7 @@ public sealed class CCollectibleSpawner : AMono
         rb.mass = Mathf.Max(0.01f, so.Weight);
         rb.useGravity = true;
 
+        ++_settlingCount;
         StartCoroutine(SettleRoutine(go, rb));
     }
 
@@ -239,6 +271,13 @@ public sealed class CCollectibleSpawner : AMono
         if (rb != null)
         {
             Destroy(rb);
+        }
+
+        // 이 수집품의 안정화가 끝났다. 모두 끝났으면 숨겼던 레이어를 복원한다.
+        --_settlingCount;
+        if (_settlingCount <= 0)
+        {
+            SetLayerHidden(false);
         }
     }
     #endregion

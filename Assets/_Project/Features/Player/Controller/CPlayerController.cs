@@ -12,6 +12,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     [SerializeField] private float _moveSpeed;
     [Tooltip("지상 이동 속도(m/s). 속도 직접 제어라 미끄러짐 없음")]
     [SerializeField] private float _groundMoveSpeed = 6f;
+    [SerializeField] private bool _speedTestMode = false;
     [SerializeField] private float _jumpForce;
     [SerializeField] private float _verticalForce;
 
@@ -118,30 +119,36 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     /// 플레이어를 지정한 트랜스폼의 위치·회전으로 즉시 이동시킵니다.
     /// </summary>
     /// <param name="target">이동시킬 목표 트랜스폼(예: 잠수함의 SpawnPoint)</param>
-    public void Teleport(Transform target, Rigidbody playerRb)
+    public void Teleport(Transform target)
     {
         if (target == null)
         {
             UDebug.Print("Teleport 대상이 null입니다.", LogType.Error);
             return;
         }
-        if (playerRb == null)
+        if (_rb == null)
         {
             UDebug.Print("Teleport 대상의 리지드바디를 찾지 못했습니다.", LogType.Error);
             return;
         }
 
-        transform.SetPositionAndRotation(target.position, target.rotation);
-        playerRb.position = target.position;
-        playerRb.rotation = target.rotation;
+        // 물리 보간(Interpolation)으로 인한 위치 튐 현상 방지
+        bool wasKinematic = _rb.isKinematic;
+        _rb.isKinematic = true;
+
+        // Transform 직접 조작 제거 후 Rigidbody를 통해서만 위치/회전 동기화
+        _rb.position = target.position;
+        _rb.rotation = target.rotation;
+
+        // 물리 운동량 완벽 초기화 (인자로 받은 playerRb 기준)
+        _rb.velocity = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
+
+        _rb.isKinematic = wasKinematic;
+
+        // 플레이어시선 각도 동기화
         _yaw = target.eulerAngles.y;
         _pitch = 0f;
-
-        if (_rb != null)
-        {
-            _rb.velocity = Vector3.zero;
-            _rb.angularVelocity = Vector3.zero;
-        }
     }
 
     /// <summary>
@@ -213,7 +220,8 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         if (_currentState == EPlayerState.Swimming)
         {
             // 수영: 힘 기반 이동 (물의 관성 유지). 수중 중력 없음 → 입력 없으면 그 자리에 부유
-            _rb.AddForce(_moveDirection * (_moveSpeed * _fuelSpeedMultiplier), ForceMode.Force);
+            float movespeed = _speedTestMode ? _moveSpeed : UData.Thruster().MaxSpeed(CProgressManager.Ins.GetGearLevel(EDataType.Thruster));
+            _rb.AddForce(_moveDirection * (movespeed * _fuelSpeedMultiplier), ForceMode.Force);
 
             if (_isJumpPressed && !IsControlLocked)
             {
@@ -228,6 +236,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         else
         {
             // 지상 / 수중바닥: 수평 속도 직접 제어로 미끄러짐 제거 (y속도는 유지)
+            
             Vector3 horizontalVel = _moveDirection * (_groundMoveSpeed * _fuelSpeedMultiplier);
             _rb.velocity = new Vector3(horizontalVel.x, _rb.velocity.y, horizontalVel.z);
 

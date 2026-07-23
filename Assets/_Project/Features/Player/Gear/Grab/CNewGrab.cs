@@ -5,7 +5,7 @@ using UnityEngine;
 /// <summary>
 /// 클래스의 설계 의도입니다.
 /// </summary>
-public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
+public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [SerializeField] private CPlayerController _controller;
@@ -16,12 +16,16 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     [SerializeField] private CTwizers _twizers;
     [SerializeField] private ConfigurableJoint _twizersJointToArm;
     [SerializeField] private float _shootForce = 10f;
+    [SerializeField] private float _maxdistance = 4f;
     [SerializeField] private float _shrinkSpeed = 10f;
     [SerializeField] private float _twizersRotateSpeed = 1f;
     [SerializeField] private CGrabToolSO _grabToolSO;
-    [SerializeField] private int _currentDistantLevel=0;
-    [SerializeField] private int _currentSpeedLevel=0;
+    [SerializeField] private int _currentDistantLevel = 0;
+    [SerializeField] private int _currentSpeedLevel = 0;
     [SerializeField] private Transform _playerCam;
+
+    //test모드가 활성화 중이면 테스트 데이터(스피드,거리)로 작동 
+    [SerializeField] private bool _testmode = false;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -41,7 +45,6 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public EGrabStatus grabStatus = EGrabStatus.Wait;
-    public float Maxdistance { get; private set; } = 4f;
     public void ShootWrist()
     {
         _twizersRigidBody.isKinematic = false;
@@ -113,6 +116,16 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         }
 
     }
+    public float GetMaxDistance()
+    {
+        float maxdistance = _testmode ? _maxdistance : UData.GrabTool().ReachDistance(CProgressManager.Ins.GetGearLevel(EDataType.GrabTool));
+        return maxdistance;
+    }
+    public float GetMaxGrabSpeed()
+    {
+        float maxPower = _testmode ? _shootForce : UData.GrabTool().GrabSpeed(CProgressManager.Ins.GetGearLevel(EDataType.GrabTool));
+        return maxPower;
+    }
     public EFixedUpdatePriority FixedUpdatePriority => EFixedUpdatePriority.Lv5;
     public void ExecuteFixedUpdateFrame()
     {
@@ -141,12 +154,13 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
     private bool DistanceCk()
     {
         float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
-        if (distance < Maxdistance) return true;
+        float maxdistance = GetMaxDistance();
+        if (distance < maxdistance) return true;
         else return false;
     }
     private void ShootWristContinuous()
     {
-        _twizersRigidBody.AddForce(_aimDir * _shootForce, ForceMode.Force);
+        _twizersRigidBody.AddForce(_aimDir * GetMaxGrabSpeed(), ForceMode.Force);
 
         //거리제한되면 자동으로 그랩동작을 시행한 다음 상태변경한다. 
         if (!DistanceCk())
@@ -217,9 +231,17 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
                 float aimDistance = (aimPos - _playerCam.transform.localPosition).magnitude;
                 if (aimDistance < 0.2f) return;
 
-                if (hit.collider != null && hit.collider.gameObject.CompareTag(K.TAG_GRABABLE) && hit.rigidbody == null)
+                CCollectible temp = hit.transform.root.GetComponent<CCollectible>();
+                if (hit.collider != null && hit.transform.root.CompareTag(K.TAG_GRABABLE) && hit.transform.root.GetComponent<Rigidbody>() == null)
                 {
-                    hit.collider.AddComponent<Rigidbody>();
+                    Rigidbody rg=hit.transform.root.AddComponent<Rigidbody>();
+                    if (temp.Data.IsAir == true)
+                    {
+                        rg.drag = 11.75f;
+                        rg.angularDrag = 0.05f;
+                        rg.useGravity = false;
+                    }
+                        
                 }
 
 
@@ -243,6 +265,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
                 break;
             case EGrabStatus.Connect:
                 print("상태변경>connect");
+                _twizers.GrabSetting(false);
                 _twizersRigidBody.isKinematic = false;
                 //_armRigidBody.isKinematic = false;
                 JointOn(_twizersJointToArm, _armRigidBody);
@@ -261,7 +284,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         GameObject itemObj = _twizers.GetItemAndPutdown();
         // 제대로 잡혀있는지 검사
         if (itemObj == null) return null;
-
+        Debug.Log(itemObj);
         item = itemObj.GetComponent<CCollectible>();
         var data = item.Data;
         bool success = UPlayer.TryAddToBag(data.Id); // 배낭 입력 시도
@@ -273,7 +296,10 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         // 배낭 입력 실패 및 아이템 놓기
         else
         {
-            // 자동
+            if (item != null)
+            {
+                _twizers.CollisionOn();
+            }
         }
         return item;
     }
@@ -285,9 +311,11 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
 
     private void GrabInputHandler(OnInputGrab ctx)
     {
-        if (grabStatus != EGrabStatus.Wait) return;
+        //if (grabStatus != EGrabStatus.Wait) return;
         if (_controller.CurrentState == EPlayerState.OnGround) return;
-        if (UPlayer.CurrentFuel <= 0f) return;
+        // if (UPlayer.CurrentFuel <= 0f) return;
+        if (_controller.IsControlLocked) return;
+        if (Time.timeScale == 0f) return;
 
         ChangeStatus(EGrabStatus.Shooting);
     }
@@ -334,8 +362,6 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
         _armOriginLength = (_arm.transform.position - _armEndPivot.transform.position).magnitude;
 
         _grabOffset = Quaternion.Inverse(_arm.transform.localRotation) * _twizersAnchor.transform.localRotation;
-        Maxdistance = _grabToolSO.ReachDistance(_currentDistantLevel);
-        _shootForce = _grabToolSO.GrabSpeed(_currentSpeedLevel);
     }
 
     protected override void OnEnable()
@@ -357,12 +383,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable,IFixedUpdateFrameable
 
 
     }
-    private void OnValidate()
-    {
-        Maxdistance = _grabToolSO.ReachDistance(_currentDistantLevel);
-        _shootForce=_grabToolSO.GrabSpeed(_currentSpeedLevel);
 
-    }
     #endregion
 
     #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────

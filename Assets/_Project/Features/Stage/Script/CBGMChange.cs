@@ -1,37 +1,42 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 클래스의 설계 의도입니다.
+/// 각 씬에 배치하는 BGM 컴포넌트입니다.
 /// </summary>
 public class CBGMChange : AMono
 {
-    #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
-    [SerializeField] private string _bgmId;
-    #endregion
-
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
+    [SerializeField] private bool _playing = true;
 
+    private readonly string[] _playlist =
+    {
+        null, // Boot
+        Id.BGM_サカナだった頃, // Title
+        Id.BGM_Cleyton_RX_Underwater, // Stage 1
+        Id.BGM_Underwater_Theme_II,
+        Id.BGM_珊瑚礁,
+        Id.BGM_Blue_Water,
+        Id.BGM_Observing_The_Star,
+        null, // Stage 6
+        null, // Ending
+    };
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-
-    #endregion
-
-    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private void BGMChange()
+    public bool IsPlaying => _playing;
+    public void SetPlay(bool playing)
     {
-        USound.PlayBgm(_bgmId);
+        _playing = playing;
     }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    private void Awake()
+    private void Start()
     {
-        BGMChange();
+        if (!_playing) return;
+
+        int sceneIndex = (int)UScene.Current;
+        USound.PlayBgm(_playlist[sceneIndex]);
     }
-    #endregion
-
-    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
-
     #endregion
 }

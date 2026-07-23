@@ -37,7 +37,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
     private Quaternion _finger2OriginRot;
     private Collider _finger1Col;
     private Collider _finger2Col;
-    private Collider _objectCol;
+    private Collider[] _objectCols;
     
 
     private float _grabTimer = 0f;
@@ -62,7 +62,7 @@ public class CTwizers : AFrameable, IUpdateFrameable
         if (_grabInfo.crashedObject != null && _activeJoint == null)
         {
             _grabInfo.crashedObject = null;
-
+            CollisionOn();
             print("break!");
             //힘을 받아서 놓쳤을 경우 잡기 쿨타임
             _breakWaitTimer = _breakWaitTimeSetting;
@@ -141,12 +141,14 @@ public class CTwizers : AFrameable, IUpdateFrameable
                 temp.x -= 5;
                 _finger2Real.transform.localRotation= Quaternion.Euler(temp);
                 // collision 무시
-                _objectCol=_grabInfo.crashedObject.GetComponent<Collider>();
-                Physics.IgnoreCollision(_finger1Col, _objectCol,true);
-                Physics.IgnoreCollision(_finger2Col, _objectCol, true);
-                Physics.IgnoreCollision(_finger1OutCollider, _objectCol, true);
-                Physics.IgnoreCollision(_finger2OutCollider, _objectCol, true);
-
+                _objectCols = _grabInfo.crashedObject.GetComponentsInChildren<Collider>();
+                foreach(Collider col in _objectCols)
+                {
+                    Physics.IgnoreCollision(_finger1Col, col, true);
+                    Physics.IgnoreCollision(_finger2Col, col, true);
+                    Physics.IgnoreCollision(_finger1OutCollider, col, true);
+                    Physics.IgnoreCollision(_finger2OutCollider, col, true);
+                }
 
                 //테스트용
                 Grabed = true;
@@ -218,10 +220,13 @@ public class CTwizers : AFrameable, IUpdateFrameable
     }
     public void CollisionOn()
     {
-        Physics.IgnoreCollision(_finger1Col, _objectCol, false);
-        Physics.IgnoreCollision(_finger2Col, _objectCol, false);
-        Physics.IgnoreCollision(_finger1OutCollider, _objectCol, false);
-        Physics.IgnoreCollision(_finger2OutCollider, _objectCol, false);
+        foreach (Collider col in _objectCols)
+        {
+            Physics.IgnoreCollision(_finger1Col, col, false);
+            Physics.IgnoreCollision(_finger2Col, col, false);
+            Physics.IgnoreCollision(_finger1OutCollider, col, false);
+            Physics.IgnoreCollision(_finger2OutCollider, col, false);
+        }
     }
     #endregion
 
