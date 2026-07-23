@@ -45,6 +45,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _spawnWaitTimeout: 3
+  _respawnFadeOutTime: 0.5
+  _respawnFadeInTime: 0.5
+  _arriveCam: {fileID: 0}
+  _dest: {fileID: 0}
+  _downPos: {fileID: 0}
+  _upPos: {fileID: 0}
 --- !u!1 &4889117081297818053
 GameObject:
   m_ObjectHideFlags: 0
@@ -96,14 +102,18 @@ MonoBehaviour:
   _areaCenter: {fileID: 8054043517620132381}
   _boxSizeX: 0
   _boxSizeZ: 0
-  _circleRadius: 200
+  _circleRadius: 150
   _customPoints: []
   _dropHeight: 0
   _dropHeightJitter: 1
   _fullRandomRotation: 1
   _sleepSpeed: 0.05
   _sleepHoldTime: 0.4
-  _maxSettleTime: 6
+  _maxSettleTime: 10
+  _cullCamera: {fileID: 0}
+  _hideLayer:
+    serializedVersion: 2
+    m_Bits: 512
 --- !u!1 &5720876921493494057
 GameObject:
   m_ObjectHideFlags: 0

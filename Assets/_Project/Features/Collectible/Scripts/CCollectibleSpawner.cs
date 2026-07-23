@@ -39,16 +39,6 @@ public sealed class CCollectibleSpawner : AMono
     [Tooltip("완전 랜덤 회전(끄면 Y축 회전만)")]
     [SerializeField] private bool _fullRandomRotation = true;
 
-    [Header("공중 수집품 (IsAir)")]
-    [Tooltip("바닥으로 판정할 지형 레이어")]
-    [SerializeField] private LayerMask _groundLayer;
-    [Tooltip("바닥을 찾기 위해 아래로 쏘는 레이의 최대 길이")]
-    [SerializeField] private float _airRayLength = 150f;
-    [Tooltip("바닥으로부터 최소 높이(m)")]
-    [SerializeField] private float _airMinHeight = 3f;
-    [Tooltip("바닥으로부터 최대 높이(m)")]
-    [SerializeField] private float _airMaxHeight = 8f;
-
     [Header("안정화 감지")]
     [Tooltip("이 속도(초당) 미만이면 정지로 간주")]
     [SerializeField] private float _sleepSpeed = 0.05f;
@@ -56,10 +46,17 @@ public sealed class CCollectibleSpawner : AMono
     [SerializeField] private float _sleepHoldTime = 0.4f;
     [Tooltip("이 시간(초)을 넘기면 안정화와 무관하게 강제로 Rigidbody 제거")]
     [SerializeField] private float _maxSettleTime = 6f;
+
+    [Header("스폰 중 숨김 (컬링)")]
+    [Tooltip("수집품 생성·배치 동안 컬링할 대상 카메라")]
+    [SerializeField] private Camera _cullCamera;
+    [Tooltip("생성·배치 동안 이 카메라에서 숨길 레이어")]
+    [SerializeField] private LayerMask _hideLayer;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private bool _spawned; // 최초 1회 보장
+    private int _settlingCount; // 낙하 안정화 진행 중인 수집품 수. 0이 되면 컬링 복원.
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -107,6 +104,9 @@ public sealed class CCollectibleSpawner : AMono
 
         int[] counts = DecideCounts(entries);
 
+        // 생성·배치 동안 수집품 레이어를 카메라에서 숨긴다.
+        SetLayerHidden(true);
+
         for (int i = 0; i < entries.Count; ++i)
         {
             CCollectibleSO so = entries[i].Collectible;
@@ -117,8 +117,29 @@ public sealed class CCollectibleSpawner : AMono
 
             for (int n = 0; n < counts[i]; ++n)
             {
-                SpawnOne(so, parent);
+                SpawnOne(so);
             }
+        }
+
+        // 낙하 안정화 중인 수집품이 하나도 없으면(전부 공중 수집품 등) 바로 복원한다.
+        if (_settlingCount <= 0)
+        {
+            SetLayerHidden(false);
+        }
+    }
+
+    // 카메라 컬링 마스크에서 대상 레이어를 끄거나(hidden=true) 다시 켠다.
+    private void SetLayerHidden(bool hidden)
+    {
+        if (_cullCamera == null) return;
+
+        if (hidden)
+        {
+            _cullCamera.cullingMask &= ~_hideLayer.value;
+        }
+        else
+        {
+            _cullCamera.cullingMask |= _hideLayer.value;
         }
     }
 
@@ -168,27 +189,15 @@ public sealed class CCollectibleSpawner : AMono
         return counts;
     }
 
-    // 개별 수집품 하나를 생성한다. 공중 수집품과 일반(낙하) 수집품을 분기한다.
-    private void SpawnOne(CCollectibleSO so, Transform parent)
-    {
-        if (so.IsAir)
-        {
-            SpawnAir(so, parent);
-            return;
-        }
-
-        SpawnFalling(so, parent);
-    }
-
-    // 일반 수집품: 공중에서 생성해 중력으로 낙하시킨 뒤 안정화되면 Rigidbody를 제거한다.
-    private void SpawnFalling(CCollectibleSO so, Transform parent)
+    // 개별 수집품 하나를 생성하고 낙하 코루틴을 시작한다.
+    private void SpawnOne(CCollectibleSO so)
     {
         Vector3 pos = GetSpawnPosition();
         pos.y += _dropHeight + Random.Range(-_dropHeightJitter, _dropHeightJitter);
 
         Quaternion rot = _fullRandomRotation ? URandom.Rotation() : URandom.RotationYaw();
 
-        GameObject go = Instantiate(so.Prefab, pos, rot, parent);
+        GameObject go = Instantiate(so.Prefab, pos, rot);
         go.transform.localScale *= so.GetRandomScale(); // SO의 min~max 범위 랜덤 크기
 
         // 낙하용 Rigidbody 부착 (질량은 수집품 무게 반영)
@@ -196,31 +205,8 @@ public sealed class CCollectibleSpawner : AMono
         rb.mass = Mathf.Max(0.01f, so.Weight);
         rb.useGravity = true;
 
+        ++_settlingCount;
         StartCoroutine(SettleRoutine(go, rb));
-    }
-
-    // 공중 수집품: 바닥을 레이캐스트로 찾아 그 위 랜덤 높이에 Rigidbody 없이 떠 있게 생성한다.
-    private void SpawnAir(CCollectibleSO so, Transform parent)
-    {
-        Vector3 origin = GetSpawnPosition();
-
-        // 스폰 지점보다 살짝 위에서 아래로 _airRayLength 만큼 쏴서 바닥을 찾는다.
-        Vector3 rayStart = origin + Vector3.up * 1f;
-        if (!Physics.Raycast(rayStart, Vector3.down, out RaycastHit hit, _airRayLength, _groundLayer))
-        {
-            UDebug.Print(
-                $"CCollectibleSpawner: 공중 수집품({so.name})의 바닥을 찾지 못해 생성을 건너뜁니다. " +
-                $"레이 길이({_airRayLength})나 지형 레이어를 확인하세요.",
-                LogType.Error);
-            return;
-        }
-
-        Vector3 pos = hit.point + Vector3.up * Random.Range(_airMinHeight, _airMaxHeight);
-        Quaternion rot = _fullRandomRotation ? URandom.Rotation() : URandom.RotationYaw();
-
-        GameObject go = Instantiate(so.Prefab, pos, rot, parent);
-        go.transform.localScale *= so.GetRandomScale();
-        // 공중 수집품은 낙하하지 않으므로 Rigidbody를 붙이지 않는다.
     }
 
     // 형태에 따라 범위 내 랜덤 위치를 구한다.
@@ -285,6 +271,13 @@ public sealed class CCollectibleSpawner : AMono
         if (rb != null)
         {
             Destroy(rb);
+        }
+
+        // 이 수집품의 안정화가 끝났다. 모두 끝났으면 숨겼던 레이어를 복원한다.
+        --_settlingCount;
+        if (_settlingCount <= 0)
+        {
+            SetLayerHidden(false);
         }
     }
     #endregion
