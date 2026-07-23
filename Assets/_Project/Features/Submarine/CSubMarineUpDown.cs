@@ -109,9 +109,9 @@ public class CSubMarineUpDown : AMono
         UFade.FadeOut(1.5f, true);
 
         if (goDeeper)
-            UScene.NextLoad(delay: 2f, onComplete: () => ArriveSubmarine(3f, goDeeper));
+            UScene.NextLoad(delay: 2f);
         else
-            UScene.PrevLoad(delay: 2f, onComplete: () => ArriveSubmarine(3f, goDeeper));
+            UScene.PrevLoad(delay: 2f);
     }
 
     /// <summary>
