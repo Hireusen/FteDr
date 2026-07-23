@@ -231,9 +231,17 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 float aimDistance = (aimPos - _playerCam.transform.localPosition).magnitude;
                 if (aimDistance < 0.2f) return;
 
+                CCollectible temp = hit.transform.root.GetComponent<CCollectible>();
                 if (hit.collider != null && hit.transform.root.CompareTag(K.TAG_GRABABLE) && hit.transform.root.GetComponent<Rigidbody>() == null)
                 {
-                    hit.transform.root.AddComponent<Rigidbody>();
+                    Rigidbody rg=hit.transform.root.AddComponent<Rigidbody>();
+                    if (temp.Data.IsAir == true)
+                    {
+                        rg.drag = 11.75f;
+                        rg.angularDrag = 0.05f;
+                        rg.useGravity = false;
+                    }
+                        
                 }
 
 
