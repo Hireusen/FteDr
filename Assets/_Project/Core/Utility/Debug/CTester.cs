@@ -81,8 +81,6 @@ public sealed class CTester : AMono
         GUILayout.Space(8);
         DrawGearSection();
         GUILayout.Space(8);
-        DrawStageSection();
-        GUILayout.Space(8);
         DrawOptionSection();
 
         GUILayout.EndScrollView();
@@ -144,16 +142,6 @@ public sealed class CTester : AMono
             if (!UPlayer.UpgradeGear(type))
                 UDebug.Print($"[디버그] {label} 업그레이드 실패 (최대 레벨?)", LogType.Warning);
         }
-        GUILayout.EndHorizontal();
-    }
-
-    private void DrawStageSection()
-    {
-        GUILayout.Label($"── 스테이지 ──  현재 {UPlayer.CurrentStage} / 해금 {UPlayer.UnlockedStage}");
-        GUILayout.BeginHorizontal();
-        if (GUILayout.Button("다음 해금")) UPlayer.UnlockNextStage();
-        if (GUILayout.Button("현재 -1")) UPlayer.SetCurrentStage(Mathf.Max(0, UPlayer.CurrentStage - 1));
-        if (GUILayout.Button("현재 +1")) UPlayer.SetCurrentStage(UPlayer.CurrentStage + 1);
         GUILayout.EndHorizontal();
     }
 

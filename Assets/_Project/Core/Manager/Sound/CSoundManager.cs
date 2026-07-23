@@ -26,9 +26,9 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
     /// <summary>
     /// 메인 카메라 위치에서 거리감 없는 효과음을 재생합니다.
     /// </summary>
-    public void PlaySfx(string id)
+    public CSoundEmitter PlaySfx(string id)
     {
-        if (!TryGetClip(id, out CSoundSO so)) return;
+        if (!TryGetClip(id, out CSoundSO so)) return null;
 
         Camera cam = Camera.main;
         Vector3 pos = cam != null ? cam.transform.position : Vector3.zero;
@@ -37,50 +37,55 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         emitter.SetPosition(pos);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
         PlayOnEmitter(emitter, so, BLEND_2D, so.MinDistance, so.MaxDistance);
+        return emitter;
     }
 
     /// <summary>지정한 좌표에서 3D 효과음을 재생합니다.</summary>
-    public void PlaySfx(string id, Vector3 pos)
+    public CSoundEmitter PlaySfx(string id, Vector3 pos)
     {
-        if (!TryGetClip(id, out CSoundSO so)) return;
+        if (!TryGetClip(id, out CSoundSO so)) return null;
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
         PlayOnEmitter(emitter, so, BLEND_3D, so.MinDistance, so.MaxDistance);
+        return emitter;
     }
 
     /// <summary>재생 거리를 덮어씌워 지정한 좌표에서 3D 효과음을 재생합니다.</summary>
-    public void PlaySfx(string id, Vector3 pos, float minDistance, float maxDistance)
+    public CSoundEmitter PlaySfx(string id, Vector3 pos, float minDistance, float maxDistance)
     {
-        if (!TryGetClip(id, out CSoundSO so)) return;
+        if (!TryGetClip(id, out CSoundSO so)) return null;
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
         PlayOnEmitter(emitter, so, BLEND_3D, minDistance, maxDistance);
+        return emitter;
     }
 
     /// <summary>지정한 대상을 따라다니며 3D 효과음을 재생합니다.</summary>
-    public void PlaySfx(string id, Transform target)
+    public CSoundEmitter PlaySfx(string id, Transform target)
     {
-        if (!TryGetClip(id, out CSoundSO so)) return;
+        if (!TryGetClip(id, out CSoundSO so)) return null;
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetFollow(target);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
         PlayOnEmitter(emitter, so, BLEND_3D, so.MinDistance, so.MaxDistance);
+        return emitter;
     }
 
     /// <summary>재생 거리를 덮어씌워  지정한 대상을 따라다니며 3D 효과음을 재생합니다.</summary>
-    public void PlaySfx(string id, Transform target, float minDistance, float maxDistance)
+    public CSoundEmitter PlaySfx(string id, Transform target, float minDistance, float maxDistance)
     {
-        if (!TryGetClip(id, out CSoundSO so)) return;
+        if (!TryGetClip(id, out CSoundSO so)) return null;
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetFollow(target);
         emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
         PlayOnEmitter(emitter, so, BLEND_3D, minDistance, maxDistance);
+        return emitter;
     }
 
     ///<summary> 재생 중인 모든 효과음을 즉시 중단하고 반납합니다.</summary>
