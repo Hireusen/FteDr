@@ -124,6 +124,37 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &3292123
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3292124}
+  m_Layer: 0
+  m_Name: "\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3292124
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3292123}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &501214633
 GameObject:
   m_ObjectHideFlags: 0
@@ -502,50 +533,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1260452952
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1260452954}
-  - component: {fileID: 1260452953}
-  m_Layer: 0
-  m_Name: testobj
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1260452953
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1260452952}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 81d16954805b866419ceb08cc7e3da20, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!4 &1260452954
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1260452952}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 311.44864, y: -183.10971, z: 129.13638}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1487466969
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -557,7 +544,7 @@ PrefabInstance:
     - target: {fileID: 3014605172093824797, guid: 968445f326ac2fb478c5512e781975b2,
         type: 3}
       propertyPath: m_Name
-      value: AimTestCanvas
+      value: PlayerAimCanvas
       objectReference: {fileID: 0}
     - target: {fileID: 6199502232075012793, guid: 968445f326ac2fb478c5512e781975b2,
         type: 3}
@@ -880,6 +867,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3753045671744593199, guid: cf1c642b1b5796c449e15d235ec86ad9,
+        type: 3}
+      propertyPath: _cullCamera
+      value: 
+      objectReference: {fileID: 534669904}
+    - target: {fileID: 3753045671744593199, guid: cf1c642b1b5796c449e15d235ec86ad9,
+        type: 3}
+      propertyPath: _hideLayer.m_Bits
+      value: 512
+      objectReference: {fileID: 0}
     - target: {fileID: 4898953586714474987, guid: cf1c642b1b5796c449e15d235ec86ad9,
         type: 3}
       propertyPath: m_Name
@@ -1084,5 +1081,5 @@ SceneRoots:
   - {fileID: 1509417085}
   - {fileID: 656867768}
   - {fileID: 501214635}
-  - {fileID: 1260452954}
   - {fileID: 1487466969}
+  - {fileID: 3292124}
