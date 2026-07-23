@@ -12,6 +12,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     [SerializeField] private float _moveSpeed;
     [Tooltip("지상 이동 속도(m/s). 속도 직접 제어라 미끄러짐 없음")]
     [SerializeField] private float _groundMoveSpeed = 6f;
+    [SerializeField] private bool _speedTestMode = false;
     [SerializeField] private float _jumpForce;
     [SerializeField] private float _verticalForce;
 
@@ -213,7 +214,8 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         if (_currentState == EPlayerState.Swimming)
         {
             // 수영: 힘 기반 이동 (물의 관성 유지). 수중 중력 없음 → 입력 없으면 그 자리에 부유
-            _rb.AddForce(_moveDirection * (_moveSpeed * _fuelSpeedMultiplier), ForceMode.Force);
+            float movespeed = _speedTestMode ? _moveSpeed : UData.Thruster().MaxSpeed(CProgressManager.Ins.GetGearLevel(EDataType.Thruster));
+            _rb.AddForce(_moveDirection * (movespeed * _fuelSpeedMultiplier), ForceMode.Force);
 
             if (_isJumpPressed && !IsControlLocked)
             {
@@ -228,6 +230,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         else
         {
             // 지상 / 수중바닥: 수평 속도 직접 제어로 미끄러짐 제거 (y속도는 유지)
+            
             Vector3 horizontalVel = _moveDirection * (_groundMoveSpeed * _fuelSpeedMultiplier);
             _rb.velocity = new Vector3(horizontalVel.x, _rb.velocity.y, horizontalVel.z);
 
