@@ -15,7 +15,8 @@ public sealed class CPlayerHudController : AMono
 
     [Header("산소(연료) 게이지")]
     [SerializeField] private Image _oxygenFillImage;
-    [SerializeField] private TMP_Text _oxygenText;
+    [SerializeField] private TMP_Text _oxygenCurText;
+    [SerializeField] private TMP_Text _oxygenMaxText;
     [SerializeField] private string _oxygenFormat = "{0:0} / {1:0}";
 
     [Header("버튼")]
@@ -78,9 +79,10 @@ public sealed class CPlayerHudController : AMono
             _oxygenFillImage.fillAmount = max > 0f ? Mathf.Clamp01(current / max) : 0f;
         }
 
-        if (_oxygenText != null)
+        if (_oxygenCurText != null && _oxygenMaxText != null)
         {
-            _oxygenText.text = string.Format(_oxygenFormat, current, max);
+            _oxygenCurText.text = string.Format("{0:0}", current);
+            _oxygenMaxText.text = string.Format("{0:0}", max);
         }
     }
     #endregion
