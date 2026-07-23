@@ -120,6 +120,7 @@ public class CSubMarineUpDown : AMono
     /// <param name="duration">(초)</param>
     public void ArriveSubmarine(float duration, bool goDeeper = true)
     {
+        //USound.PlaySfx()
         UFade.FadeIn(2f, true);
         // MoveSubmarine의 가속 코루틴이 끝났을 경우에만 진행
         if (_moveOn)
