@@ -1011,7 +1011,7 @@ MonoBehaviour:
     FieldOfView: 60.000004
     OrthographicSize: 10
     NearClipPlane: 0.1
-    FarClipPlane: 5000
+    FarClipPlane: 45
     Dutch: 0
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
@@ -1679,12 +1679,14 @@ MonoBehaviour:
   _twizers: {fileID: 8287872184708301779}
   _twizersJointToArm: {fileID: 249347402678089730}
   _shootForce: 10
+  _maxdistance: 4
   _shrinkSpeed: 80
   _twizersRotateSpeed: 1
   _grabToolSO: {fileID: 11400000, guid: d08ea590a7621284ca3636558f1f9f31, type: 2}
   _currentDistantLevel: 1
   _currentSpeedLevel: 1
   _playerCam: {fileID: 5546990443894001600}
+  _testmode: 0
   grabStatus: 0
 --- !u!95 &3872504200272043507
 Animator:
@@ -1722,6 +1724,7 @@ MonoBehaviour:
   _root: {fileID: 3279441574885357185}
   _moveSpeed: 40
   _groundMoveSpeed: 2
+  _speedTestMode: 0
   _jumpForce: 40
   _verticalForce: 30
   _waterDrag: 3
