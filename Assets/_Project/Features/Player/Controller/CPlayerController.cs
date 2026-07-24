@@ -152,57 +152,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         _pitch = 0f;
     }
 
-    /// <summary>
-    /// 플레이어를 지정한 부모(잠수함 등)에 종속시킵니다.
-    /// 연출 동안 부모의 이동을 그대로 따라가도록 Rigidbody를 kinematic으로 전환하고 조작을 잠급니다.
-    /// Detach로 반드시 원복해야 합니다.
-    /// </summary>
-    /// <param name="parent">종속시킬 부모 트랜스폼</param>
-    public void AttachTo(Transform parent)
-    {
-        if (parent == null)
-        {
-            UDebug.Print("AttachTo 대상이 null입니다.", LogType.Error);
-            return;
-        }
-        UDebug.Print($"플레이어 잠수함 어태치를 진행합니다.");
-
-        _originalParent = transform.parent;
-        transform.SetParent(parent, worldPositionStays: true);
-
-        if (_rb != null)
-        {
-            _prevKinematic = _rb.isKinematic;
-            _rb.velocity = Vector3.zero;
-            _rb.angularVelocity = Vector3.zero;
-            _rb.isKinematic = true; // 물리 시뮬레이션에서 빠져 부모 이동을 트랜스폼으로 따라감
-        }
-
-        _lockByCutscene = true;
-    }
-
-    /// <summary>
-    /// AttachTo로 걸었던 종속을 해제하고 원래 물리 상태·부모로 되돌립니다.
-    /// </summary>
-    public void Detach()
-    {
-        transform.SetParent(_originalParent, worldPositionStays: true);
-        _originalParent = null;
-        UDebug.Print($"플레이어 잠수함 디태치를 진행합니다.");
-
-        if (_rb != null)
-        {
-            _rb.isKinematic = _prevKinematic;
-            _rb.velocity = Vector3.zero;
-            _rb.angularVelocity = Vector3.zero;
-        } else
-        {
-            UDebug.Print($"플레이어 리지드바디를 가져올 수 없습니다.", LogType.Error);
-        }
-
-            _lockByCutscene = false;
-    }
-
     public void ExecuteFixedUpdateFrame()
     {
         if (_rb.isKinematic) return;

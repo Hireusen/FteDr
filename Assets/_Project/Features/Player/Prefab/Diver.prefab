@@ -343,6 +343,7 @@ Transform:
   m_Children:
   - {fileID: 7287286503354525872}
   - {fileID: 3445598835591532473}
+  - {fileID: 3659911245728023387}
   m_Father: {fileID: 2728337266944006544}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &7704545056674137366
@@ -1741,7 +1742,7 @@ MonoBehaviour:
   _submarineLayer:
     serializedVersion: 2
     m_Bits: 4096
-  _lowFuelSpeedMultiplier: 0.3
+  _lowFuelSpeedMultiplier: 0.8
 --- !u!54 &8379305060406398257
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2381,6 +2382,65 @@ Transform:
   - {fileID: 5546990443894001600}
   m_Father: {fileID: 2728337266944006544}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &8330207075498271472
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3659911245728023387}
+  - component: {fileID: 799698726381292251}
+  - component: {fileID: 2612230894132136632}
+  m_Layer: 11
+  m_Name: Effect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3659911245728023387
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8330207075498271472}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 2704735362725339065}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &799698726381292251
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8330207075498271472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da90ebf3059157b47b31f036fa7cc0f8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _player: {fileID: 3261221692145292238}
+--- !u!114 &2612230894132136632
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8330207075498271472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d878e0d7b9a3ca04690770ca78431d9b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _player: {fileID: 3261221692145292238}
 --- !u!1 &8636658282512009255
 GameObject:
   m_ObjectHideFlags: 0
