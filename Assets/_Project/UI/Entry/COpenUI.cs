@@ -97,7 +97,8 @@ public class COpenUI : AFrameable,IUpdateFrameable
     {
         if (_cPlayerToCockpit == null) return;
         if (_cPlayerToCockpit.SitCockpit == false) return;
-        if (ctx.moved.sqrMagnitude >= 0.0001) return;
+        if (ctx.moved.sqrMagnitude < 0.0001f) return;
+
         _canInventory = true;
         _cPlayerToCockpit.CockpitToPlayer();
     }

@@ -141,11 +141,11 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         _rb.position = target.position;
         _rb.rotation = target.rotation;
 
-        // 물리 운동량 완벽 초기화 (인자로 받은 playerRb 기준)
+        _rb.isKinematic = wasKinematic;
+
+        // 물리 운동량 초기화
         _rb.velocity = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
-
-        _rb.isKinematic = wasKinematic;
 
         // 플레이어시선 각도 동기화
         _yaw = target.eulerAngles.y;
