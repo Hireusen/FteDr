@@ -6,6 +6,7 @@
 public class CUnderwaterInjector : AMono
 {
     [SerializeField] private CUnderwaterEffect _underwaterEffect;
+
     private void Start()
     {
 #if UNITY_EDITOR
@@ -21,14 +22,13 @@ public class CUnderwaterInjector : AMono
             UDebug.Print("플레이어를 찾지 못했습니다.");
             return;
         }
-
+#endif
         var comp = player.GetComponentInChildren<CPlayerDive>();
         if(comp == null)
         {
             UDebug.Print("플레이어의 CPlayerDive 컴포넌트를 찾지 못했습니다.");
             return;
         }
-#endif
 
         comp.InjectUnderwaterEffect(_underwaterEffect);
     }
