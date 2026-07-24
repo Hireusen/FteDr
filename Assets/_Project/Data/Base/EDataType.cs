@@ -15,6 +15,7 @@ public enum EDataType
     Thruster = 5,
     Radar = 6,
     Net = 12,
+    Submarine = 13,
     // 시스템
     Sound = 8,
     Spawner = 10,
