@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// 사운드 재생의 실제 로직을 담당하는 싱글톤 클래스입니다.
@@ -11,8 +11,18 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
     private AudioSource _bgmSource; // 단일 BGM 소스
     private AudioSource _ambienceSource; // 독립 환경음 소스
+    private AudioLowPassFilter _bgmLowPass; // BGM 로우패스
+    private AudioLowPassFilter _ambienceLowPass; // 환경음 로우패스
     private string _curBgmId;
     private string _curAmbienceId;
+
+    // BGM/Ambience 로우패스 오버라이드 (설정 시 SO·전역 대신 강제 적용)
+    private bool _bgmLowPassOverride;
+    private bool _bgmLowPassOverrideOn;
+    private float _bgmLowPassOverrideCutoff;
+    private bool _ambienceLowPassOverride;
+    private bool _ambienceLowPassOverrideOn;
+    private float _ambienceLowPassOverrideCutoff;
 
     private bool _useUnderwater; // 수중 분위기 전역 토글
     private float _underwaterCutoff = 750f;
@@ -35,7 +45,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
-        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff, so.UseLowPass, so.LowPassCutoff);
         PlayOnEmitter(emitter, so, BLEND_2D, so.MinDistance, so.MaxDistance);
         return emitter;
     }
@@ -47,7 +57,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
-        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff, so.UseLowPass, so.LowPassCutoff);
         PlayOnEmitter(emitter, so, BLEND_3D, so.MinDistance, so.MaxDistance);
         return emitter;
     }
@@ -59,7 +69,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetPosition(pos);
-        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff, so.UseLowPass, so.LowPassCutoff);
         PlayOnEmitter(emitter, so, BLEND_3D, minDistance, maxDistance);
         return emitter;
     }
@@ -71,7 +81,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetFollow(target);
-        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff, so.UseLowPass, so.LowPassCutoff);
         PlayOnEmitter(emitter, so, BLEND_3D, so.MinDistance, so.MaxDistance);
         return emitter;
     }
@@ -83,7 +93,7 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
 
         CSoundEmitter emitter = _factory.Rent();
         emitter.SetFollow(target);
-        emitter.SetLowPass(_useUnderwater, _underwaterCutoff);
+        emitter.SetLowPass(_useUnderwater, _underwaterCutoff, so.UseLowPass, so.LowPassCutoff);
         PlayOnEmitter(emitter, so, BLEND_3D, minDistance, maxDistance);
         return emitter;
     }
@@ -137,6 +147,8 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         _bgmSource.volume = so.Volume * v.bgm * v.master;
         _bgmSource.Play();
         _curBgmId = id;
+
+        RefreshBgmLowPass(so); // SO·전역 반영
     }
 
     /// <summary>배경음을 중단합니다.</summary>
@@ -163,6 +175,8 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         _ambienceSource.volume = so.Volume * v.ambience * v.master;
         _ambienceSource.Play();
         _curAmbienceId = id;
+
+        RefreshAmbienceLowPass(so); // SO·전역 반영
     }
 
     /// <summary>환경음을 중단합니다.</summary>
@@ -177,11 +191,58 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ─ 수중 / 볼륨 ◀─────────────────────────
-    /// <summary>수중 분위기(로우패스)를 전역으로 켜거나 끕니다. 이후 재생되는 효과음에 적용됩니다.</summary>
+    /// <summary>
+    /// 수중 분위기(로우패스)를 전역으로 켜거나 끕니다.
+    /// 재생 중인 BGM·Ambience·SFX 전부에 즉시 반영되며, 이후 재생분에도 적용됩니다.
+    /// </summary>
     public void SetUnderwater(bool enabled, float cutoffHz = 750f)
     {
         _useUnderwater = enabled;
         _underwaterCutoff = cutoffHz;
+
+        RefreshAllLowPass();
+    }
+
+    /// <summary>
+    /// BGM 로우패스를 SO·전역과 무관하게 강제로 지정합니다. (오버라이드)
+    /// 자동 규칙으로 되돌리려면 ClearBgmLowPassOverride를 호출하세요.
+    /// </summary>
+    /// <param name="enabled">강제 활성 여부</param>
+    /// <param name="cutoffHz">강제 차단 주파수(Hz)</param>
+    public void SetBgmLowPass(bool enabled, float cutoffHz = 750f)
+    {
+        _bgmLowPassOverride = true;
+        _bgmLowPassOverrideOn = enabled;
+        _bgmLowPassOverrideCutoff = cutoffHz;
+        RefreshBgmLowPass();
+    }
+
+    /// <summary>BGM 로우패스 오버라이드를 해제하고 SO·전역 자동 규칙으로 되돌립니다.</summary>
+    public void ClearBgmLowPassOverride()
+    {
+        _bgmLowPassOverride = false;
+        RefreshBgmLowPass();
+    }
+
+    /// <summary>
+    /// 환경음 로우패스를 SO·전역과 무관하게 강제로 지정합니다. (오버라이드)
+    /// 자동 규칙으로 되돌리려면 ClearAmbienceLowPassOverride를 호출하세요.
+    /// </summary>
+    /// <param name="enabled">강제 활성 여부</param>
+    /// <param name="cutoffHz">강제 차단 주파수(Hz)</param>
+    public void SetAmbienceLowPass(bool enabled, float cutoffHz = 750f)
+    {
+        _ambienceLowPassOverride = true;
+        _ambienceLowPassOverrideOn = enabled;
+        _ambienceLowPassOverrideCutoff = cutoffHz;
+        RefreshAmbienceLowPass();
+    }
+
+    /// <summary>환경음 로우패스 오버라이드를 해제하고 SO·전역 자동 규칙으로 되돌립니다.</summary>
+    public void ClearAmbienceLowPassOverride()
+    {
+        _ambienceLowPassOverride = false;
+        RefreshAmbienceLowPass();
     }
 
     /// <summary>
@@ -220,16 +281,22 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
         Transform root = transform;
 
         // BGM 소스
-        _bgmSource = UObject.Create(K.NAME_BGM_OBJECT, root).GetOrAddComponent<AudioSource>();
+        GameObject bgmGo = UObject.Create(K.NAME_BGM_OBJECT, root);
+        _bgmSource = bgmGo.GetOrAddComponent<AudioSource>();
         _bgmSource.playOnAwake = false;
         _bgmSource.loop = true;
         _bgmSource.spatialBlend = BLEND_2D;
+        _bgmLowPass = bgmGo.GetOrAddComponent<AudioLowPassFilter>();
+        _bgmLowPass.enabled = false;
 
         // Ambience 소스
-        _ambienceSource = UObject.Create(K.NAME_AMBIENCE_OBJECT, root).GetOrAddComponent<AudioSource>();
+        GameObject ambGo = UObject.Create(K.NAME_AMBIENCE_OBJECT, root);
+        _ambienceSource = ambGo.GetOrAddComponent<AudioSource>();
         _ambienceSource.playOnAwake = false;
         _ambienceSource.loop = true;
         _ambienceSource.spatialBlend = BLEND_2D;
+        _ambienceLowPass = ambGo.GetOrAddComponent<AudioLowPassFilter>();
+        _ambienceLowPass.enabled = false;
 
         // SFX 이미터 풀
         _factory = new CSoundEmitterFactory(root, PREWARM_COUNT);
@@ -271,6 +338,81 @@ public sealed class CSoundManager : ASingleton<CSoundManager>
     private void OnOptionVolumeChangedHandler(OnOptionVolumeChanged ctx)
     {
         RefreshVolume();
+    }
+
+    // 전역 로우패스 변경 시 재생 중인 BGM·Ambience·SFX 필터를 모두 재계산합니다.
+    private void RefreshAllLowPass()
+    {
+        RefreshBgmLowPass();
+        RefreshAmbienceLowPass();
+
+        // 재생 중인 SFX 이미터도 전역+개별 중첩으로 즉시 갱신
+        var active = _factory.Active;
+        int count = active.Count;
+        for (int i = 0; i < count; ++i)
+        {
+            active[i].RefreshLowPass(_useUnderwater, _underwaterCutoff);
+        }
+    }
+
+    // 현재 BGM SO를 조회해 BGM 로우패스를 재계산합니다.
+    private void RefreshBgmLowPass()
+    {
+        CSoundSO so = null;
+        if (!_curBgmId.IsBlank()) TryGetClip(_curBgmId, out so);
+        RefreshBgmLowPass(so);
+    }
+
+    // 주어진 SO로 BGM 로우패스를 재계산합니다. (오버라이드 우선)
+    private void RefreshBgmLowPass(CSoundSO so)
+    {
+        if (_bgmLowPass == null) return;
+
+        if (_bgmLowPassOverride)
+        {
+            _bgmLowPass.enabled = _bgmLowPassOverrideOn;
+            if (_bgmLowPassOverrideOn) _bgmLowPass.cutoffFrequency = _bgmLowPassOverrideCutoff;
+            return;
+        }
+
+        bool soOn = so != null && so.UseLowPass;
+        float soCutoff = so != null ? so.LowPassCutoff : 22000f;
+        ApplyFilter(_bgmLowPass, soOn, soCutoff);
+    }
+
+    // 현재 Ambience SO를 조회해 환경음 로우패스를 재계산합니다.
+    private void RefreshAmbienceLowPass()
+    {
+        CSoundSO so = null;
+        if (!_curAmbienceId.IsBlank()) TryGetClip(_curAmbienceId, out so);
+        RefreshAmbienceLowPass(so);
+    }
+
+    // 주어진 SO로 환경음 로우패스를 재계산합니다. (오버라이드 우선)
+    private void RefreshAmbienceLowPass(CSoundSO so)
+    {
+        if (_ambienceLowPass == null) return;
+
+        if (_ambienceLowPassOverride)
+        {
+            _ambienceLowPass.enabled = _ambienceLowPassOverrideOn;
+            if (_ambienceLowPassOverrideOn) _ambienceLowPass.cutoffFrequency = _ambienceLowPassOverrideCutoff;
+            return;
+        }
+
+        bool soOn = so != null && so.UseLowPass;
+        float soCutoff = so != null ? so.LowPassCutoff : 22000f;
+        ApplyFilter(_ambienceLowPass, soOn, soCutoff);
+    }
+
+    // 전역+개별 중첩 규칙으로 필터를 적용합니다. (BGM·Ambience 공용)
+    private void ApplyFilter(AudioLowPassFilter filter, bool soOn, float soCutoff)
+    {
+        bool on = _useUnderwater || soOn;
+        filter.enabled = on;
+        if (!on) return;
+
+        filter.cutoffFrequency = USound.ResolveCutoff(_useUnderwater, _underwaterCutoff, soOn, soCutoff);
     }
     #endregion
 }

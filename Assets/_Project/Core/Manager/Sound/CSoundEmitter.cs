@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// 효과음을 재생하고, 재생이 끝나면 스스로 풀에 반납되는 이미터입니다.
@@ -11,6 +11,10 @@ public sealed class CSoundEmitter : AFrameable, ILateUpdateFrameable
     private AudioLowPassFilter _lowPass; // 수중 분위기용
     private Transform _followTarget; // 추적 대상
     private bool _isActive;
+
+    // 개별(SO) 로우패스 설정 보존 (전역 변경 시 중첩 재계산용)
+    private bool _soLowPassOn;
+    private float _soLowPassCutoff;
 
     private float _baseVolume; // SO 원본 볼륨 (실시간 갱신 기준값)
 
@@ -69,16 +73,43 @@ public sealed class CSoundEmitter : AFrameable, ILateUpdateFrameable
     }
 
     /// <summary>
-    /// 수중 로우패스 필터를 켜거나 끕니다.
+    /// 전역·개별 로우패스를 중첩하여 필터를 갱신합니다.
+    /// 둘 중 하나라도 켜져 있으면 활성화되며, 차단 주파수는 더 낮은(더 먹먹한) 쪽을 채택합니다.
     /// </summary>
-    /// <param name="enabled">활성화 여부</param>
-    /// <param name="cutoffHz">차단 주파수(Hz). 낮을수록 더 먹먹해집니다.</param>
-    public void SetLowPass(bool enabled, float cutoffHz = 1500f)
+    /// <param name="globalOn">전역 로우패스 활성 여부</param>
+    /// <param name="globalCutoff">전역 차단 주파수(Hz)</param>
+    /// <param name="soOn">개별(SO) 로우패스 활성 여부</param>
+    /// <param name="soCutoff">개별(SO) 차단 주파수(Hz)</param>
+    public void SetLowPass(bool globalOn, float globalCutoff, bool soOn, float soCutoff)
+    {
+        // 개별 설정 보존: 이후 전역 변경 시 RefreshLowPass로 중첩 재계산
+        _soLowPassOn = soOn;
+        _soLowPassCutoff = soCutoff;
+
+        Apply(globalOn, globalCutoff);
+    }
+
+    /// <summary>
+    /// 전역 로우패스가 바뀌었을 때, 보존된 개별 설정과 중첩하여 필터를 다시 계산합니다.
+    /// (SetUnderwater 즉시 반영용)
+    /// </summary>
+    /// <param name="globalOn">전역 로우패스 활성 여부</param>
+    /// <param name="globalCutoff">전역 차단 주파수(Hz)</param>
+    public void RefreshLowPass(bool globalOn, float globalCutoff)
+    {
+        Apply(globalOn, globalCutoff);
+    }
+
+    // 전역+보존된 개별 설정으로 필터를 갱신합니다.
+    private void Apply(bool globalOn, float globalCutoff)
     {
         if (_lowPass == null) return;
 
-        _lowPass.enabled = enabled;
-        _lowPass.cutoffFrequency = cutoffHz;
+        bool on = globalOn || _soLowPassOn;
+        _lowPass.enabled = on;
+        if (!on) return;
+
+        _lowPass.cutoffFrequency = USound.ResolveCutoff(globalOn, globalCutoff, _soLowPassOn, _soLowPassCutoff);
     }
 
     /// <summary>
