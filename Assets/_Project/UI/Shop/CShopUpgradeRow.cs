@@ -24,7 +24,7 @@ public sealed class CShopUpgradeRow : AMono, IPointerEnterHandler
     [Header("필수 연결")]
     [SerializeField] private TMP_Text _nameLevelText;
     [Tooltip("현재 레벨 / 최대 레벨 비율을 보여줄 이미지 (Image Type: Filled)")]
-    [SerializeField] private Image _levelFillImage;
+    [SerializeField] private Slider _levelSlider;
     [SerializeField] private TMP_Text _priceText;
     [Tooltip("가격 버튼. 누르면 즉시 구매/업그레이드된다.")]
     [SerializeField] private Button _priceButton;
@@ -135,9 +135,9 @@ public sealed class CShopUpgradeRow : AMono, IPointerEnterHandler
             _nameLevelText.text = string.Format(_nameLevelFormat, _displayName, level);
         }
 
-        if (_levelFillImage != null)
+        if (_levelSlider != null)
         {
-            _levelFillImage.fillAmount = maxLevel > 0 ? Mathf.Clamp01((float)level / maxLevel) : 0f;
+            _levelSlider.value = maxLevel > 0 ? Mathf.Clamp01((float)level / maxLevel) : 0f;
         }
 
         bool isMaxLevel = cost < 0;
