@@ -16,19 +16,12 @@ public sealed class CFuelSystem : AGear, IUpdateFrameable
 
     [Header("참조")]
     [SerializeField] private CPlayerController _player;
-
-    [Header("디버그 (임시)")]
-    [Tooltip("연료 상태/소모량을 화면 좌상단에 임시로 표시합니다.")]
-    [SerializeField] private bool _showDebugOverlay = true;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private float _tickTimer;
 
     private float _stageMultiplier = 1f;
-
-    private GUIStyle _debugStyle; // 임시 오버레이용 (지연 생성)
-    private GUIStyle _debugButtonStyle; // 임시 버튼용 (지연 생성)
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -115,6 +108,16 @@ public sealed class CFuelSystem : AGear, IUpdateFrameable
     {
         base.OnDisable(); // 프레임 해제 + 이벤트 구독 해제
     }
+    #endregion
+
+    #region ─────────────────────────▶ 디버그 ◀─────────────────────────
+    #if UNITY_EDITOR
+    [Header("디버그 (임시)")]
+    [Tooltip("연료 상태/소모량을 화면 좌상단에 임시로 표시합니다.")]
+    [SerializeField] private bool _showDebugOverlay = true;
+
+    private GUIStyle _debugStyle; // 임시 오버레이용 (지연 생성)
+    private GUIStyle _debugButtonStyle; // 임시 버튼용 (지연 생성)
 
     // 임시: 연료 소모를 화면에서 확인하기 위한 오버레이입니다. (기획 확정 후 제거/HUD로 대체)
     private void OnGUI()
@@ -153,5 +156,6 @@ public sealed class CFuelSystem : AGear, IUpdateFrameable
             pm.RecoverFuel(pm.MaxFuel);
         }
     }
+    #endif
     #endregion
 }

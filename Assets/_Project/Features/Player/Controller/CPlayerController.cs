@@ -93,7 +93,8 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         get
         {
             if (IsControlLocked) return false;
-            if (_isJumpPressed) return true; // 상승(수중) / 점프
+            if (_isJumpPressed) return true;
+            if (_isDescentPressed) return true;
             return _currentMoveInput.sqrMagnitude > 0.0001f;
         }
     }
