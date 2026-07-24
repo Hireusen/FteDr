@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 플레이어의 런타임 데이터를 보유하고 스탯을 계산하는 매니저입니다.
@@ -149,6 +149,7 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     public bool TryAddToBag(string collectibleId)
     {
         if (!HasBagSpace) return false;
+        if (!HasWeightSpace(collectibleId)) return false;
 
         _runtime.bagItems.Add(collectibleId);
         PublishBag();
