@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using DG.Tweening;
 
 /// <summary>
 /// PlayerUI_Canvas(HUD)를 담당하는 컨트롤러입니다. 여닫는 "창"이 아니라 상시 표시되는 HUD라서
@@ -19,9 +20,23 @@ public sealed class CPlayerHudController : AMono
     [SerializeField] private TMP_Text _oxygenMaxText;
     [SerializeField] private string _oxygenFormat = "{0:0} / {1:0}";
 
+    [Header("산소 게이지 세로 길이 (레벨업 시 증가)")]
+    [Tooltip("같이 늘어나야 하는 RectTransform들 (예: Background, Fill Area). 전부 동일한 목표 높이로 동시에 커집니다.")]
+    [SerializeField] private RectTransform[] _oxygenHeightTargets;
+    [SerializeField] private float _baseSliderHeight = 200f;
+    [SerializeField] private float _heightPerLevel = 20f;
+    [SerializeField] private float _heightGrowDuration = 0.4f;
+
     [Header("버튼")]
     [SerializeField] private Button _btnBag;
     [SerializeField] private Button _btnNet;
+    #endregion
+
+    #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
+    // 최종 표시 여부 = 잠수함 밖 && UI 창들이 HUD를 허용할 때. 시작 시 잠수함 안이라고 가정해 기본 숨김.
+    // (CSubmarineAreaSensor가 씬에 붙어있어야 "밖으로 나감" 이벤트가 와서 실제로 보이게 됨)
+    private bool _isInsideSubmarine = true;
+    private bool _windowsAllowHud = true;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -43,15 +58,20 @@ public sealed class CPlayerHudController : AMono
     {
         CEventBus<OnPlayerFuelChanged>.Subscribe(FuelHandler);
         CEventBus<OnRequestHudVisibility>.Subscribe(HudVisibilityHandler);
+        CEventBus<OnGearUpgraded>.Subscribe(GearUpgradedHandler);
+        CEventBus<OnPlayerSubmarineAreaChanged>.Subscribe(SubmarineAreaHandler);
 
         RefreshOxygen(UPlayer.CurrentFuel, UPlayer.MaxFuel); // 진입 시 현재값 즉시 반영
-        HudVisibilityHandler(new OnRequestHudVisibility(true)); // Game Scene 진입 시 HUD는 기본적으로 켜져있어야 한다
+        ApplySliderHeight(UPlayer.GetGearLevel(EDataType.FuelTank), instant: true); // 진입 시점 레벨 기준으로 즉시 반영 (연출 없음)
+        RefreshHudVisibility(); // 시작 시 잠수함 안이라고 가정하고 있으므로 기본은 숨김 상태로 시작
     }
 
     private void OnDisable()
     {
         CEventBus<OnPlayerFuelChanged>.Unsubscribe(FuelHandler);
         CEventBus<OnRequestHudVisibility>.Unsubscribe(HudVisibilityHandler);
+        CEventBus<OnGearUpgraded>.Unsubscribe(GearUpgradedHandler);
+        CEventBus<OnPlayerSubmarineAreaChanged>.Unsubscribe(SubmarineAreaHandler);
     }
     #endregion
 
@@ -63,15 +83,63 @@ public sealed class CPlayerHudController : AMono
 
     private void HudVisibilityHandler(OnRequestHudVisibility ctx)
     {
-        if (_hudCanvasGroup == null) return;
+        _windowsAllowHud = ctx.visible;
+        RefreshHudVisibility();
+    }
 
-        _hudCanvasGroup.alpha = ctx.visible ? 1f : 0f;
-        _hudCanvasGroup.blocksRaycasts = ctx.visible;
-        _hudCanvasGroup.interactable = ctx.visible;
+    // 잠수함 트리거를 벗어나기 전까지는 다른 조건과 무관하게 HUD를 숨긴다.
+    private void SubmarineAreaHandler(OnPlayerSubmarineAreaChanged ctx)
+    {
+        _isInsideSubmarine = ctx.isInsideSubmarine;
+        RefreshHudVisibility();
+    }
+
+    // 연료탱크가 업그레이드되면 슬라이더 세로 길이를 부드럽게 늘린다.
+    private void GearUpgradedHandler(OnGearUpgraded ctx)
+    {
+        if (ctx.gearType != EDataType.FuelTank) return;
+        ApplySliderHeight(ctx.newLevel, instant: false);
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    // 최종 표시 여부 = 잠수함 밖 && UI 창들이 HUD를 허용할 때
+    private void RefreshHudVisibility()
+    {
+        if (_hudCanvasGroup == null) return;
+
+        bool visible = !_isInsideSubmarine && _windowsAllowHud;
+        _hudCanvasGroup.alpha = visible ? 1f : 0f;
+        _hudCanvasGroup.blocksRaycasts = visible;
+        _hudCanvasGroup.interactable = visible;
+    }
+
+    private void ApplySliderHeight(int fuelTankLevel, bool instant)
+    {
+        if (_oxygenHeightTargets == null || _oxygenHeightTargets.Length == 0) return;
+
+        float targetHeight = _baseSliderHeight + (fuelTankLevel - 1) * _heightPerLevel;
+
+        int count = _oxygenHeightTargets.Length;
+        for (int i = 0; i < count; ++i)
+        {
+            RectTransform rect = _oxygenHeightTargets[i];
+            if (rect == null) continue;
+
+            rect.DOKill();
+            Vector2 size = rect.sizeDelta;
+
+            if (instant || _heightGrowDuration <= 0f)
+            {
+                rect.sizeDelta = new Vector2(size.x, targetHeight);
+            }
+            else
+            {
+                rect.DOSizeDelta(new Vector2(size.x, targetHeight), _heightGrowDuration).SetUpdate(true);
+            }
+        }
+    }
+
     private void RefreshOxygen(float current, float max)
     {
         if (_oxygenFillImage != null)
