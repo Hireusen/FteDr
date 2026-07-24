@@ -67,11 +67,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     // 조작 잠금 사유들. 하나라도 true 면 잠금. (집게/고갈이 서로를 덮어쓰지 않도록 분리)
     private bool _lockByGrab = false;
     private bool _lockByFuel = false;
-    private bool _lockByCutscene = false; // 잠수함 연출 등으로 잠수함에 종속된 동안 조작 잠금
-
-    // 잠수함 연출 종속 이전의 물리 상태를 복원하기 위해 보관
-    private bool _prevKinematic = false;
-    private Transform _originalParent = null;
 
     private EMoveLockReason _uiLockReasons = EMoveLockReason.None;
     #endregion
@@ -82,7 +77,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     public EPlayerState CurrentState => _currentState;
 
     /// <summary>하나의 사유라도 서 있으면 조작이 잠깁니다.</summary>
-    public bool IsControlLocked => _lockByGrab || _lockByFuel || _lockByCutscene || _uiLockReasons != EMoveLockReason.None;
+    public bool IsControlLocked => _lockByGrab || _lockByFuel || _uiLockReasons != EMoveLockReason.None;
 
     /// <summary>
     /// 시선(회전)을 제외한 실제 이동 조작(이동/상승)이 들어오고 있는지 여부입니다.

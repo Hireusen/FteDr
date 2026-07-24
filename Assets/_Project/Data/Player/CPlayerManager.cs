@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 /// <summary>
 /// 플레이어의 런타임 데이터를 보유하고 스탯을 계산하는 매니저입니다.
@@ -24,14 +24,13 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     /// <summary>현재 연료량입니다.</summary>
     public float CurrentFuel => _runtime.currentFuel;
 
-    /// <summary>패널티가 적용된 현재 최대 연료량입니다.</summary>
+    /// <summary>현재 최대 연료량입니다.</summary>
     public float MaxFuel
     {
         get
         {
             int level = CProgressManager.Ins.GetGearLevel(EDataType.FuelTank);
-            float baseMax = UData.FuelTank().MaxFuel(level);
-            return Mathf.Max(0f, baseMax - _runtime.fuelPenalty);
+            return UData.FuelTank().MaxFuel(level);
         }
     }
 
@@ -77,12 +76,14 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
         RefreshFuelState();
     }
 
-    /// <summary>최대 연료량을 깎습니다.</summary>
-    /// <param name="amount">감소량(양수)</param>
-    public void ApplyFuelPenalty(float amount)
+    /// <summary>피격 피해를 현재 연료량에 적용합니다. (절댓값 차감 후 비율 차감)</summary>
+    /// <param name="flat">절댓값 피해량(양수)</param>
+    /// <param name="ratio">비율 피해량(0~1, 예: 0.25 = 25%)</param>
+    public void ApplyDamage(float flat, float ratio)
     {
-        _runtime.fuelPenalty += Mathf.Max(0f, amount);
-        _runtime.currentFuel = Mathf.Min(_runtime.currentFuel, MaxFuel);
+        float fuel = Mathf.Max(0f, _runtime.currentFuel - Mathf.Max(0f, flat));
+        fuel *= Mathf.Clamp01(1f - ratio);
+        _runtime.currentFuel = Mathf.Max(0f, fuel);
         PublishFuel();
         RefreshFuelState();
     }

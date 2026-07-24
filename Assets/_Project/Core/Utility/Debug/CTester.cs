@@ -1,4 +1,4 @@
-﻿#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using UnityEngine;
 
 /// <summary>
@@ -81,6 +81,8 @@ public sealed class CTester : AMono
         GUILayout.Space(8);
         DrawGearSection();
         GUILayout.Space(8);
+        DrawStageSection();
+        GUILayout.Space(8);
         DrawOptionSection();
 
         GUILayout.EndScrollView();
@@ -107,7 +109,7 @@ public sealed class CTester : AMono
         if (GUILayout.Button("가득")) UPlayer.RecoverFuel(_fuelMax); // Max로 clamp됨
         GUILayout.EndHorizontal();
         GUILayout.BeginHorizontal();
-        if (GUILayout.Button("페널티 +5")) UPlayer.ApplyFuelPenalty(5f);
+        if (GUILayout.Button("피해 5 + 25%")) UPlayer.ApplyDamage(5f, 0.25f);
         if (GUILayout.Button("새 잠수 리셋")) UPlayer.ResetForNew();
         GUILayout.EndHorizontal();
         GUILayout.Label($"가방: {_bagCount} / {_bagCap}");
@@ -142,6 +144,16 @@ public sealed class CTester : AMono
             if (!UPlayer.UpgradeGear(type))
                 UDebug.Print($"[디버그] {label} 업그레이드 실패 (최대 레벨?)", LogType.Warning);
         }
+        GUILayout.EndHorizontal();
+    }
+
+    private void DrawStageSection()
+    {
+        GUILayout.Label($"── 스테이지 ──  현재 {UPlayer.CurrentStage} / 해금 {UPlayer.UnlockedStage}");
+        GUILayout.BeginHorizontal();
+        if (GUILayout.Button("다음 해금")) UPlayer.UnlockNextStage();
+        if (GUILayout.Button("현재 -1")) UPlayer.SetCurrentStage(Mathf.Max(0, UPlayer.CurrentStage - 1));
+        if (GUILayout.Button("현재 +1")) UPlayer.SetCurrentStage(UPlayer.CurrentStage + 1);
         GUILayout.EndHorizontal();
     }
 

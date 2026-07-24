@@ -87,7 +87,8 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     private float _moveSpeed;
     private float _fieldOfView;   // 정면 시야 각(도, 전체 폭)
     private float _sightRange;    // 시야 사거리(거리)
-    private float _damage;
+    private float _flatDamage;    // 절댓값 피해량
+    private float _ratioDamage;   // 비율 피해량(0~1)
     private float _dashSpeed;
     private float _dashWindup;
     private float _fleeSpeed;
@@ -226,9 +227,9 @@ public class CEnemyController : AFrameable, IUpdateFrameable
         bool blocked = MoveClamped(_dashDir, _dashSpeed, dt);
 
         // 접촉 피해 (돌진 1회당 최대 1번)
-        if (!_dashHitApplied && _damage > 0f && TryGetPlayerWithin(_contactRange))
+        if (!_dashHitApplied && (_flatDamage > 0f || _ratioDamage > 0f) && TryGetPlayerWithin(_contactRange))
         {
-            UPlayer.ApplyFuelPenalty(_damage);
+            UPlayer.ApplyDamage(_flatDamage, _ratioDamage);
             _dashHitApplied = true;
             // TODO: 피격 사운드/이펙트 연동
         }
@@ -584,7 +585,8 @@ public class CEnemyController : AFrameable, IUpdateFrameable
         _moveSpeed = so.MoveSpeed;
         _fieldOfView = so.FieldOfView;
         _sightRange = so.SightRange;
-        _damage = so.Damage;
+        _flatDamage = so.FlatDamage;
+        _ratioDamage = so.RatioDamage;
         _dashSpeed = so.DashSpeed;
         _dashWindup = so.DashWindup;
         _fleeSpeed = so.FleeSpeed;
