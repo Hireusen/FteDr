@@ -9,7 +9,7 @@ public class COpenUI : AFrameable,IUpdateFrameable
     [Header("참조 연결")]
     [SerializeField] private Transform _cam;
     [SerializeField] private CPlayerController _controller;
-    [SerializeField] private CInterectPopup _interectPopup;
+    [SerializeField] private CInteractPopup _interectPopup;
 
     [Header("옵션")]
     [SerializeField] private LayerMask _interactorMask;

@@ -4,7 +4,7 @@ using UnityEngine;
 /// <summary>
 /// 클래스의 설계 의도입니다.
 /// </summary>
-public class CInterectPopup : AMono
+public class CInteractPopup : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [SerializeField] public TextMeshProUGUI title;

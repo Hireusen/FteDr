@@ -7,7 +7,7 @@ using DG.Tweening;
 /// PlayerUI_Canvas(HUD)를 담당하는 컨트롤러입니다. 여닫는 "창"이 아니라 상시 표시되는 HUD라서
 /// CUIWindow는 붙지 않고, CUIManager가 계산해서 발행하는 OnRequestHudVisibility를 직접 구독합니다.
 /// </summary>
-public sealed class CPlayerHudController : AMono
+public sealed class CPlayerHubController : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("HUD 표시 제어")]

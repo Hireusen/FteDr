@@ -4,7 +4,7 @@
 /// 잠수함에 들어왔을 때 연료량을 모두 채워주고, 충전 순간 물방울 파티클을 재생합니다.
 /// (다이브와 달리 색감/일렁임 펄스는 없습니다.)
 /// </summary>
-public class CPlayerChangeFuel : AFrameable, IUpdateFrameable
+public class CPlayerChargeFuel : AFrameable, IUpdateFrameable
 {
     [SerializeField] private CPlayerController _player;
     [SerializeField] private Transform _playerCenter;
