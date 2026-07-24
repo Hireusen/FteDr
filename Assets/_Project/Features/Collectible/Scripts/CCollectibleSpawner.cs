@@ -18,8 +18,6 @@ public sealed class CCollectibleSpawner : AMono
     [Tooltip("생성된 오브젝트를 담을 부모(비우면 이 오브젝트)")]
     [SerializeField] private Transform _container;
 
-    [SerializeField] private Vector2 _airCollectibleSpawnRange = new Vector2(3f, 10f);
-
     [Header("스폰 범위")]
     [SerializeField] private ESpawnShape _shape = ESpawnShape.Box;
     [Tooltip("범위 중심 (비우면 이 오브젝트 위치)")]

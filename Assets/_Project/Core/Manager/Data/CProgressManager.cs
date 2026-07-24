@@ -6,11 +6,11 @@
 public sealed class CProgressManager : ASingleton<CProgressManager>
 {
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private const string FILE_NAME = "progress"; // 저장 파일명
     private ProgressData _progress;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    public const string FILE_NAME = "progress"; // 저장 파일명
     public override bool IsGlobal => true;
 
     /// <summary>현재 진행도 데이터를 읽습니다.</summary>
