@@ -1,4 +1,4 @@
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+﻿#if UNITY_EDITOR || DEVELOPMENT_BUILD
 using UnityEngine;
 
 /// <summary>
@@ -152,8 +152,6 @@ public sealed class CTester : AMono
         GUILayout.Label($"── 스테이지 ──  현재 {UPlayer.CurrentStage} / 해금 {UPlayer.UnlockedStage}");
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("다음 해금")) UPlayer.UnlockNextStage();
-        if (GUILayout.Button("현재 -1")) UPlayer.SetCurrentStage(Mathf.Max(0, UPlayer.CurrentStage - 1));
-        if (GUILayout.Button("현재 +1")) UPlayer.SetCurrentStage(UPlayer.CurrentStage + 1);
         GUILayout.EndHorizontal();
     }
 

@@ -66,6 +66,14 @@ public sealed class CUnderwaterEffect : AMono
     [SerializeField, Range(0f, 2f)] private float _crisisMaxStrength = 0.9f;
     [Tooltip("위기 맥동 속도")]
     [SerializeField] private float _crisisPulseSpeed = 4f;
+
+    [Header("다이브 펄스 (잠수 순간 연출)")]
+    [Tooltip("펄스 최고조에서 틴트 강도에 더해지는 양")]
+    [SerializeField, Range(0f, 1f)] private float _divePulseTint = 0.4f;
+    [Tooltip("펄스 최고조에서 왜곡 강도에 더해지는 양")]
+    [SerializeField, Range(0f, 0.05f)] private float _divePulseDistort = 0.01f;
+    [Tooltip("펄스가 최고조에서 원래대로 돌아오는 시간(초)")]
+    [SerializeField] private float _divePulseDuration = 1.2f;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -78,6 +86,15 @@ public sealed class CUnderwaterEffect : AMono
     /// <summary>산소 위기 연출을 켜거나 끕니다. 켜져 있는 동안 테두리가 붉게 맥동합니다.</summary>
     /// <param name="active">켤지(true) 끌지(false)</param>
     public void SetOxygenCrisis(bool active) => _crisisActive = active;
+
+    /// <summary>
+    /// 잠수 순간 연출: 틴트·왜곡이 확 진해졌다가 원래대로 돌아오는 일회성 펄스를 재생합니다.
+    /// </summary>
+    public void PlayDivePulse()
+    {
+        // 최고조(1)에서 시작해 Update에서 서서히 0으로 감쇠한다.
+        _divePulse = 1f;
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -85,6 +102,7 @@ public sealed class CUnderwaterEffect : AMono
 
     private bool _deathActive = false;
     private bool _crisisActive = false;
+    private float _divePulse = 0f; // 다이브 펄스 진행도(1=최고조 → 0=없음)
 
     // 죽음 비네팅 강도의 현재 보간값(평상시 강도 ↔ 죽음 강도 사이).
     private float _deathVignetteCurrent;
@@ -143,6 +161,13 @@ public sealed class CUnderwaterEffect : AMono
             _computedTintStrength = _tintStrength;
         }
 
+        // 1-b) 다이브 펄스: 진행도를 서서히 0으로 감쇠시키고, 그만큼 틴트 강도를 추가로 얹는다.
+        if (_divePulse > 0f)
+        {
+            _divePulse = Mathf.MoveTowards(_divePulse, 0f, Time.deltaTime / Mathf.Max(0.01f, _divePulseDuration));
+            _computedTintStrength = Mathf.Clamp01(_computedTintStrength + _divePulseTint * _divePulse);
+        }
+
         // 2) 비네팅 계산: 죽음(우선) > 위기 > 평상시 순으로 결정. 인스펙터 필드는 건드리지 않는다.
         float deathTarget = _deathActive ? _deathVignetteStrength : _vignetteStrength;
         _deathVignetteCurrent = Mathf.Lerp(
@@ -183,7 +208,7 @@ public sealed class CUnderwaterEffect : AMono
         _material.SetColor(ID_Vig, _computedVignetteColor);
         _material.SetFloat(ID_VigStr, _computedVignetteStrength);
         _material.SetFloat(ID_VigSoft, _vignetteSoftness);
-        _material.SetFloat(ID_DistStr, _distortStrength);
+        _material.SetFloat(ID_DistStr, _distortStrength + _divePulseDistort * _divePulse);
         _material.SetFloat(ID_DistSpd, _distortSpeed);
         _material.SetFloat(ID_DistScl, _distortScale);
         _material.SetFloat(ID_Sat, _saturation);

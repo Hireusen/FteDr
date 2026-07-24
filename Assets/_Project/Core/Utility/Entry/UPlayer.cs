@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 /// <summary>
 /// 플레이어 데이터 접근의 진입점 역할을 하는 퍼사드 클래스입니다.
@@ -95,10 +95,6 @@ public static class UPlayer
     /// <summary>해당 스테이지가 이미 해금되어 자유 이동 가능한지 여부입니다.</summary>
     /// <param name="stage">대상 스테이지</param>
     public static bool IsStageUnlocked(int stage) => Progress.IsStageUnlocked(stage);
-
-    /// <summary>현재 위치를 지정 스테이지로 설정합니다. (해금 범위 내 상승/하강)</summary>
-    /// <param name="stage">이동할 스테이지</param>
-    public static void SetCurrentStage(int stage) => Progress.SetCurrentStage(stage);
 
     /// <summary>다음 스테이지를 해금합니다. (해금 비용 차감은 호출부 책임)</summary>
     public static void UnlockNextStage() => Progress.UnlockNextStage();
