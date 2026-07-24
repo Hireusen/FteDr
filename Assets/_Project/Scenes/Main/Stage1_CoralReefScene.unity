@@ -16,11 +16,11 @@ RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 9
   m_Fog: 1
-  m_FogColor: {r: 0.22347811, g: 0.46020252, b: 0.5849056, a: 1}
+  m_FogColor: {r: 0.7048772, g: 0.7691132, b: 0.9056604, a: 1}
   m_FogMode: 3
   m_FogDensity: 0.01
-  m_LinearFogStart: 0
-  m_LinearFogEnd: 300
+  m_LinearFogStart: 20
+  m_LinearFogEnd: 65
   m_AmbientSkyColor: {r: 0.34607512, g: 0.57427907, b: 0.7264151, a: 1}
   m_AmbientEquatorColor: {r: 0.2028302, g: 0.4891787, b: 0.8113208, a: 1}
   m_AmbientGroundColor: {r: 0.08098967, g: 0.12667616, b: 0.18867922, a: 1}
@@ -212,6 +212,7 @@ GameObject:
   - component: {fileID: 534669904}
   - component: {fileID: 534669903}
   - component: {fileID: 534669906}
+  - component: {fileID: 534669908}
   - component: {fileID: 534669907}
   m_Layer: 0
   m_Name: Main Camera
@@ -341,14 +342,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _tintColor: {r: 0.1, g: 0.4, b: 0.55, a: 1}
-  _tintStrength: 0.017
+  _tintStrength: 0.15
   _depthTintEnabled: 1
-  _maxY: 0
-  _minY: -50
-  _shallowTintColor: {r: 0.2, g: 0.55, b: 0.65, a: 1}
+  _maxY: 150
+  _minY: 50
+  _shallowTintColor: {r: 0.47472408, g: 0.7206184, b: 0.7924528, a: 1}
   _shallowTintStrength: 0.2
-  _deepTintColor: {r: 0.02, g: 0.1, b: 0.25, a: 1}
-  _deepTintStrength: 0.6
+  _deepTintColor: {r: 0.030037377, g: 0.1100081, b: 0.254717, a: 1}
+  _deepTintStrength: 0.2
   _vignetteColor: {r: 0, g: 0.05, b: 0.1, a: 1}
   _vignetteStrength: 0
   _vignetteSoftness: 0.5
@@ -362,6 +363,22 @@ MonoBehaviour:
   _crisisMinStrength: 0.37
   _crisisMaxStrength: 0.66
   _crisisPulseSpeed: 10
+--- !u!114 &534669908
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 534669902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b0059fc0a4e995b4da3d79f68564131e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _fogColor: {r: 0.34420612, g: 0.63189113, b: 0.8018868, a: 1}
+  _fogStart: 0
+  _fogEnd: 100
+  _fogMaxDensity: 1
 --- !u!1001 &656867768
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1012,41 +1029,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Stage1_Submarine Pos
-      objectReference: {fileID: 0}
-    - target: {fileID: 1852735333802766282, guid: 6f8556851c699e349a27c70995d5cc4e,
-        type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 7.4947305
-      objectReference: {fileID: 0}
-    - target: {fileID: 1852735333802766282, guid: 6f8556851c699e349a27c70995d5cc4e,
-        type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 3.5995102
-      objectReference: {fileID: 0}
-    - target: {fileID: 1852735333802766282, guid: 6f8556851c699e349a27c70995d5cc4e,
-        type: 3}
-      propertyPath: m_LocalPosition.z
-      value: -5.714268
-      objectReference: {fileID: 0}
-    - target: {fileID: 1852735333802766282, guid: 6f8556851c699e349a27c70995d5cc4e,
-        type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0.934248
-      objectReference: {fileID: 0}
-    - target: {fileID: 1852735333802766282, guid: 6f8556851c699e349a27c70995d5cc4e,
-        type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0.18629104
-      objectReference: {fileID: 0}
-    - target: {fileID: 1852735333802766282, guid: 6f8556851c699e349a27c70995d5cc4e,
-        type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0.29823542
-      objectReference: {fileID: 0}
-    - target: {fileID: 1852735333802766282, guid: 6f8556851c699e349a27c70995d5cc4e,
-        type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0.05943186
       objectReference: {fileID: 0}
     - target: {fileID: 4112158761618251734, guid: 6f8556851c699e349a27c70995d5cc4e,
         type: 3}

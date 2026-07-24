@@ -195,7 +195,16 @@ public sealed class CCollectibleSpawner : AMono
         Vector3 pos = GetSpawnPosition();
         pos.y += _dropHeight + Random.Range(-_dropHeightJitter, _dropHeightJitter);
 
-        Quaternion rot = _fullRandomRotation ? URandom.Rotation() : URandom.RotationYaw();
+        Quaternion rot;
+        if(so.IsAir)
+        {
+            // 공중 수집품은 랜덤 회전이 아닌, Y축 회전만 랜덤으로 한다.
+            rot = URandom.RotationYaw();
+        }
+        else
+        {
+            rot = _fullRandomRotation ? URandom.Rotation() : URandom.RotationYaw();
+        }
 
         GameObject go = Instantiate(so.Prefab, pos, rot);
         go.transform.localScale *= so.GetRandomScale(); // SO의 min~max 범위 랜덤 크기
