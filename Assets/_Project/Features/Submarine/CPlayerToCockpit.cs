@@ -52,6 +52,8 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
+            if (!_cSubMarineUpDown.CanMove(false)) return;
+
             SitCockpit = false;
             _cSubMarineUpDown.StartCutScene(false);
             OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
@@ -59,6 +61,8 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
         }
         else if (Input.GetKeyDown(KeyCode.E))
         {
+            if (!_cSubMarineUpDown.CanMove(true)) return;
+
             SitCockpit = false;
             OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
             _cSubMarineUpDown.StartCutScene(true);
