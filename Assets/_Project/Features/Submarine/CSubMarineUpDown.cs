@@ -238,9 +238,8 @@ public class CSubMarineUpDown : AMono
         // 연출 종료: 플레이어를 SpawnPoint 위치에 놓고 다시 활성화한다.
         if (_playerSpawnPoint != null && CGameManager.Player != null)
         {
-            CGameManager.Player.transform.SetPositionAndRotation(
-                _playerSpawnPoint.position, _playerSpawnPoint.rotation);
             CGameManager.Player.SetActive(true);
+            SpawnPlayer();
         }
 
         // 켜둔 타임라인을 끈다. (다음 재생을 위해 처음부터 다시 시작되도록)

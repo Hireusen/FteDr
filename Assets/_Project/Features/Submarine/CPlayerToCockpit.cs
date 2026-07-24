@@ -46,12 +46,14 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
+            UDebug.Print($"Q 입력 완료");
             _cSubMarineUpDown.StartCutScene(false);
             OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
             SitCockpit = false;
         }
         else if (Input.GetKeyDown(KeyCode.E))
         {
+            UDebug.Print($"E 입력 완료");
             SitCockpit = false;
             OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
             _cSubMarineUpDown.StartCutScene(true);
