@@ -239,6 +239,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 {
                     CCollectible temp = hit.transform.root.GetComponent<CCollectible>();
                     Rigidbody rg=hit.transform.root.AddComponent<Rigidbody>();
+                    rg.useGravity = false;
                     if (temp.Data.IsAir == true)
                     {
                         rg.drag = 11.75f;
