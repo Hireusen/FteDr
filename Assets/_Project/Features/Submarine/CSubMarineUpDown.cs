@@ -16,7 +16,7 @@ public class CSubMarineUpDown : AMono
 
     [Header("필수 정보")]
     [SerializeField] private EScene _firstGameScene = EScene.Stage_1;
-    [SerializeField] private EScene _lastGameScene = EScene.Stage_4;
+    [SerializeField] private EScene _lastGameScene = EScene.Stage_6;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
