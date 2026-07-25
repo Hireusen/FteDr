@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
@@ -16,6 +16,10 @@ public class CSoundSO : ABaseSO
     [Header("3D 거리")]
     [SerializeField] protected float _minDistance = 3f; // 최대 음량이 재생되는 거리
     [SerializeField] protected float _maxDistance = 20f; // 거의 들리지 않는 음량이 재생되는 거리
+
+    [Header("로우패스 (개별 먹먹함)")]
+    [SerializeField] protected bool _useLowPass = false; // 이 사운드 자체에 로우패스 적용 여부
+    [SerializeField, Range(10f, 22000f)] protected float _lowPassCutoff = 1500f; // 낮을수록 더 먹먹함
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -30,6 +34,12 @@ public class CSoundSO : ABaseSO
 
     /// <summary>소리가 거의 들리지 않게 되는 최대 거리입니다. (3D 효과음 전용)</summary>
     public float MaxDistance => _maxDistance;
+
+    /// <summary>이 사운드 자체에 로우패스를 적용할지 여부입니다. (전역 로우패스와 중첩)</summary>
+    public bool UseLowPass => _useLowPass;
+
+    /// <summary>이 사운드의 로우패스 차단 주파수(Hz)입니다. 낮을수록 더 먹먹해집니다.</summary>
+    public float LowPassCutoff => _lowPassCutoff;
 
     /// <summary>
     /// 사용자 설정 볼륨을 반영한 최종 사운드 볼륨을 계산하여 반환합니다.

@@ -89,9 +89,19 @@ MonoBehaviour:
   _dropHeight: 0
   _dropHeightJitter: 1
   _fullRandomRotation: 1
+  _groundLayer:
+    serializedVersion: 2
+    m_Bits: 1288
+  _airRayLength: 150
+  _airMinHeight: 3
+  _airMaxHeight: 8
   _sleepSpeed: 0.05
   _sleepHoldTime: 0.4
   _maxSettleTime: 6
+  _cullCamera: {fileID: 0}
+  _hideLayer:
+    serializedVersion: 2
+    m_Bits: 512
 --- !u!1 &5440769785316784994
 GameObject:
   m_ObjectHideFlags: 0
@@ -137,6 +147,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _spawnWaitTimeout: 3
+  _camEffect: {fileID: 0}
+  _respawnFadeOutTime: 1.5
+  _respawnFadeInTime: 1.5
   _arriveCam: {fileID: 0}
   _dest: {fileID: 0}
   _downPos: {fileID: 0}

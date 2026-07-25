@@ -15,7 +15,10 @@ public class CEnemySO : ABaseSO
     [SerializeField, Range(1f, 360f)] protected float _fieldOfView = 90f;
     [Tooltip("시야 사거리(거리). 이 거리 안의 플레이어만 감지합니다.")]
     [SerializeField] protected float _sightRange;
-    [SerializeField] protected float _damage;
+    [Tooltip("절댓값 피해량. 현재 연료에서 먼저 이만큼 뺍니다.")]
+    [SerializeField, Min(0f)] protected float _flatDamage;
+    [Tooltip("비율 피해량(0~1). 절댓값 차감 후 남은 연료에서 이 비율만큼 더 뺍니다. 예: 0.25 = 25%.")]
+    [SerializeField, Range(0f, 1f)] protected float _ratioDamage;
 
     [Header("돌진 / 도주")]
     [Tooltip("돌진 시 이동 속도. 순찰 속도(_moveSpeed)보다 커야 돌진처럼 느껴집니다.")]
@@ -43,8 +46,11 @@ public class CEnemySO : ABaseSO
     /// <summary>적의 시야 사거리(거리)를 반환합니다.</summary>
     public float SightRange => _sightRange;
 
-    /// <summary>플레이어와 접촉 시 입히는 연료/체력 피해량을 반환합니다.</summary>
-    public float Damage => _damage;
+    /// <summary>플레이어 접촉 시 현재 연료에서 먼저 차감하는 절댓값 피해량입니다.</summary>
+    public float FlatDamage => _flatDamage;
+
+    /// <summary>절댓값 차감 후 남은 연료에서 추가로 차감하는 비율 피해량(0~1)입니다.</summary>
+    public float RatioDamage => _ratioDamage;
 
     /// <summary>돌진 이동 속도입니다.</summary>
     public float DashSpeed => _dashSpeed;
@@ -71,7 +77,7 @@ public class CEnemySO : ABaseSO
         if (_moveSpeed <= 0) errorList.Add($"{errorList.Count + 1}. 이동 속도가 0 이하입니다.");
         if (_fieldOfView <= 0) errorList.Add($"{errorList.Count + 1}. 시야 각이 0 이하입니다.");
         if (_sightRange <= 0) errorList.Add($"{errorList.Count + 1}. 시야 사거리가 0 이하입니다.");
-        if (_damage <= 0) errorList.Add($"{errorList.Count + 1}. 대미지가 0 이하입니다.");
+        if (_flatDamage <= 0 && _ratioDamage <= 0) errorList.Add($"{errorList.Count + 1}. 절댓값/비율 피해량이 모두 0입니다. (하나 이상 지정 필요)");
 
         if (_dashSpeed <= 0) errorList.Add($"{errorList.Count + 1}. 돌진 속도가 0 이하입니다.");
         if (_dashSpeed <= _moveSpeed) errorList.Add($"{errorList.Count + 1}. 돌진 속도가 순찰 속도 이하입니다. (돌진이 느립니다)");

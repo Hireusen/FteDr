@@ -3,7 +3,7 @@
 /// <summary>
 /// EScene 관련 판정 확장 메서드를 담는 유틸리티입니다.
 /// </summary>
-public static class ESceneExtension
+public static class SceneExtension
 {
     /// <summary>
     /// 플레이어·잠수함이 활성화되는 게임플레이 씬인지 여부입니다.
@@ -20,7 +20,7 @@ public static class ESceneExtension
         }
         else
         {
-            return scene >= EScene.Stage_1 && scene <= EScene.Stage_4;
+            return scene >= EScene.Stage_1 && scene <= EScene.Stage_6;
         }
     }
 }

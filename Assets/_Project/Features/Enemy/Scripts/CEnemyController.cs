@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 /// <summary>
 /// 적(상어) 이동/전투 컨트롤러입니다.
@@ -80,6 +81,10 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     [SerializeField, Min(0f)] private float _avoidStrength = 2f;
     [Tooltip("감각 레이 갱신 간격(초). 매 프레임 대신 이 간격으로만 다시 쏴 부하를 줄입니다. 0이면 매 프레임.")]
     [SerializeField, Min(0f)] private float _avoidRefreshInterval = 0.1f;
+
+    [Header("피격 연출")]
+    [SerializeField] private CUnderwaterEffect _underwaterEffect;
+    [SerializeField] private float _victimEffectDuration = 0.35f;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -87,7 +92,8 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     private float _moveSpeed;
     private float _fieldOfView;   // 정면 시야 각(도, 전체 폭)
     private float _sightRange;    // 시야 사거리(거리)
-    private float _damage;
+    private float _flatDamage;    // 절댓값 피해량
+    private float _ratioDamage;   // 비율 피해량(0~1)
     private float _dashSpeed;
     private float _dashWindup;
     private float _fleeSpeed;
@@ -115,6 +121,7 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     private readonly Collider[] _overlapBuffer = new Collider[8];
 
     private EEnemyState _state = EEnemyState.Patrol;
+    private Coroutine _victimEffect;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -226,11 +233,17 @@ public class CEnemyController : AFrameable, IUpdateFrameable
         bool blocked = MoveClamped(_dashDir, _dashSpeed, dt);
 
         // 접촉 피해 (돌진 1회당 최대 1번)
-        if (!_dashHitApplied && _damage > 0f && TryGetPlayerWithin(_contactRange))
+        if (!_dashHitApplied && (_flatDamage > 0f || _ratioDamage > 0f) && TryGetPlayerWithin(_contactRange))
         {
-            UPlayer.ApplyFuelPenalty(_damage);
+            UPlayer.ApplyDamage(_flatDamage, _ratioDamage);
             _dashHitApplied = true;
             // TODO: 피격 사운드/이펙트 연동
+            USound.PlaySfx(Id.SFX_Attack_03);
+            if(_victimEffect != null)
+            {
+                StopCoroutine(_victimEffect);
+            }
+            _victimEffect = StartCoroutine(CoVictimEffect());
         }
 
         // 종료 판정: 벽에 막혔거나 공격 애니메이션이 끝나면 도주로 전환
@@ -239,6 +252,28 @@ public class CEnemyController : AFrameable, IUpdateFrameable
         {
             EnterFlee();
         }
+    }
+
+    private IEnumerator CoVictimEffect()
+    {
+#if UNITY_EDITOR
+        if(_underwaterEffect == null)
+        {
+            UDebug.Print("UnderwaterEffect가 비어있습니다. 피격 이펙트를 재생할 수 없습니다.", LogType.Error);
+            yield break;
+        }
+#endif
+        _underwaterEffect.PlayHit(_victimEffectDuration);
+        USound.SetUnderwater(true, 500f);
+        float cashTime = Time.time + _victimEffectDuration;
+
+        while (cashTime > Time.time)
+        {
+            yield return null;
+        }
+
+        USound.SetUnderwater(false);
+        _victimEffect = null;
     }
 
     // 공격 애니메이션 상태에 진입한 뒤, 재생이 끝났는지 판정합니다.
@@ -584,7 +619,8 @@ public class CEnemyController : AFrameable, IUpdateFrameable
         _moveSpeed = so.MoveSpeed;
         _fieldOfView = so.FieldOfView;
         _sightRange = so.SightRange;
-        _damage = so.Damage;
+        _flatDamage = so.FlatDamage;
+        _ratioDamage = so.RatioDamage;
         _dashSpeed = so.DashSpeed;
         _dashWindup = so.DashWindup;
         _fleeSpeed = so.FleeSpeed;

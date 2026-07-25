@@ -145,6 +145,7 @@ public static class USaveFile
             UDebug.Print($"저장 파일 전체 삭제에 실패했습니다. {e.Message}", LogType.Error);
         }
 
+        UDebug.Print($"데이터 {deleted}개를 삭제했습니다.");
         return deleted;
     }
     #endregion

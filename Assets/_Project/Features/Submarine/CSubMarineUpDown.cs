@@ -16,7 +16,7 @@ public class CSubMarineUpDown : AMono
 
     [Header("필수 정보")]
     [SerializeField] private EScene _firstGameScene = EScene.Stage_1;
-    [SerializeField] private EScene _lastGameScene = EScene.Stage_4;
+    [SerializeField] private EScene _lastGameScene = EScene.Stage_6;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -120,6 +120,7 @@ public class CSubMarineUpDown : AMono
     /// <param name="duration">(초)</param>
     public void ArriveSubmarine(float duration, bool goDeeper = true)
     {
+        //USound.PlaySfx()
         UFade.FadeIn(2f, true);
         // MoveSubmarine의 가속 코루틴이 끝났을 경우에만 진행
         if (_moveOn)
@@ -237,9 +238,8 @@ public class CSubMarineUpDown : AMono
         // 연출 종료: 플레이어를 SpawnPoint 위치에 놓고 다시 활성화한다.
         if (_playerSpawnPoint != null && CGameManager.Player != null)
         {
-            CGameManager.Player.transform.SetPositionAndRotation(
-                _playerSpawnPoint.position, _playerSpawnPoint.rotation);
             CGameManager.Player.SetActive(true);
+            SpawnPlayer();
         }
 
         // 켜둔 타임라인을 끈다. (다음 재생을 위해 처음부터 다시 시작되도록)

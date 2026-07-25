@@ -9,15 +9,16 @@ public class COpenUI : AFrameable,IUpdateFrameable
     [Header("참조 연결")]
     [SerializeField] private Transform _cam;
     [SerializeField] private CPlayerController _controller;
-    [SerializeField] private CInterectPopup _interectPopup;
+    [SerializeField] private CInteractPopup _interectPopup;
 
     [Header("옵션")]
     [SerializeField] private LayerMask _interactorMask;
-    [SerializeField] private float _rayMaxDistance = 4f;
+    [SerializeField] private float _rayMaxDistance = 2f;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-
+    private bool _canInventory = true;
+    private CPlayerToCockpit _cPlayerToCockpit;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -41,6 +42,11 @@ public class COpenUI : AFrameable,IUpdateFrameable
                     _interectPopup.title.text = "Shop";
                     _interectPopup.gameObject.SetActive(true);
                 }
+                if(hit.collider.TryGetComponent(out CPlayerToCockpit cock))
+                {
+                    _interectPopup.title.text = "Cockpit";
+                    _interectPopup.gameObject.SetActive(true);
+                }
                 
             }
         }
@@ -50,6 +56,7 @@ public class COpenUI : AFrameable,IUpdateFrameable
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
     private void InventoryHandler(OnInputInventory ctx)
     {
+        if(_canInventory==false) return;
         OnRequestOpenUI.Publish(EUI.InventoryWindow);
     }
     private void ShopHandler(OnInputGrab ctx)
@@ -70,6 +77,31 @@ public class COpenUI : AFrameable,IUpdateFrameable
             UDebug.Print("상점이 레이캐스트에 잡히지 않았습니다!");
         }
     }
+    private void ToCockpitHandler(OnInputGrab ctx)
+    {
+        if (_controller.CurrentState != EPlayerState.OnGround) return;
+
+        if (Physics.Raycast(_cam.position, _cam.forward, out RaycastHit hit, _rayMaxDistance, _interactorMask))
+        {
+            _cPlayerToCockpit=hit.collider.GetComponent<CPlayerToCockpit>();
+            if (_cPlayerToCockpit==null) return;
+            if (_cPlayerToCockpit.SitCockpit== true) return;
+
+            _cPlayerToCockpit.MoveToCockpit();
+            _canInventory = false;
+            
+            
+        }
+    }
+    private void CockpitToPlayer(OnInputMove ctx)
+    {
+        if (_cPlayerToCockpit == null) return;
+        if (_cPlayerToCockpit.SitCockpit == false) return;
+        if (ctx.moved.sqrMagnitude < 0.0001f) return;
+
+        _canInventory = true;
+        _cPlayerToCockpit.CockpitToPlayer();
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -78,12 +110,16 @@ public class COpenUI : AFrameable,IUpdateFrameable
         base.OnEnable();
         CEventBus<OnInputInventory>.Subscribe(InventoryHandler);
         CEventBus<OnInputGrab>.Subscribe(ShopHandler);
+        CEventBus<OnInputGrab>.Subscribe(ToCockpitHandler);
+        CEventBus<OnInputMove>.Subscribe(CockpitToPlayer);
     }
     protected override void OnDisable()
     {
         base.OnDisable();
         CEventBus<OnInputInventory>.Unsubscribe(InventoryHandler);
         CEventBus<OnInputGrab>.Unsubscribe(ShopHandler);
+        CEventBus<OnInputGrab>.Unsubscribe(ToCockpitHandler);
+        CEventBus<OnInputMove>.Unsubscribe(CockpitToPlayer);
     }
 
 #if UNITY_EDITOR

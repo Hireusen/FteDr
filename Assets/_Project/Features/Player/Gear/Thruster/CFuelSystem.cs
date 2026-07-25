@@ -120,6 +120,7 @@ public sealed class CFuelSystem : AGear, IUpdateFrameable
     private GUIStyle _debugButtonStyle; // 임시 버튼용 (지연 생성)
 
     // 임시: 연료 소모를 화면에서 확인하기 위한 오버레이입니다. (기획 확정 후 제거/HUD로 대체)
+    /*
     private void OnGUI()
     {
         if (!_showDebugOverlay) return;
@@ -156,6 +157,7 @@ public sealed class CFuelSystem : AGear, IUpdateFrameable
             pm.RecoverFuel(pm.MaxFuel);
         }
     }
+    */
     #endif
     #endregion
 }

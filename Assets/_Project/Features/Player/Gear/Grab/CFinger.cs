@@ -104,6 +104,7 @@ public class CFinger : AMono
         if (temp.crashedObject.CompareTag(K.TAG_GRABABLE))
         //if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
         {
+            
             Objects.Add(collision.gameObject);
 
             Collider myCollider = GetComponent<Collider>();
@@ -112,6 +113,7 @@ public class CFinger : AMono
             crashobject.crashedObject = temp.crashedObject;
             crashobject.crashPoint = contactPoint;
 
+            if(temp.crashedObject.GetComponent<CCollectible>().Data.IsAir==false) temp.crashedObject.GetComponent<Rigidbody>().useGravity = true;
             CrashObjects.Add(crashobject);
             print(_testnum + "attach");
 

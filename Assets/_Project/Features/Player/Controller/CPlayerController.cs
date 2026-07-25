@@ -67,11 +67,6 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     // 조작 잠금 사유들. 하나라도 true 면 잠금. (집게/고갈이 서로를 덮어쓰지 않도록 분리)
     private bool _lockByGrab = false;
     private bool _lockByFuel = false;
-    private bool _lockByCutscene = false; // 잠수함 연출 등으로 잠수함에 종속된 동안 조작 잠금
-
-    // 잠수함 연출 종속 이전의 물리 상태를 복원하기 위해 보관
-    private bool _prevKinematic = false;
-    private Transform _originalParent = null;
 
     private EMoveLockReason _uiLockReasons = EMoveLockReason.None;
     #endregion
@@ -82,7 +77,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     public EPlayerState CurrentState => _currentState;
 
     /// <summary>하나의 사유라도 서 있으면 조작이 잠깁니다.</summary>
-    public bool IsControlLocked => _lockByGrab || _lockByFuel || _lockByCutscene || _uiLockReasons != EMoveLockReason.None;
+    public bool IsControlLocked => _lockByGrab || _lockByFuel || _uiLockReasons != EMoveLockReason.None;
 
     /// <summary>
     /// 시선(회전)을 제외한 실제 이동 조작(이동/상승)이 들어오고 있는지 여부입니다.
@@ -141,66 +136,15 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         _rb.position = target.position;
         _rb.rotation = target.rotation;
 
-        // 물리 운동량 완벽 초기화 (인자로 받은 playerRb 기준)
+        _rb.isKinematic = wasKinematic;
+
+        // 물리 운동량 초기화
         _rb.velocity = Vector3.zero;
         _rb.angularVelocity = Vector3.zero;
-
-        _rb.isKinematic = wasKinematic;
 
         // 플레이어시선 각도 동기화
         _yaw = target.eulerAngles.y;
         _pitch = 0f;
-    }
-
-    /// <summary>
-    /// 플레이어를 지정한 부모(잠수함 등)에 종속시킵니다.
-    /// 연출 동안 부모의 이동을 그대로 따라가도록 Rigidbody를 kinematic으로 전환하고 조작을 잠급니다.
-    /// Detach로 반드시 원복해야 합니다.
-    /// </summary>
-    /// <param name="parent">종속시킬 부모 트랜스폼</param>
-    public void AttachTo(Transform parent)
-    {
-        if (parent == null)
-        {
-            UDebug.Print("AttachTo 대상이 null입니다.", LogType.Error);
-            return;
-        }
-        UDebug.Print($"플레이어 잠수함 어태치를 진행합니다.");
-
-        _originalParent = transform.parent;
-        transform.SetParent(parent, worldPositionStays: true);
-
-        if (_rb != null)
-        {
-            _prevKinematic = _rb.isKinematic;
-            _rb.velocity = Vector3.zero;
-            _rb.angularVelocity = Vector3.zero;
-            _rb.isKinematic = true; // 물리 시뮬레이션에서 빠져 부모 이동을 트랜스폼으로 따라감
-        }
-
-        _lockByCutscene = true;
-    }
-
-    /// <summary>
-    /// AttachTo로 걸었던 종속을 해제하고 원래 물리 상태·부모로 되돌립니다.
-    /// </summary>
-    public void Detach()
-    {
-        transform.SetParent(_originalParent, worldPositionStays: true);
-        _originalParent = null;
-        UDebug.Print($"플레이어 잠수함 디태치를 진행합니다.");
-
-        if (_rb != null)
-        {
-            _rb.isKinematic = _prevKinematic;
-            _rb.velocity = Vector3.zero;
-            _rb.angularVelocity = Vector3.zero;
-        } else
-        {
-            UDebug.Print($"플레이어 리지드바디를 가져올 수 없습니다.", LogType.Error);
-        }
-
-            _lockByCutscene = false;
     }
 
     public void ExecuteFixedUpdateFrame()

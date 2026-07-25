@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Text;
-using System.Collections.Generic;
 
 /// <summary>
 /// 선택한 CCollectibleSO들의 식별 정보를 CSV로 추출하는 에디터 유틸리티입니다.
