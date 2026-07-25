@@ -60,15 +60,17 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 if (_rotateLeftHeld)
                 {
                     //왼쪽집게회전
-                    Quaternion temp = _twizersAnchor.transform.localRotation;
-                    temp.x -= _twizersRotateSpeed * Time.deltaTime;
-                    _twizersAnchor.transform.localRotation = temp;
+                    _twizersAnchor.transform.Rotate(
+                    Vector3.left,
+                    _twizersRotateSpeed * Time.deltaTime,
+                    Space.Self);
                 }
                 if (_rotateRightHeld)
                 {
-                    Quaternion temp = _twizersAnchor.transform.localRotation;
-                    temp.x += _twizersRotateSpeed * Time.deltaTime;
-                    _twizersAnchor.transform.localRotation = temp;
+                    _twizersAnchor.transform.Rotate(
+                    Vector3.right,
+                    _twizersRotateSpeed * Time.deltaTime,
+                    Space.Self);
                     //오른집게회전
                 }
                 break;
@@ -218,7 +220,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
                 RaycastHit hit;
                 Vector3 aimPos;
-                if (Physics.Raycast(ray, out hit, AIMDISTANCE))
+                int mask = ~(1 << gameObject.layer);
+                if (Physics.Raycast(ray, out hit, AIMDISTANCE,mask))
                 {
                     aimPos = hit.point;
                 }
@@ -248,7 +251,10 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
 
                 USound.PlaySfx(Id.SFX_robotics2);
                 ShootWrist();
-                _aimDir = (aimPos - _arm.transform.position).normalized;
+                _aimDir = (aimPos - _twizers.transform.position).normalized;
+                Debug.DrawLine(_twizers.transform.position, aimPos, Color.green, 3);
+                Debug.Log(aimPos);
+                Debug.Log(_twizers.transform.position);
                 _twizersRigidBody.constraints = RigidbodyConstraints.FreezeRotation;
                 _controller.IsControlLockedByGrab = true;
                 _twizers.OpenGrabContinuous();
@@ -279,6 +285,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 break;
         }
     }
+
     private CCollectible GetItem()
     {
         CCollectible item = null;
