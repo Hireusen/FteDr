@@ -199,6 +199,15 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""ToggleHud"",
+                    ""type"": ""Button"",
+                    ""id"": ""791177b3-eeb9-4e08-8d69-f91234beab7a"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -443,6 +452,17 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""action"": ""RotateTwizerRight"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1911e4d2-fe76-4f10-a9fc-f40b59f81f84"",
+                    ""path"": ""<Keyboard>/h"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": "";PC"",
+                    ""action"": ""ToggleHud"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
                 }
             ]
         }
@@ -496,6 +516,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         m_GameMap_Inventory = m_GameMap.FindAction("Inventory", throwIfNotFound: true);
         m_GameMap_RotateTwizerLeft = m_GameMap.FindAction("RotateTwizerLeft", throwIfNotFound: true);
         m_GameMap_RotateTwizerRight = m_GameMap.FindAction("RotateTwizerRight", throwIfNotFound: true);
+        m_GameMap_ToggleHud = m_GameMap.FindAction("ToggleHud", throwIfNotFound: true);
     }
 
     ~@InputDispatcher()
@@ -588,6 +609,7 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
     private readonly InputAction m_GameMap_Inventory;
     private readonly InputAction m_GameMap_RotateTwizerLeft;
     private readonly InputAction m_GameMap_RotateTwizerRight;
+    private readonly InputAction m_GameMap_ToggleHud;
     /// <summary>
     /// Provides access to input actions defined in input action map "GameMap".
     /// </summary>
@@ -647,6 +669,10 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "GameMap/RotateTwizerRight".
         /// </summary>
         public InputAction @RotateTwizerRight => m_Wrapper.m_GameMap_RotateTwizerRight;
+        /// <summary>
+        /// Provides access to the underlying input action "GameMap/ToggleHud".
+        /// </summary>
+        public InputAction @ToggleHud => m_Wrapper.m_GameMap_ToggleHud;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -709,6 +735,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @RotateTwizerRight.started += instance.OnRotateTwizerRight;
             @RotateTwizerRight.performed += instance.OnRotateTwizerRight;
             @RotateTwizerRight.canceled += instance.OnRotateTwizerRight;
+            @ToggleHud.started += instance.OnToggleHud;
+            @ToggleHud.performed += instance.OnToggleHud;
+            @ToggleHud.canceled += instance.OnToggleHud;
         }
 
         /// <summary>
@@ -756,6 +785,9 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @RotateTwizerRight.started -= instance.OnRotateTwizerRight;
             @RotateTwizerRight.performed -= instance.OnRotateTwizerRight;
             @RotateTwizerRight.canceled -= instance.OnRotateTwizerRight;
+            @ToggleHud.started -= instance.OnToggleHud;
+            @ToggleHud.performed -= instance.OnToggleHud;
+            @ToggleHud.canceled -= instance.OnToggleHud;
         }
 
         /// <summary>
@@ -919,5 +951,12 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnRotateTwizerRight(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "ToggleHud" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnToggleHud(InputAction.CallbackContext context);
     }
 }

@@ -130,6 +130,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
             PushStack(targetUI);
             RefreshHudVisibility();
             RefreshCursor();
+            RefreshSortOrder();
             return;
         }
 
@@ -143,6 +144,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
             PushStack(targetUI);
             RefreshHudVisibility();
             RefreshCursor();
+            RefreshSortOrder();
         }
         else
         {
@@ -162,6 +164,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
         _openStack.Remove(targetUI);
         RefreshHudVisibility();
         RefreshCursor();
+        RefreshSortOrder();
     }
 
     // ESC: 열려있는 게 있으면 가장 최근에 연 것만 닫고, 아무것도 없으면 일시정지창을 새로 연다.
@@ -188,6 +191,26 @@ public sealed class CUIManager : ASingleton<CUIManager>
     {
         _openStack.Remove(uiType);  // 이미 스택에 있었다면 제거 후
         _openStack.Add(uiType);     // 맨 위로 다시 쌓는다 (같은 창을 다시 열어도 순서가 갱신됨)
+    }
+
+    // 스택 순서대로 Canvas.sortingOrder를 다시 매긴다. (나중에 연 창일수록 큰 값 → 항상 위에 그려지고 클릭도 위 창이 받음)
+    // CUIManager의 열림 스택은 논리적인 "ESC로 뭘 닫을지"만 관리하고, 실제 화면 위/아래는 Canvas의 Sort Order가 정하기 때문에
+    // 스택이 바뀔 때마다 이 둘을 일치시켜줘야 한다. 안 그러면 나중에 연 창이 시각적으로만 위에 보이고 클릭은 아래 창이 가로챌 수 있다.
+    private void RefreshSortOrder()
+    {
+        const int BASE_SORT_ORDER = 100;
+
+        int count = _openStack.Count;
+        for (int i = 0; i < count; ++i)
+        {
+            if (!_uiInstanceDict.TryGetValue(_openStack[i], out GameObject instance) || instance == null) continue;
+
+            Canvas canvas = instance.GetComponent<Canvas>();
+            if (canvas == null) continue;
+
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = BASE_SORT_ORDER + i;
+        }
     }
 
     // 씬이 바뀌면(Title↔Game) 커서가 필요한 컨텍스트도 바뀌므로 다시 계산한다.

@@ -1,106 +1,119 @@
-﻿using System.Collections;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using DG.Tweening;
 
 /// <summary>
-/// 마우스 호버 시 크기가 부드럽게 변하고, 클릭 시 살짝 눌리는 펀치 연출 + 클릭 SFX까지 재생하는
-/// 공용 반응형 버튼 컴포넌트입니다. (기존 호버 스케일 기능은 그대로 유지)
+/// 마우스 호버/클릭 시 스케일 변화와 색상(틴트) 변화를 DOTween으로 재생하는 공용 반응형 버튼 컴포넌트입니다.
+/// 두 효과는 인스펙터에서 각각 독립적으로 켜고 끌 수 있습니다.
+///
+/// 주의: 스케일 변화는 RectTransform의 Pivot을 기준으로 커지고 작아집니다.
+/// Pivot이 (0.5, 0.5)가 아니면 한쪽으로 치우쳐 보이니, 버튼의 Pivot을 (0.5, 0.5)로 맞춰주세요.
 /// </summary>
 public class CScaleResponsiveButton : AMono, IPointerEnterHandler, IPointerExitHandler
 {
-    #region ─────────────────────────▶ 인펙터 설정 ◀─────────────────────────
-    [Header("Scale Settings")]
-    [SerializeField] private float _hoverScaleFactor = 1.08f;      // 호버 시 커질 배율
-    [SerializeField] private float _transitionDuration = 0.15f;    // 크기 변화에 걸리는 시간 (초)
-
-    [Header("Click Settings")]
-    [Tooltip("클릭 시 살짝 줄어드는 배율 (1보다 작은 값)")]
+    #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
+    [Header("스케일 연출")]
+    [SerializeField] private bool _useScale = true;
+    [SerializeField] private float _hoverScaleFactor = 1.08f;
     [SerializeField] private float _clickScaleFactor = 0.92f;
-    [SerializeField] private float _clickTransitionDuration = 0.08f;
+    [SerializeField] private float _scaleDuration = 0.15f;
 
-    [Header("Click Sound")]
+    [Header("색상(틴트) 연출")]
+    [SerializeField] private bool _useColorTint = false;
+    [Tooltip("호버 시 곱해질 색상. 흰색보다 밝게 하려면 RGB를 1보다 크게(예: 1.15) 주세요.")]
+    [SerializeField] private Color _hoverTintColor = new Color(1.15f, 1.15f, 1.15f, 1f);
+    [SerializeField] private float _tintDuration = 0.15f;
+
+    [Header("클릭 사운드")]
     [Tooltip("비워두면 클릭 사운드를 재생하지 않습니다.")]
     [SerializeField] private string _clickSfxId = "";
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private RectTransform _rectTransform;                           // 캐싱된 RectTransform
+    private RectTransform _rectTransform;
     private Button _button;
-    private Vector3 _originalScale;                                 // 초기 크기 저장용
-    private Vector3 _targetScale;                                   // 목표 크기 저장용
-    private Coroutine _scaleCoroutine;                              // 현재 실행 중인 크기 변경 코루틴
-    private bool _isHovering;                                       // 클릭 펀치가 끝난 뒤 되돌아갈 목표(호버 중인지) 판단용
+    private Graphic _targetGraphic;   // 틴트를 적용할 대상 (Button.targetGraphic 재사용)
+    private Vector3 _originalScale;
+    private Color _originalColor;
+    private bool _isHovering;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
-        // [최적화] GetComponent는 Awake에서 최초 1회만 캐싱하여 런타임 오버헤드 방지
         _rectTransform = GetComponent<RectTransform>();
-        if (_rectTransform != null)
-        {
-            _originalScale = _rectTransform.localScale;
-            _targetScale = _originalScale;
-        }
+        if (_rectTransform != null) _originalScale = _rectTransform.localScale;
 
         _button = GetComponent<Button>();
         if (_button != null)
         {
             _button.onClick.AddListener(OnClicked);
+            _targetGraphic = _button.targetGraphic;
         }
+
+        if (_targetGraphic == null) _targetGraphic = GetComponent<Graphic>();
+        if (_targetGraphic != null) _originalColor = _targetGraphic.color;
     }
 
     private void OnDisable()
     {
-        // [예외 처리] 오브젝트가 비활성화될 때 코루틴이 남아있어 발생할 수 있는 오동작 방지
-        if (_scaleCoroutine != null)
-        {
-            StopCoroutine(_scaleCoroutine);
-            _scaleCoroutine = null;
-        }
+        // 비활성화될 때 진행 중이던 트윈을 정리하고 원래 상태로 복구한다.
+        _rectTransform?.DOKill();
+        _targetGraphic?.DOKill();
 
         _isHovering = false;
-
-        // [상태 초기화] 원래 크기로 강제 복구
-        if (_rectTransform != null)
-        {
-            _rectTransform.localScale = _originalScale;
-        }
+        if (_rectTransform != null) _rectTransform.localScale = _originalScale;
+        if (_targetGraphic != null) _targetGraphic.color = _originalColor;
     }
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    /// <summary>
-    /// 외부 컨트롤러(또는 UButtonFx 자동 장착)에서 애니메이션/사운드 설정값을 세팅할 때 호출합니다.
-    /// </summary>
-    /// <param name="scaleFactor">호버 시 커질 배율</param>
-    /// <param name="duration">호버 크기 변화 시간(초)</param>
-    /// <param name="clickSfxId">클릭 시 재생할 사운드 ID. null/빈 문자열이면 무음</param>
+    /// <summary>외부(UButtonFx 자동 장착 등)에서 파라미터를 세팅할 때 호출합니다.</summary>
     public void Initialize(float scaleFactor, float duration, string clickSfxId = null)
     {
         _hoverScaleFactor = scaleFactor;
-        _transitionDuration = duration;
+        _scaleDuration = duration;
         if (clickSfxId != null) _clickSfxId = clickSfxId;
     }
     #endregion
 
     #region ─────────────────────────▶ 이벤트 핸들러 ◀─────────────────────────
-    // 마우스 포인터가 버튼 안으로 들어왔을 때
     public void OnPointerEnter(PointerEventData eventData)
     {
         _isHovering = true;
-        StartScaleTransition(_originalScale * _hoverScaleFactor, _transitionDuration);
+
+        if (_useScale && _rectTransform != null)
+        {
+            _rectTransform.DOKill();
+            _rectTransform.DOScale(_originalScale * _hoverScaleFactor, _scaleDuration).SetUpdate(true);
+        }
+
+        if (_useColorTint && _targetGraphic != null)
+        {
+            _targetGraphic.DOKill();
+            _targetGraphic.DOColor(_originalColor * _hoverTintColor, _tintDuration).SetUpdate(true);
+        }
     }
 
-    // 마우스 포인터가 버튼 밖으로 나갔을 때
     public void OnPointerExit(PointerEventData eventData)
     {
         _isHovering = false;
-        StartScaleTransition(_originalScale, _transitionDuration);
+
+        if (_useScale && _rectTransform != null)
+        {
+            _rectTransform.DOKill();
+            _rectTransform.DOScale(_originalScale, _scaleDuration).SetUpdate(true);
+        }
+
+        if (_useColorTint && _targetGraphic != null)
+        {
+            _targetGraphic.DOKill();
+            _targetGraphic.DOColor(_originalColor, _tintDuration).SetUpdate(true);
+        }
     }
 
-    // 버튼 클릭 시: 살짝 줄어들었다가 원래(또는 호버 중이었으면 호버 크기로) 되돌아오는 펀치 연출 + SFX
+    // 클릭 시: 살짝 눌렸다가, 지금 호버 중이면 호버 크기로 아니면 원래 크기로 되돌아오는 펀치 연출 + SFX
     private void OnClicked()
     {
         if (!string.IsNullOrEmpty(_clickSfxId))
@@ -108,47 +121,16 @@ public class CScaleResponsiveButton : AMono, IPointerEnterHandler, IPointerExitH
             USound.PlaySfx(_clickSfxId);
         }
 
-        if (_scaleCoroutine != null) StopCoroutine(_scaleCoroutine);
-        _scaleCoroutine = StartCoroutine(CoClickPunch());
-    }
-    #endregion
-
-    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private void StartScaleTransition(Vector3 newTargetScale, float duration)
-    {
-        if (_scaleCoroutine != null)
+        if (_useScale && _rectTransform != null)
         {
-            StopCoroutine(_scaleCoroutine);
+            Vector3 returnTarget = _isHovering ? _originalScale * _hoverScaleFactor : _originalScale;
+
+            _rectTransform.DOKill();
+            Sequence seq = DOTween.Sequence();
+            seq.SetUpdate(true); // Pause(Time.timeScale=0) 위에서도 클릭 펀치가 멈추지 않도록
+            seq.Append(_rectTransform.DOScale(_originalScale * _clickScaleFactor, _scaleDuration * 0.5f));
+            seq.Append(_rectTransform.DOScale(returnTarget, _scaleDuration * 0.5f));
         }
-
-        _scaleCoroutine = StartCoroutine(CoScaleTo(newTargetScale, duration));
-    }
-
-    private IEnumerator CoScaleTo(Vector3 destScale, float duration)
-    {
-        Vector3 startScale = _rectTransform.localScale;
-        float elapsedTime = 0f;
-
-        while (elapsedTime < duration)
-        {
-            elapsedTime += Time.unscaledDeltaTime;
-            float t = Mathf.Clamp01(elapsedTime / duration);
-            _rectTransform.localScale = Vector3.Lerp(startScale, destScale, t);
-            yield return null;
-        }
-
-        _rectTransform.localScale = destScale;
-        _scaleCoroutine = null;
-    }
-
-    // 목표 크기까지 줄었다가, 지금 호버 중이면 호버 크기로 아니면 원래 크기로 되돌아온다.
-    private IEnumerator CoClickPunch()
-    {
-        Vector3 punchTarget = _originalScale * _clickScaleFactor;
-        yield return CoScaleTo(punchTarget, _clickTransitionDuration);
-
-        Vector3 returnTarget = _isHovering ? _originalScale * _hoverScaleFactor : _originalScale;
-        _scaleCoroutine = StartCoroutine(CoScaleTo(returnTarget, _clickTransitionDuration));
     }
     #endregion
 }
