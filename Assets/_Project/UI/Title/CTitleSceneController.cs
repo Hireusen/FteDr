@@ -108,7 +108,8 @@ public class CTitleSceneController : AMono
         ApplyFadeColor();
 
         _transitioning = true;
-        bool started = UScene.NextLoadWithFade(0f, _fadeOutDuration, _fadeInDuration);
+        bool started = UScene.NextLoadWithFade(0f, _fadeOutDuration, _fadeInDuration,
+            onProgress: p => OnSceneLoadProgress.Publish(p));
         if (!started)
         {
             UDebug.Print("다음 씬이 빌드 세팅 범위를 벗어났습니다.", LogType.Error);
