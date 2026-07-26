@@ -7,7 +7,7 @@ using DG.Tweening;
 /// PlayerUI_Canvas(HUD)를 담당하는 컨트롤러입니다. 여닫는 "창"이 아니라 상시 표시되는 HUD라서
 /// CUIWindow는 붙지 않고, CUIManager가 계산해서 발행하는 OnRequestHudVisibility를 직접 구독합니다.
 /// </summary>
-public sealed class CPlayerHubController : AMono
+public sealed class CPlayerHudController : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("HUD 표시 제어")]
@@ -30,6 +30,12 @@ public sealed class CPlayerHubController : AMono
     [Header("버튼")]
     [SerializeField] private Button _btnBag;
     [SerializeField] private Button _btnNet;
+
+    [Header("버튼 인터랙션 자동 장착 (호버 스케일 + 클릭 펀치 + 클릭 SFX)")]
+    [SerializeField] private float _buttonHoverScale = 1.08f;
+    [SerializeField] private float _buttonHoverDuration = 0.15f;
+    [Tooltip("비워두면 클릭 사운드를 재생하지 않습니다.")]
+    [SerializeField] private string _buttonClickSfxId = "";
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -52,6 +58,9 @@ public sealed class CPlayerHubController : AMono
             // 그물 버튼은 UI를 열지 않고 즉시 게임플레이 액션으로 이어진다. 키보드와 동일한 이벤트를 재사용.
             _btnNet.onClick.AddListener(() => OnInputNet.Publish());
         }
+
+        // HUD 아래(가방/그물 버튼 등)에도 동일한 버튼 연출/사운드를 자동으로 붙인다.
+        UButtonFx.AutoEquip(gameObject, _buttonHoverScale, _buttonHoverDuration, _buttonClickSfxId);
     }
 
     private void OnEnable()
