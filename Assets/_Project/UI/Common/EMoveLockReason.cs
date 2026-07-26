@@ -12,5 +12,6 @@ public enum EMoveLockReason
     Shop = 1 << 0,      // 상점창 열림
     Inventory = 1 << 1, // 인벤토리창 열림
     Result = 1 << 2,    // 결과창 열림
-    Submarine= 1 << 3 // 잠수함 내부 연출
+    Submarine= 1 << 3, // 잠수함 내부 연출
+    Tutorial = 1 << 4,  // 튜토리얼창 열림
 }

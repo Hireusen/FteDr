@@ -32,18 +32,27 @@ public sealed class CInventoryView : AMono
     private void OnEnable()
     {
         CEventBus<OnPlayerBagChanged>.Subscribe(BagChangedHandler);
+        CEventBus<OnGearUpgraded>.Subscribe(GearUpgradedHandler);
         RefreshSlots(); // 창을 여는 시점에 현재 소지품 상태를 즉시 반영
     }
 
     private void OnDisable()
     {
         CEventBus<OnPlayerBagChanged>.Unsubscribe(BagChangedHandler);
+        CEventBus<OnGearUpgraded>.Unsubscribe(GearUpgradedHandler);
     }
     #endregion
 
     #region ─────────────────────────▶ 이벤트 핸들러 ◀─────────────────────────
     private void BagChangedHandler(OnPlayerBagChanged data)
     {
+        RefreshSlots();
+    }
+
+    // 가방(EDataType.Bag)이 업그레이드되면 용량이 늘어나므로 잠금 상태를 다시 계산한다.
+    private void GearUpgradedHandler(OnGearUpgraded ctx)
+    {
+        if (ctx.gearType != EDataType.Bag) return;
         RefreshSlots();
     }
     #endregion
@@ -69,6 +78,7 @@ public sealed class CInventoryView : AMono
     }
 
     // 현재 UPlayer.BagItems 기준으로 앞에서부터 슬롯을 채우고, 나머지는 비웁니다.
+    // 실제 가방 용량(UPlayer.BagCapacity)을 넘는 칸은 잠가서 아직 해금되지 않은 칸임을 표시합니다.
     private void RefreshSlots()
     {
         if (_slots.Count == 0) return;
@@ -76,10 +86,17 @@ public sealed class CInventoryView : AMono
         var bagItems = UPlayer.BagItems;
         int itemCount = bagItems.Count;
         int slotCount = _slots.Count;
+        int capacity = UPlayer.BagCapacity;
 
         for (int i = 0; i < slotCount; ++i)
         {
-            _slots[i].Setup(i < itemCount ? bagItems[i] : null);
+            bool isLocked = i >= capacity;
+            _slots[i].SetLocked(isLocked);
+
+            if (!isLocked)
+            {
+                _slots[i].Setup(i < itemCount ? bagItems[i] : null);
+            }
         }
 
         if (itemCount > slotCount)

@@ -12,4 +12,5 @@ public enum EUI
     HudWindow,              // HUD창
     LoadingWindow,          // 로딩창
     ResultWindow,           // 결과창
+    TutorialWindow,         // 튜토리얼창
 }

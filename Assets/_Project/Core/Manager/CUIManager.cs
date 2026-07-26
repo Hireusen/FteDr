@@ -24,15 +24,8 @@ public sealed class CUIManager : ASingleton<CUIManager>
     /// <summary>현재 열려있는 창들을 연 순서대로 반환합니다. (가장 나중에 연 것이 마지막)</summary>
     public IReadOnlyList<EUI> OpenStack => _openStack;
 
-    public bool IsOpen(EUI ui)
-    {
-        int length = _openStack.Count;
-        for (int i = 0; i < length; ++i)
-        {
-            if (_openStack[i] == ui) return true;
-        }
-        return false;
-    }
+    /// <summary>해당 창이 지금 열려있는지(스택에 있는지) 반환합니다.</summary>
+    public bool IsOpen(EUI uiType) => _openStack.Contains(uiType);
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -42,7 +35,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
 
     private bool _lastHudVisible = true;
     #endregion
-    
+
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void OnEnable()
     {
@@ -122,7 +115,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
     {
         EUI targetUI = ctx.uIType;
 
-        // 이미 등록된 인스턴스(씬 배치 or 이전에 생성됨)가 있으면 그대로 사용
+        // 1) 이미 등록된 인스턴스(씬 배치 or 이전에 생성됨)가 있으면 그대로 사용
         if (_uiInstanceDict.TryGetValue(targetUI, out GameObject instance) && instance != null)
         {
             OpenInstance(instance);
@@ -132,7 +125,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
             return;
         }
 
-        // 없으면 프리팹으로 지연 생성
+        // 2) 없으면 프리팹으로 지연 생성
         if (_uiPrefabDict.TryGetValue(targetUI, out GameObject prefab) && prefab != null)
         {
             GameObject newInstance = Instantiate(prefab);
@@ -164,9 +157,11 @@ public sealed class CUIManager : ASingleton<CUIManager>
 
     // ESC: 열려있는 게 있으면 가장 최근에 연 것만 닫고, 아무것도 없으면 일시정지창을 새로 연다.
     // (Pause 위에 Settings를 열어둔 상태에서 ESC → Settings만 닫히고 Pause는 그대로 유지됨)
-    // 단, Result가 떠있는 동안은 ESC 자체를 무시한다 (정산 화면에서는 닫기/상점이동 버튼으로만 나가야 함).
+    // 단, Game 씬이 아니면(타이틀 등) ESC로 메뉴를 열거나 닫지 않는다.
+    // Result가 떠있는 동안도 ESC 자체를 무시한다 (정산 화면에서는 닫기/상점이동 버튼으로만 나가야 함).
     private void EscHandler(OnInputEsc ctx)
     {
+        if (!UScene.Current.IsGameplay()) return;
         if (_openStack.Contains(EUI.ResultWindow)) return;
 
         if (_openStack.Count > 0)
@@ -187,9 +182,29 @@ public sealed class CUIManager : ASingleton<CUIManager>
     }
 
     // 씬이 바뀌면(Title↔Game) 커서가 필요한 컨텍스트도 바뀌므로 다시 계산한다.
+    // Game 씬이 아니게 됐다면(타이틀 등), 혹시 창이 영속 오브젝트에 잘못 붙어 파괴되지 않았을 경우를 대비해
+    // 열려있던 걸 강제로 닫아서 "이전 씬 메뉴가 남아있는" 문제를 방지한다.
     private void SceneLoadEndHandler(OnSceneLoadEnd ctx)
     {
+        if (!UScene.Current.IsGameplay())
+        {
+            CloseAllWindows();
+        }
         RefreshCursor();
+    }
+
+    // 스택에 남아있는 창을 전부 정상적인 Close() 경로로 닫는다. (SetActive로 강제 끄지 않고 OnRequestCloseUI를 태워서
+    // 이동잠금/커서/HUD 등 CUIWindow.Close()가 처리하는 부수효과도 같이 정리되게 한다)
+    private void CloseAllWindows()
+    {
+        if (_openStack.Count == 0) return;
+
+        List<EUI> stackCopy = new List<EUI>(_openStack); // 순회 중 리스트가 바뀌므로 복사본을 사용
+        int count = stackCopy.Count;
+        for (int i = 0; i < count; ++i)
+        {
+            OnRequestCloseUI.Publish(stackCopy[i]);
+        }
     }
 
     // IUIWindow가 있으면 페이드 인, 없으면 즉시 활성화.
@@ -223,20 +238,12 @@ public sealed class CUIManager : ASingleton<CUIManager>
     }
 
     // 커서 표시 여부를 개별 창이 아니라 여기서 한 곳에서만 계산한다.
-    // 스택에 하나라도 열려있으면 커서가 필요하고,
-    // Game 씬이 아니면(Title 등) 게임플레이 잠금 자체가 의미 없으므로 항상 커서가 필요하다.
+    // (1) 스택에 하나라도 열려있으면 커서가 필요하고,
+    // (2) Game 씬이 아니면(Title 등) 게임플레이 잠금 자체가 의미 없으므로 항상 커서가 필요하다.
     // 여러 창이 겹쳐 있다가 하나만 닫혀도 나머지가 남아있으면 커서가 계속 보이도록, 매번 전체 상태를 다시 계산해서 반영한다.
     private void RefreshCursor()
     {
-        int length = _openStack.Count;
-        for (int i = 0; i < length; ++i)
-        {
-            UDebug.Print($"현재 열려있는 {i}번째 UI = {_openStack[i]}");
-        }
-        UDebug.Print($"현재 게임플레이 = {UScene.Current.IsGameplay()}");
-
-        bool needsCursor = (_openStack.Count > 0) || (!UScene.Current.IsGameplay());
-        UDebug.Print($"NeedsCursor = {needsCursor}");
+        bool needsCursor = _openStack.Count > 0 || !UScene.Current.IsGameplay();
         CInputManager.Ins?.SetCursorReason(ECursorReason.Menu, needsCursor);
     }
     #endregion

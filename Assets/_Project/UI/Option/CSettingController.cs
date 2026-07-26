@@ -1,53 +1,123 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
-/// 클래스의 설계 의도입니다.
+/// Setting_Canvas의 실제 내용(볼륨 슬라이더, 해상도 변경)을 담당합니다.
+/// 창의 열기/닫기/페이드/닫기버튼은 CUIWindow가 전담하므로 여기서는 다루지 않습니다.
 /// </summary>
-public class CSettingController : AMono
+public sealed class CSettingController : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
-    //[Header("주제")]
-    //[SerializeField] private Class _class;
-    [SerializeField] private Button _closeButton;                   // 닫기 버튼
-    #endregion
+    [Header("볼륨 슬라이더 (0~1)")]
+    [SerializeField] private Slider _masterSlider;
+    [SerializeField] private Slider _bgmSlider;
+    [SerializeField] private Slider _sfxSlider;
+    [SerializeField] private Slider _ambienceSlider;
 
-    #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-
-    #endregion
-
-    #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-
-    #endregion
-
-    #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    /// <summary>
-    /// 닫기 버튼 클릭 시 호출
-    /// </summary>
-    private void OnClickClose()
+    [Header("해상도")]
+    [SerializeField] private TMP_Dropdown _resolutionDropdown;
+    [SerializeField]
+    private List<ResolutionOption> _resolutionOptions = new()
     {
-        _closeButton.interactable = false;
-
-        UFade.FadeOut(0.3f, blockRaycasts: true, onComplete: () =>
-        {
-            gameObject.SetActive(false);
-            _closeButton.interactable = true;
-            UFade.FadeIn(0.3f);
-        });
-    }
+        new ResolutionOption { width = 1920, height = 1080, label = "1920 x 1080" },
+        new ResolutionOption { width = 2560, height = 1080, label = "2560 x 1080" },
+    };
+    [SerializeField] private Toggle _fullscreenToggle;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
-        if (_closeButton != null)
+        BuildResolutionDropdown();
+
+        if (_masterSlider != null) _masterSlider.onValueChanged.AddListener(OnMasterChanged);
+        if (_bgmSlider != null) _bgmSlider.onValueChanged.AddListener(OnBgmChanged);
+        if (_sfxSlider != null) _sfxSlider.onValueChanged.AddListener(OnSfxChanged);
+        if (_ambienceSlider != null) _ambienceSlider.onValueChanged.AddListener(OnAmbienceChanged);
+
+        if (_resolutionDropdown != null) _resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
+        if (_fullscreenToggle != null) _fullscreenToggle.onValueChanged.AddListener(OnFullscreenChanged);
+    }
+
+    private void OnEnable()
+    {
+        RefreshFromCurrentOption();
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 내부 메서드 - 초기화 ◀─────────────────────────
+    private void BuildResolutionDropdown()
+    {
+        if (_resolutionDropdown == null) return;
+
+        _resolutionDropdown.ClearOptions();
+        List<string> labels = new(_resolutionOptions.Count);
+        for (int i = 0; i < _resolutionOptions.Count; ++i)
         {
-            _closeButton.onClick.AddListener(OnClickClose);
+            labels.Add(_resolutionOptions[i].label);
+        }
+        _resolutionDropdown.AddOptions(labels);
+    }
+
+    // 창이 열릴 때마다(OnEnable) 현재 저장된 옵션 값으로 UI를 맞춰준다. (리스너가 다시 발동하지 않도록 SetValueWithoutNotify 사용)
+    private void RefreshFromCurrentOption()
+    {
+        OptionData option = CLocalOptionManager.Ins.Option;
+
+        if (_masterSlider != null) _masterSlider.SetValueWithoutNotify(option.masterVolume);
+        if (_bgmSlider != null) _bgmSlider.SetValueWithoutNotify(option.bgmVolume);
+        if (_sfxSlider != null) _sfxSlider.SetValueWithoutNotify(option.sfxVolume);
+        if (_ambienceSlider != null) _ambienceSlider.SetValueWithoutNotify(option.ambienceVolume);
+
+        if (_fullscreenToggle != null)
+        {
+            _fullscreenToggle.SetIsOnWithoutNotify(option.fullScreenMode != FullScreenMode.Windowed);
+        }
+
+        if (_resolutionDropdown != null)
+        {
+            int index = _resolutionOptions.FindIndex(r => r.width == option.resolutionWidth && r.height == option.resolutionHeight);
+            _resolutionDropdown.SetValueWithoutNotify(Mathf.Max(0, index));
         }
     }
     #endregion
 
-    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
+    #region ─────────────────────────▶ 이벤트 핸들러 ◀─────────────────────────
+    private void OnMasterChanged(float value) => CLocalOptionManager.Ins.SetMasterVolume(value);
+    private void OnBgmChanged(float value) => CLocalOptionManager.Ins.SetBgmVolume(value);
+    private void OnSfxChanged(float value) => CLocalOptionManager.Ins.SetSfxVolume(value);
+    private void OnAmbienceChanged(float value) => CLocalOptionManager.Ins.SetAmbienceVolume(value);
 
+    private void OnResolutionChanged(int index)
+    {
+        if (index < 0 || index >= _resolutionOptions.Count) return;
+
+        ResolutionOption selected = _resolutionOptions[index];
+        FullScreenMode mode = (_fullscreenToggle != null && _fullscreenToggle.isOn)
+            ? FullScreenMode.FullScreenWindow
+            : FullScreenMode.Windowed;
+
+        CLocalOptionManager.Ins.SetResolution(selected.width, selected.height, mode);
+    }
+
+    private void OnFullscreenChanged(bool isFullscreen)
+    {
+        OptionData option = CLocalOptionManager.Ins.Option;
+        FullScreenMode mode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+        CLocalOptionManager.Ins.SetResolution(option.resolutionWidth, option.resolutionHeight, mode);
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
+    [Serializable]
+    public struct ResolutionOption
+    {
+        public int width;
+        public int height;
+        public string label;
+    }
     #endregion
 }

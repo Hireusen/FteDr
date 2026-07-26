@@ -34,6 +34,12 @@ public sealed class CUIWindow : AMono, IUIWindow
     [SerializeField] private EMoveLockReason _moveLockReason = EMoveLockReason.None;
     [Tooltip("이 창이 열려있는 동안 HUD를 숨길지 여부")]
     [SerializeField] private bool _hidesHud = false;
+
+    [Header("버튼 인터랙션 자동 장착 (호버 스케일 + 클릭 펀치 + 클릭 SFX)")]
+    [SerializeField] private float _buttonHoverScale = 1.08f;
+    [SerializeField] private float _buttonHoverDuration = 0.15f;
+    [Tooltip("비워두면 클릭 사운드를 재생하지 않습니다.")]
+    [SerializeField] private string _buttonClickSfxId = "";
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -93,6 +99,10 @@ public sealed class CUIWindow : AMono, IUIWindow
         {
             UDebug.Print($"CUIWindow({_uiType}): 닫기 버튼이 연결되지 않았습니다. 모든 창은 닫기 버튼을 가져야 합니다.", LogType.Warning, gameObject);
         }
+
+        // 이 창 아래의 모든 버튼(닫기 버튼 포함)에 호버/클릭 연출 + 클릭 SFX를 자동으로 붙인다.
+        // 특정 버튼만 빼고 싶으면 그 버튼에 CButtonFxExclude를 붙이면 된다.
+        UButtonFx.AutoEquip(gameObject, _buttonHoverScale, _buttonHoverDuration, _buttonClickSfxId);
     }
 
     // CUIManager에 스스로를 등록한다. Awake가 아니라 Start에서 하는 이유: RegisterWindow가 즉시 SetActive(false)를
@@ -136,8 +146,8 @@ public sealed class CUIWindow : AMono, IUIWindow
         // 여기서 미리 감지해서 원인을 바로 알 수 있게 하고, 페이드 없이도 최소한 켜짐/꺼짐은 즉시 반영한다.
         if (!gameObject.activeInHierarchy)
         {
-            UDebug.Print($"CUIWindow({_uiType}): 부모 오브젝트가 비활성 상태라 페이드를 시작할 수 없습니다. " +
-                $"이 창의 상위 오브젝트(예: UIManger)가 씬에서 꺼져있는지 확인해주세요.", LogType.Error, gameObject);
+            UDebug.Print($"CUIWindow({_uiType}): 조상 오브젝트 '{FindInactiveAncestorName()}'가 비활성 상태라 페이드를 시작할 수 없습니다. " +
+                $"이 오브젝트를 활성화해주세요.", LogType.Error, gameObject);
             _canvasGroup.alpha = to;
             onComplete?.Invoke();
             return;
@@ -145,6 +155,21 @@ public sealed class CUIWindow : AMono, IUIWindow
 
         if (_fadeCoroutine != null) StopCoroutine(_fadeCoroutine);
         _fadeCoroutine = StartCoroutine(CoFade(from, to, duration, onComplete));
+    }
+
+    // activeInHierarchy가 false인 원인이 된 첫 번째 비활성 조상의 이름을 찾는다. (자기 자신 포함해서 위로 훑음)
+    private string FindInactiveAncestorName()
+    {
+        Transform current = transform;
+        while (current != null)
+        {
+            if (!current.gameObject.activeSelf)
+            {
+                return current.gameObject.name;
+            }
+            current = current.parent;
+        }
+        return "(찾지 못함 - 원인 불명)";
     }
 
     // 일시정지(Time.timeScale=0) 상태에서도 페이드가 진행되도록 unscaledDeltaTime 사용 (UFade와 동일 관례)

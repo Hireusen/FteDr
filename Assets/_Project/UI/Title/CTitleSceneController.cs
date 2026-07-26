@@ -57,8 +57,8 @@ public class CTitleSceneController : AMono
             if (targets[i] == null) continue;
 
             GameObject go = targets[i].gameObject;
-            ScaleResponsiveButton responsive = go.GetComponent<ScaleResponsiveButton>();
-            if (responsive == null) responsive = go.AddComponent<ScaleResponsiveButton>();
+            CScaleResponsiveButton responsive = go.GetComponent<CScaleResponsiveButton>();
+            if (responsive == null) responsive = go.AddComponent<CScaleResponsiveButton>();
 
             responsive.Initialize(_hoverScaleFactor, _animationDuration);
         }

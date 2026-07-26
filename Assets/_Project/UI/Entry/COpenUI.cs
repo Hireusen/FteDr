@@ -3,7 +3,7 @@
 /// <summary>
 /// 키 입력을 받아 UI를 여는 컴포넌트입니다.
 /// </summary>
-public class COpenUI : AFrameable,IUpdateFrameable
+public class COpenUI : AFrameable, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("참조 연결")]
@@ -33,7 +33,7 @@ public class COpenUI : AFrameable,IUpdateFrameable
         if (!_controller.IsControlLocked)
         {
             if (_controller.CurrentState != EPlayerState.OnGround) return;
-            
+
 
             if (Physics.Raycast(_cam.position, _cam.forward, out RaycastHit hit, _rayMaxDistance, _interactorMask)) // 상점에 마우스가 가있을 때
             {
@@ -42,12 +42,12 @@ public class COpenUI : AFrameable,IUpdateFrameable
                     _interectPopup.title.text = "Shop";
                     _interectPopup.gameObject.SetActive(true);
                 }
-                if(hit.collider.TryGetComponent(out CPlayerToCockpit cock))
+                if (hit.collider.TryGetComponent(out CPlayerToCockpit cock))
                 {
                     _interectPopup.title.text = "Cockpit";
                     _interectPopup.gameObject.SetActive(true);
                 }
-                
+
             }
         }
     }
@@ -56,8 +56,18 @@ public class COpenUI : AFrameable,IUpdateFrameable
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
     private void InventoryHandler(OnInputInventory ctx)
     {
-        if(_canInventory==false) return;
-        OnRequestOpenUI.Publish(EUI.InventoryWindow);
+        if (_canInventory == false) return;
+
+        // 무조건 열기 대신 토글: 이미 열려있으면 닫고, 닫혀있으면 연다.
+        // (CInventoryToggleBridge가 하던 역할을 여기로 흡수 — 브릿지는 이제 삭제해도 됩니다)
+        if (CUIManager.Ins.IsOpen(EUI.InventoryWindow))
+        {
+            OnRequestCloseUI.Publish(EUI.InventoryWindow);
+        }
+        else
+        {
+            OnRequestOpenUI.Publish(EUI.InventoryWindow);
+        }
     }
     private void ShopHandler(OnInputGrab ctx)
     {
@@ -83,14 +93,14 @@ public class COpenUI : AFrameable,IUpdateFrameable
 
         if (Physics.Raycast(_cam.position, _cam.forward, out RaycastHit hit, _rayMaxDistance, _interactorMask))
         {
-            _cPlayerToCockpit=hit.collider.GetComponent<CPlayerToCockpit>();
-            if (_cPlayerToCockpit==null) return;
-            if (_cPlayerToCockpit.SitCockpit== true) return;
+            _cPlayerToCockpit = hit.collider.GetComponent<CPlayerToCockpit>();
+            if (_cPlayerToCockpit == null) return;
+            if (_cPlayerToCockpit.SitCockpit == true) return;
 
             _cPlayerToCockpit.MoveToCockpit();
             _canInventory = false;
-            
-            
+
+
         }
     }
     private void CockpitToPlayer(OnInputMove ctx)
