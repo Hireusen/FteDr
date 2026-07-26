@@ -167,6 +167,7 @@ public class CStageManager : AFrameable, IUpdateFrameable
     private void Start()
     {
         StartCoroutine(SpawnPlayerWhenReadyCo());
+        CProgressManager.Ins.SetCurrentStage((int)(UScene.Current) - 2);
     }
 
     private void OnDestroy()

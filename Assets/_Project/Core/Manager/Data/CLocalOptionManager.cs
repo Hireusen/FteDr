@@ -17,36 +17,40 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     public OptionData Option => _option;
 
     #region ─────────────────────────▶ 볼륨 ◀─────────────────────────
-    /// <summary>마스터 볼륨을 설정하고 저장 및 변경 이벤트를 발행합니다.</summary>
+    /// <summary>마스터 볼륨을 설정하고 변경 이벤트를 발행합니다.</summary>
     /// <param name="value">0~1 범위의 볼륨 값</param>
-    public void SetMasterVolume(float value)
+    /// <param name="save">true면 파일에 즉시 저장합니다. 드래그 중 저장 지연 시 false를 넘기세요.</param>
+    public void SetMasterVolume(float value, bool save = true)
     {
         _option.masterVolume = Mathf.Clamp01(value);
-        OnVolumeUpdated();
+        OnVolumeUpdated(save);
     }
 
-    /// <summary>배경음 볼륨을 설정하고 저장 및 변경 이벤트를 발행합니다.</summary>
+    /// <summary>배경음 볼륨을 설정하고 변경 이벤트를 발행합니다.</summary>
     /// <param name="value">0~1 범위의 볼륨 값</param>
-    public void SetBgmVolume(float value)
+    /// <param name="save">true면 파일에 즉시 저장합니다. 드래그 중 저장 지연 시 false를 넘기세요.</param>
+    public void SetBgmVolume(float value, bool save = true)
     {
         _option.bgmVolume = Mathf.Clamp01(value);
-        OnVolumeUpdated();
+        OnVolumeUpdated(save);
     }
 
-    /// <summary>효과음 볼륨을 설정하고 저장 및 변경 이벤트를 발행합니다.</summary>
+    /// <summary>효과음 볼륨을 설정하고 변경 이벤트를 발행합니다.</summary>
     /// <param name="value">0~1 범위의 볼륨 값</param>
-    public void SetSfxVolume(float value)
+    /// <param name="save">true면 파일에 즉시 저장합니다. 드래그 중 저장 지연 시 false를 넘기세요.</param>
+    public void SetSfxVolume(float value, bool save = true)
     {
         _option.sfxVolume = Mathf.Clamp01(value);
-        OnVolumeUpdated();
+        OnVolumeUpdated(save);
     }
 
-    /// <summary>환경음 볼륨을 설정하고 저장 및 변경 이벤트를 발행합니다.</summary>
+    /// <summary>환경음 볼륨을 설정하고 변경 이벤트를 발행합니다.</summary>
     /// <param name="value">0~1 범위의 볼륨 값</param>
-    public void SetAmbienceVolume(float value)
+    /// <param name="save">true면 파일에 즉시 저장합니다. 드래그 중 저장 지연 시 false를 넘기세요.</param>
+    public void SetAmbienceVolume(float value, bool save = true)
     {
         _option.ambienceVolume = Mathf.Clamp01(value);
-        OnVolumeUpdated();
+        OnVolumeUpdated(save);
     }
     #endregion
 
@@ -89,10 +93,10 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         PublishVolume();
     }
 
-    // 볼륨 변경 공통 처리: 저장 후 이벤트 발행
-    private void OnVolumeUpdated()
+    // 볼륨 변경 공통 처리: (선택적) 저장 후 이벤트 발행
+    private void OnVolumeUpdated(bool save)
     {
-        Save();
+        if (save) Save();
         PublishVolume();
     }
 
