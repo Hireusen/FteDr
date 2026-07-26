@@ -48,7 +48,8 @@ public sealed class CMoveScene : AMono
 
         if (_useFade)
         {
-            bool started = UScene.NextLoadWithFade(0f, _fadeOutDuration, _fadeInDuration);
+            bool started = UScene.NextLoadWithFade(0f, _fadeOutDuration, _fadeInDuration,
+                onProgress: p => OnSceneLoadProgress.Publish(p));
             if (!started)
             {
                 UDebug.Print("다음 씬이 빌드 세팅 범위를 벗어났습니다.", LogType.Warning);
@@ -57,7 +58,8 @@ public sealed class CMoveScene : AMono
         }
         else
         {
-            bool started = UScene.NextLoad();
+            bool started = UScene.NextLoad(
+                onProgress: p => OnSceneLoadProgress.Publish(p));
             if (!started)
             {
                 UDebug.Print("다음 씬이 빌드 세팅 범위를 벗어났습니다.", LogType.Warning);

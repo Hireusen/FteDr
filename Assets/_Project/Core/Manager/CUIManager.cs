@@ -79,19 +79,27 @@ public sealed class CUIManager : ASingleton<CUIManager>
 
     /// <summary>
     /// 창(CUIWindow)이 자신의 Start()에서 스스로를 등록합니다. 이미 같은 타입이 등록되어 있으면 덮어씁니다.
-    /// 등록 직후에는 기본적으로 숨김 상태로 만듭니다(요청이 와야 열림).
+    /// 처음 등록되는 경우에만 기본적으로 숨김 상태로 만듭니다(요청이 와야 열림).
+    /// 이미 이 인스턴스로 등록되어 있었다면(=프리팹으로 막 생성되어 Open()까지 실행된 직후) 건드리지 않습니다 —
+    /// 안 그러면 방금 페이드 인 하던 창을 Start()가 다시 숨겨버리는 버그가 생깁니다.
     /// </summary>
     public void RegisterWindow(EUI uiType, GameObject instance)
     {
         if (uiType == EUI.None || instance == null) return;
 
-        if (_uiInstanceDict.TryGetValue(uiType, out GameObject existing) && existing != null && existing != instance)
+        bool alreadyRegisteredAsThisInstance = _uiInstanceDict.TryGetValue(uiType, out GameObject existing) && existing == instance;
+
+        if (existing != null && existing != instance)
         {
             UDebug.Print($"CUIManager: EUI '{uiType}'가 이미 다른 인스턴스로 등록되어 있습니다. 같은 타입을 가진 창이 씬에 중복으로 있는지 확인해주세요.", LogType.Warning, instance);
         }
 
         _uiInstanceDict[uiType] = instance;
-        instance.SetActive(false);
+
+        if (!alreadyRegisteredAsThisInstance)
+        {
+            instance.SetActive(false);
+        }
     }
 
     /// <summary>
@@ -129,6 +137,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
         if (_uiPrefabDict.TryGetValue(targetUI, out GameObject prefab) && prefab != null)
         {
             GameObject newInstance = Instantiate(prefab);
+            DontDestroyOnLoad(newInstance); // 씬이 바뀌어도 이 창(Settings/Credits 등)은 계속 살아있어야 재사용된다
             OpenInstance(newInstance);
             _uiInstanceDict[targetUI] = newInstance;
             PushStack(targetUI);

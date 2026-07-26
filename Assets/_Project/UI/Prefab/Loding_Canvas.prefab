@@ -49,6 +49,8 @@ GameObject:
   - component: {fileID: 5033457151998509166}
   - component: {fileID: 3171013484477914170}
   - component: {fileID: 7332849294699036677}
+  - component: {fileID: 8886333293404374612}
+  - component: {fileID: 8807066950525297812}
   m_Layer: 0
   m_Name: Loding_Canvas
   m_TagString: Untagged
@@ -156,6 +158,42 @@ MonoBehaviour:
   _progressSlider: {fileID: 6976253515062243486}
   _progressText: {fileID: 1737647107814883888}
   _progressFormat: '{0:0}%'
+  _fillSpeed: 1.2
+--- !u!114 &8886333293404374612
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2722366887399889786}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1eedb6e2b043974da129d7f6e2716bb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _uiType: 7
+  _canvasGroup: {fileID: 8807066950525297812}
+  _closeButton: {fileID: 0}
+  _fadeInDuration: 0.2
+  _fadeOutDuration: 0.2
+  _moveLockReason: 0
+  _hidesHud: 1
+  _isPersistentAcrossScenes: 0
+  _buttonHoverScale: 1.08
+  _buttonHoverDuration: 0.15
+  _buttonClickSfxId: SFX_Button
+--- !u!225 &8807066950525297812
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2722366887399889786}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &2790871036273806416
 GameObject:
   m_ObjectHideFlags: 0

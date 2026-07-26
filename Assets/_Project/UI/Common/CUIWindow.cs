@@ -35,6 +35,10 @@ public sealed class CUIWindow : AMono, IUIWindow
     [Tooltip("이 창이 열려있는 동안 HUD를 숨길지 여부")]
     [SerializeField] private bool _hidesHud = false;
 
+    [Header("씬 전환 시 유지 (선택)")]
+    [Tooltip("체크하면 씬이 바뀌어도 이 창이 파괴되지 않고 계속 살아있습니다. Loading처럼 Boot에서 한 번 만들어져 게임 내내 유지되어야 하는 창에만 체크하세요. Pause/Shop/Inventory처럼 씬마다 새로 생기는 게 정상인 창은 체크하지 마세요.")]
+    [SerializeField] private bool _isPersistentAcrossScenes = false;
+
     [Header("버튼 인터랙션 자동 장착 (호버 스케일 + 클릭 펀치 + 클릭 SFX)")]
     [SerializeField] private float _buttonHoverScale = 1.08f;
     [SerializeField] private float _buttonHoverDuration = 0.15f;
@@ -91,6 +95,12 @@ public sealed class CUIWindow : AMono, IUIWindow
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
+        // 씬이 바뀌어도 파괴되지 않아야 하는 창(Loading 등)은 여기서 살아남도록 표시한다.
+        if (_isPersistentAcrossScenes)
+        {
+            DontDestroyOnLoad(gameObject);
+        }
+
         if (_closeButton != null)
         {
             _closeButton.onClick.AddListener(RequestClose);

@@ -15,6 +15,7 @@ public static partial class Id
     public const string BGM_海の中の旋律 = "BGM_海の中の旋律";
     public const string BGM_珊瑚礁 = "BGM_珊瑚礁";
     public const string SFX_Attack_03 = "SFX_Attack 03";
+    public const string SFX_Button = "SFX_Button";
     public const string SFX_Clank1 = "SFX_Clank1";
     public const string SFX_Dive_02 = "SFX_Dive 02";
     public const string SFX_Jump_03 = "SFX_Jump 03";

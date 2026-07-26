@@ -34,9 +34,9 @@ RectTransform:
   - {fileID: 4756603544828583642}
   m_Father: {fileID: 4325210759475370828}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -50, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 350, y: 0}
   m_SizeDelta: {x: 125, y: 75}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!222 &4812014953090671996
@@ -155,9 +155,9 @@ RectTransform:
   - {fileID: 4298910727436993968}
   m_Father: {fileID: 2903610950488852851}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -50, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 350, y: 0}
   m_SizeDelta: {x: 125, y: 75}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!222 &8486515789484968417
@@ -351,9 +351,9 @@ RectTransform:
   - {fileID: 7001648217742834964}
   m_Father: {fileID: 7803263378999350732}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -50, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 350, y: 0}
   m_SizeDelta: {x: 125, y: 75}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!222 &2402609290982518271
@@ -534,7 +534,7 @@ MonoBehaviour:
   _displayName: "\uCD5C\uB300 \uC5F0\uB8CC\uB7C9 \uC99D\uAC00"
   _directGearOverride: {fileID: 0}
   _nameLevelText: {fileID: 4541830414263085607}
-  _levelFillImage: {fileID: 4129227880798805712}
+  _levelSlider: {fileID: 4129227880798805712}
   _priceText: {fileID: 6027277903936438446}
   _priceButton: {fileID: 9154116039471600668}
   _nameLevelFormat: '{0} LV {1}'
@@ -678,6 +678,10 @@ MonoBehaviour:
   _fadeOutDuration: 0.2
   _moveLockReason: 1
   _hidesHud: 1
+  _isPersistentAcrossScenes: 0
+  _buttonHoverScale: 1.08
+  _buttonHoverDuration: 0.15
+  _buttonClickSfxId: SFX_Button
 --- !u!114 &3476057074373435033
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1267,7 +1271,7 @@ MonoBehaviour:
   _displayName: "\uAC00\uBC29 \uC800\uC7A5\uB7C9 \uC99D\uAC00"
   _directGearOverride: {fileID: 0}
   _nameLevelText: {fileID: 3203488815423123820}
-  _levelFillImage: {fileID: 3713290214948119851}
+  _levelSlider: {fileID: 3713290214948119851}
   _priceText: {fileID: 5008267566410575828}
   _priceButton: {fileID: 1952473298423773021}
   _nameLevelFormat: '{0} LV {1}'
@@ -1991,7 +1995,7 @@ MonoBehaviour:
   _displayName: "\uCD94\uC9C4\uAE30 \uC18D\uB3C4 \uC99D\uAC00"
   _directGearOverride: {fileID: 0}
   _nameLevelText: {fileID: 173612271758444660}
-  _levelFillImage: {fileID: 7167811190971818631}
+  _levelSlider: {fileID: 7167811190971818631}
   _priceText: {fileID: 2945238101093315000}
   _priceButton: {fileID: 4772524467472010884}
   _nameLevelFormat: '{0} LV {1}'
@@ -3396,9 +3400,9 @@ RectTransform:
   - {fileID: 2985635338300244866}
   m_Father: {fileID: 5678338939912288428}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -50, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 350, y: 0}
   m_SizeDelta: {x: 125, y: 75}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!222 &327953360391261432
@@ -4138,7 +4142,7 @@ MonoBehaviour:
   _directGearOverride: {fileID: 11400000, guid: 0ef569f5d6764884890602a01f413ae3,
     type: 2}
   _nameLevelText: {fileID: 6134139844711481416}
-  _levelFillImage: {fileID: 3032177351305241361}
+  _levelSlider: {fileID: 3032177351305241361}
   _priceText: {fileID: 1804210498958573451}
   _priceButton: {fileID: 6680184779514034645}
   _nameLevelFormat: '{0} LV {1}'
@@ -4178,9 +4182,9 @@ RectTransform:
   - {fileID: 1794315055830572797}
   m_Father: {fileID: 2521341822337017526}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -50, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 350, y: 0}
   m_SizeDelta: {x: 125, y: 75}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!222 &1376034361219888521
@@ -4706,7 +4710,7 @@ MonoBehaviour:
   _displayName: "\uADF8\uB7A9 \uC0AC\uAC70\uB9AC \uC99D\uAC00"
   _directGearOverride: {fileID: 0}
   _nameLevelText: {fileID: 5013599396840313300}
-  _levelFillImage: {fileID: 8941732388891784673}
+  _levelSlider: {fileID: 8941732388891784673}
   _priceText: {fileID: 8995065821654359098}
   _priceButton: {fileID: 215005266078966400}
   _nameLevelFormat: '{0} LV {1}'
