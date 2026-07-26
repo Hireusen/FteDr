@@ -19,10 +19,15 @@ public sealed class CInventorySlot : AMono, IPointerEnterHandler, IPointerExitHa
     [Header("호버 강조 표시")]
     [Tooltip("아이템이 있는 슬롯에 마우스를 올렸을 때 켜질 강조 오브젝트 (테두리/하이라이트 이미지 등). 평소엔 비활성 상태로 둡니다.")]
     [SerializeField] private GameObject _hoverHighlight;
+
+    [Header("잠금 표시 (미해금 가방 슬롯)")]
+    [Tooltip("가방 용량을 넘는 칸에 표시할 잠금 오버레이(자물쇠 아이콘 등). 평소엔 비활성 상태로 둡니다.")]
+    [SerializeField] private GameObject _lockOverlay;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectibleSO _data; // 이 슬롯이 표시하고 있는 수집품 데이터. null이면 빈 칸.
+    private bool _isLocked;       // 가방 용량을 넘어 아직 사용할 수 없는 칸인지 여부
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -30,11 +35,32 @@ public sealed class CInventorySlot : AMono, IPointerEnterHandler, IPointerExitHa
     public bool HasItem => _data != null;
 
     /// <summary>
+    /// 이 슬롯의 잠금 여부를 설정합니다. 잠기면 아이콘/호버/툴팁이 전부 비활성화됩니다.
+    /// </summary>
+    /// <param name="locked">true면 잠금(미해금 칸)</param>
+    public void SetLocked(bool locked)
+    {
+        _isLocked = locked;
+
+        if (_lockOverlay != null)
+        {
+            _lockOverlay.SetActive(locked);
+        }
+
+        if (locked)
+        {
+            Clear(); // 잠긴 칸은 아이템을 표시하지 않는다 (애초에 그 칸엔 아이템이 안 들어가야 정상)
+        }
+    }
+
+    /// <summary>
     /// 슬롯에 표시할 데이터를 바인딩합니다. collectibleId가 비어있으면 빈 칸으로 비웁니다.
     /// </summary>
     /// <param name="collectibleId">수집품 ID (null/빈 문자열이면 빈 칸)</param>
     public void Setup(string collectibleId)
     {
+        if (_isLocked) return; // 잠긴 칸에는 애초에 아이템이 들어오면 안 된다
+
         if (collectibleId.IsBlank())
         {
             Clear();
@@ -76,7 +102,7 @@ public sealed class CInventorySlot : AMono, IPointerEnterHandler, IPointerExitHa
     #region ─────────────────────────▶ 이벤트 핸들러 ◀─────────────────────────
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (!HasItem) return;
+        if (_isLocked || !HasItem) return;
 
         SetHighlight(true);
         OnRequestShowTooltip.Publish(_data, eventData.position);

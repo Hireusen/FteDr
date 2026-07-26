@@ -1301,7 +1301,6 @@ GameObject:
   - component: {fileID: 7808834600453134910}
   - component: {fileID: 1114734980191471820}
   - component: {fileID: 7613608137031665506}
-  - component: {fileID: 6868610177742459422}
   m_Layer: 0
   m_Name: Tutorial_Canvas
   m_TagString: Untagged
@@ -1417,29 +1416,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d1eedb6e2b043974da129d7f6e2716bb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _uiType: 8
+  _uiType: 9
   _canvasGroup: {fileID: 1114734980191471820}
   _closeButton: {fileID: 7516687572821561562}
   _fadeInDuration: 0.2
   _fadeOutDuration: 0.2
-  _moveLockReason: 4
+  _moveLockReason: 16
   _hidesHud: 1
---- !u!114 &6868610177742459422
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6529734431612883377}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3448fb6ec6064d04c90d9f3320ac093f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _rowContainer: {fileID: 0}
-  _rowPrefab: {fileID: 0}
-  _totalGoldText: {fileID: 0}
-  _totalGoldFormat: '{0} G'
+  _buttonHoverScale: 1.08
+  _buttonHoverDuration: 0.15
+  _buttonClickSfxId: 
 --- !u!1 &6605991342122595380
 GameObject:
   m_ObjectHideFlags: 0
