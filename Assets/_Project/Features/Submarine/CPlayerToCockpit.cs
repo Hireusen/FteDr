@@ -18,26 +18,24 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
-    public int ToCockpitPriority { get;private set; } = 600;
+    public int ToCockpitPriority { get; private set; } = 600;
     public bool SitCockpit { get; private set; } = false;
-    public CinemachineBrain CineBrain { get; private set; } 
+    public CinemachineBrain CineBrain { get; private set; }
     public void MoveToCockpit()
     {
         SitCockpit = true;
         //여기서 조작 불가능하게 만들어야 함
         OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, true);
-        CineBrain =Camera.main.GetComponent<CinemachineBrain>();
+        CineBrain = Camera.main.GetComponent<CinemachineBrain>();
         CineBrain.m_DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Style.EaseInOut, 1f);
         _cockpitoriginPriority = _cockpitCam.Priority;
         _cockpitCam.Priority = ToCockpitPriority;
-
-        //_lastSitTime = Time.time;
-        print("movetocockpit");
     }
     public void CockpitToPlayer()
     {
         if (_camToCutCoroutine != null) return;
 
+        _cockpitCam.Priority = _cockpitoriginPriority;
         _cockpitCam.Priority = _cockpitoriginPriority;
         _camToCutCoroutine = StartCoroutine(CamToCut());
     }
@@ -48,7 +46,7 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
     // 프레임 매니저에게 호출당할 함수
     public void ExecuteUpdateFrame()
     {
-        if (SitCockpit==false) return;
+        if (SitCockpit == false) return;
 
         if (Input.GetKeyDown(KeyCode.Q))
         {
@@ -63,10 +61,21 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
         {
             if (!_cSubMarineUpDown.CanMove(true)) return;
 
-            SitCockpit = false;
-            OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
-            _cSubMarineUpDown.StartCutScene(true);
-            UDebug.Print("벗어남 사유 : E 입력");
+            // 다음 스테이지 해금됨
+            int nextStage = UPlayer.CurrentStage + 1;
+            UDebug.Print($"목표 스테이지 : {nextStage}, 해금된 스테이지 : {UPlayer.UnlockedStage}");
+            if (UPlayer.IsStageUnlocked(nextStage))
+            {
+                OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
+                _cSubMarineUpDown.StartCutScene(true);
+                SitCockpit = false;
+            }
+            // 다음 스테이지 해금 안됨
+            else
+            {
+                UDebug.Print($"다음 스테이지 해금 안됨 : {nextStage}");
+                USound.PlaySfx(Id.SFX_Sonar_Ping);
+            }
         }
     }
     #endregion
@@ -75,7 +84,7 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
     private IEnumerator CamToCut()
     {
         yield return UCoroutine.GetWait(1f);
-        CineBrain.m_DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Style.Cut,0f);
+        CineBrain.m_DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Style.Cut, 0f);
         SitCockpit = false;
         // 여기서 조작 가능하게 만들어야 함.
         OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);

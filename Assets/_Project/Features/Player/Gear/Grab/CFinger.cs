@@ -113,7 +113,14 @@ public class CFinger : AMono
             crashobject.crashedObject = temp.crashedObject;
             crashobject.crashPoint = contactPoint;
 
-            if(temp.crashedObject.GetComponent<CCollectible>().Data.IsAir==false) temp.crashedObject.GetComponent<Rigidbody>().useGravity = true;
+            if (temp.crashedObject.GetComponent<CCollectible>().Data.IsAir == false)
+            {
+                if (temp.crashedObject.GetComponent<Rigidbody>() == null)
+                {
+                    temp.crashedObject.AddComponent<Rigidbody>();
+                }
+                temp.crashedObject.GetComponent<Rigidbody>().useGravity = true;
+            }
             CrashObjects.Add(crashobject);
             print(_testnum + "attach");
 
