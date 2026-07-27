@@ -62,17 +62,15 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 if (_rotateLeftHeld)
                 {
                     //왼쪽집게회전
-                    _twizersAnchor.transform.Rotate(
-                    Vector3.left,
-                    _twizersRotateSpeed * Time.deltaTime,
-                    Space.Self);
+                    Quaternion temp = _twizersAnchor.transform.localRotation;
+                    temp.x -= _twizersRotateSpeed * Time.deltaTime;
+                    _twizersAnchor.transform.localRotation = temp;
                 }
                 if (_rotateRightHeld)
                 {
-                    _twizersAnchor.transform.Rotate(
-                    Vector3.right,
-                    _twizersRotateSpeed * Time.deltaTime,
-                    Space.Self);
+                    Quaternion temp = _twizersAnchor.transform.localRotation;
+                    temp.x += _twizersRotateSpeed * Time.deltaTime;
+                    _twizersAnchor.transform.localRotation = temp;
                     //오른집게회전
                 }
                 break;
@@ -223,8 +221,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
                 RaycastHit hit;
                 Vector3 aimPos;
-                int mask = ~(1 << gameObject.layer);
-                if (Physics.Raycast(ray, out hit, AIMDISTANCE,mask))
+                if (Physics.Raycast(ray, out hit, AIMDISTANCE))
                 {
                     aimPos = hit.point;
                 }
@@ -237,19 +234,24 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 float aimDistance = (aimPos - _playerCam.transform.localPosition).magnitude;
                 if (aimDistance < 0.2f) return;
 
-                
+
                 if (hit.collider != null && hit.transform.root.CompareTag(K.TAG_GRABABLE) && hit.transform.root.GetComponent<Rigidbody>() == null)
                 {
                     CCollectible temp = hit.transform.root.GetComponent<CCollectible>();
-                    Rigidbody rg=hit.transform.root.AddComponent<Rigidbody>();
-                    rg.useGravity = false;
+                    Rigidbody rg = hit.transform.root.AddComponent<Rigidbody>();
                     if (temp.Data.IsAir == true)
                     {
                         rg.drag = 11.75f;
                         rg.angularDrag = 0.05f;
                         rg.useGravity = false;
+
+                        // 공중 수집품의 부유를 물리(MovePosition) 방식으로 전환. (부착 타이밍 불일치 방지)
+                        if (temp.TryGetComponent(out CCollectibleBob bob))
+                        {
+                            bob.OnBodyAttached(rg);
+                        }
                     }
-                        
+
                 }
 
 
@@ -257,8 +259,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 _fout1.CancelCrashCk();
                 _fout2.CancelCrashCk();
                 ShootWrist();
-                _aimDir = (aimPos - _twizers.transform.position).normalized;
-                
+                _aimDir = (aimPos - _arm.transform.position).normalized;
                 _twizersRigidBody.constraints = RigidbodyConstraints.FreezeRotation;
                 _controller.IsControlLockedByGrab = true;
                 _twizers.OpenGrabContinuous();
@@ -289,7 +290,6 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 break;
         }
     }
-
     private CCollectible GetItem()
     {
         CCollectible item = null;

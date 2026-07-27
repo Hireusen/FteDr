@@ -257,6 +257,10 @@ public sealed class CCollectibleSpawner : AMono
         GameObject go = Instantiate(so.Prefab, pos, rot);
         go.transform.localScale *= so.GetRandomScale();
         // 공중 수집품은 낙하하지 않으므로 Rigidbody를 붙이지 않는다.
+
+        // 상하 부유감 부여. 위치를 확정한 뒤 Initialize를 불러 현재 위치를 기준점으로 캡처한다.
+        CCollectibleBob bob = go.GetOrAddComponent<CCollectibleBob>();
+        bob.Initialize();
     }
 
     // 형태에 따라 범위 내 랜덤 위치를 구한다.
