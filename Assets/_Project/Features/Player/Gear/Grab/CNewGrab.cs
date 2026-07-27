@@ -62,21 +62,23 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 if (_rotateLeftHeld)
                 {
                     //왼쪽집게회전
-                    Quaternion temp = _twizersAnchor.transform.localRotation;
-                    temp.x -= _twizersRotateSpeed * Time.deltaTime;
-                    _twizersAnchor.transform.localRotation = temp;
+                    _twizersAnchor.transform.Rotate(
+                    Vector3.left,
+                    _twizersRotateSpeed * Time.deltaTime,
+                    Space.Self);
                 }
                 if (_rotateRightHeld)
                 {
-                    Quaternion temp = _twizersAnchor.transform.localRotation;
-                    temp.x += _twizersRotateSpeed * Time.deltaTime;
-                    _twizersAnchor.transform.localRotation = temp;
+                    _twizersAnchor.transform.Rotate(
+                    Vector3.right,
+                    _twizersRotateSpeed * Time.deltaTime,
+                    Space.Self);
                     //오른집게회전
                 }
                 break;
             case EGrabStatus.Shooting:
                 ExtendArm();
-                
+
                 break;
             case EGrabStatus.Grab:
                 //물건을 집거나, 집게를 다 닫으면 connect로 이동.
@@ -97,7 +99,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 else
                 {
                     Vector3 scale = _arm.transform.localScale;
-                    scale.z =1.5f;
+                    scale.z = 1.5f;
                     _arm.transform.localScale = scale;
                     GetItem();
                     JointFree(_armJoint);
@@ -221,7 +223,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
                 RaycastHit hit;
                 Vector3 aimPos;
-                if (Physics.Raycast(ray, out hit, AIMDISTANCE))
+                int mask = ~(1 << gameObject.layer);
+                if (Physics.Raycast(ray, out hit, AIMDISTANCE, mask))
                 {
                     aimPos = hit.point;
                 }
@@ -239,6 +242,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 {
                     CCollectible temp = hit.transform.root.GetComponent<CCollectible>();
                     Rigidbody rg = hit.transform.root.AddComponent<Rigidbody>();
+                    rg.useGravity = false;
                     if (temp.Data.IsAir == true)
                     {
                         rg.drag = 11.75f;
@@ -259,7 +263,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 _fout1.CancelCrashCk();
                 _fout2.CancelCrashCk();
                 ShootWrist();
-                _aimDir = (aimPos - _arm.transform.position).normalized;
+                _aimDir = (aimPos - _twizers.transform.position).normalized;
                 _twizersRigidBody.constraints = RigidbodyConstraints.FreezeRotation;
                 _controller.IsControlLockedByGrab = true;
                 _twizers.OpenGrabContinuous();
