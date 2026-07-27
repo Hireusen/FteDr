@@ -22,6 +22,7 @@ public class ProgressData
     #endregion
 
     #region ─────────────────────────▶ 진행 상황 ◀─────────────────────────
+    public bool isFirstGuideComplete = false; // 튜토리얼 완료 여부
     public int unlockedStage = 0; // 돈으로 해금한 최대 스테이지 (갈 수 있는 범위의 상한)
     public int currentStage = 0;  // 현재 위치한 스테이지 (해금 범위 내에서 상승/하강)
     #endregion

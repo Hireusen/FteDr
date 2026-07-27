@@ -50,6 +50,24 @@ public abstract class ABaseSO : ScriptableObject
     }
 
     /// <summary>
+    /// 배열 범위를 벗어나도 에러 로그 없이 조용히 반환합니다.
+    /// "다음 레벨이 존재하는가?"처럼 범위 밖이 정상인 조회에 사용합니다.
+    /// (외부는 1레벨 기준, 내부는 0인덱스 기준)
+    /// </summary>
+    /// <returns>범위 내면 true(값은 value로 반환), 범위 밖이면 false</returns>
+    protected static bool TryGetArrayValue<T>(T[] array, int level, out T value)
+    {
+        level--;
+        if (!UArray.InBounds(array, level))
+        {
+            value = default;
+            return false;
+        }
+        value = array[level];
+        return true;
+    }
+
+    /// <summary>
     /// 배열이 할당되지 않았거나 기본값(0 등)이 들어있는 경우 에러 목록에 추가합니다.
     /// </summary>
     protected static void IncorrectArrayToAddError<T>(List<string> errorList, T[] array, T defaultValue) where T : struct

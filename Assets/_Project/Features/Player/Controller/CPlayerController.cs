@@ -145,6 +145,9 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
         // 플레이어시선 각도 동기화
         _yaw = target.eulerAngles.y;
         _pitch = 0f;
+
+        // 가이드 타이밍
+        CFirstGuide.Try();
     }
 
     public void ExecuteFixedUpdateFrame()
