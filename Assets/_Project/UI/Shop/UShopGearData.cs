@@ -45,9 +45,8 @@ public static class UShopGearData
 
     /// <summary>
     /// 골드 차감 이후, 실제 업그레이드/해금 효과를 적용합니다.
-    /// 일반 장비는 UPlayer.UpgradeGear를, 잠수함은 UPlayer.UnlockNextStage를 호출합니다.
-    /// (UnlockNextStage는 실패 케이스가 없으므로 잠수함은 항상 true를 반환. 이미 최대 스테이지인 경우는
-    ///  호출 이전에 UpgradeCost(level)가 -1을 반환해서 구매 자체가 막히므로 여기까지 오지 않음)
+    /// 일반 장비는 UPlayer.UpgradeGear를 호출하고, 이 안에서 OnGearUpgraded가 발행되어
+    /// 구독 중인 로우/상세패널이 실시간으로 갱신됩니다.
     /// </summary>
     /// <param name="gearType">장비 타입</param>
     public static bool ApplyPurchase(EDataType gearType)
@@ -55,6 +54,7 @@ public static class UShopGearData
         if (gearType == EDataType.Submarine)
         {
             UPlayer.UnlockNextStage();
+            OnGearUpgraded.Publish(EDataType.Submarine, GetCurrentLevel(EDataType.Submarine));
             return true;
         }
 
