@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 using TMPro;
+using DG.Tweening;
 
 /// <summary>
 /// 상점 오른쪽의 상세 패널입니다. 로우에 마우스를 올리면 그 장비의 이름/현재/다음 레벨 정보를 보여주고,
-/// 골드 표시도 실시간으로 갱신합니다.
+/// 골드 표시도 실시간으로 갱신합니다. 내용이 바뀔 때마다 살짝 팝(스케일) 연출이 재생됩니다.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class CShopDetailPanel : AMono
@@ -15,6 +16,12 @@ public sealed class CShopDetailPanel : AMono
     [SerializeField] private TMP_Text _nextText;
     [Tooltip("보유 골드 표시 (선택)")]
     [SerializeField] private TMP_Text _moneyText;
+
+    [Header("등장 연출 (선택)")]
+    [Tooltip("이름/현재/다음 텍스트를 전부 감싸는 RectTransform. 비워두면 연출 없이 텍스트만 바뀝니다.")]
+    [SerializeField] private RectTransform _contentRoot;
+    [SerializeField] private float _revealStartScale = 0.92f;
+    [SerializeField] private float _revealDuration = 0.2f;
 
     [Header("표시 형식")]
     [SerializeField] private string _currentFormat = "현재 레벨 : {0}\n{1}";
@@ -51,6 +58,7 @@ public sealed class CShopDetailPanel : AMono
     {
         _shownGearType = ctx.gear.Type;
         Bind(ctx.displayName, ctx.gear, ctx.currentLevel);
+        PlayRevealPunch();
     }
 
     // 지금 보여주고 있는 장비가 업그레이드됐다면, 바뀐 레벨 기준으로 다시 갱신한다.
@@ -105,6 +113,16 @@ public sealed class CShopDetailPanel : AMono
         {
             _moneyText.text = string.Format(_moneyFormat, money);
         }
+    }
+
+    // 새 장비 정보로 갈아탈 때, 살짝 작았다가 원래 크기로 튀어 오르는 팝 연출을 재생한다.
+    private void PlayRevealPunch()
+    {
+        if (_contentRoot == null) return;
+
+        _contentRoot.DOKill();
+        _contentRoot.localScale = Vector3.one * _revealStartScale;
+        _contentRoot.DOScale(1f, _revealDuration).SetEase(Ease.OutBack).SetUpdate(true);
     }
     #endregion
 }

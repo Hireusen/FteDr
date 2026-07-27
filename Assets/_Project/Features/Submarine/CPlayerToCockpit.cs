@@ -24,7 +24,7 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
     public void MoveToCockpit()
     {
         SitCockpit = true;
-        //여기서 조작 불가능하게 만들어야 함
+        OnPlayerCockpitStateChanged.Publish(true); // 조작 안내 UI 표시
         OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, true);
         CineBrain = Camera.main.GetComponent<CinemachineBrain>();
         CineBrain.m_DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Style.EaseInOut, 1f);
@@ -53,6 +53,7 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
             if (!_cSubMarineUpDown.CanMove(false)) return;
 
             SitCockpit = false;
+            OnPlayerCockpitStateChanged.Publish(false); // 조작 안내 UI 숨김
             _cSubMarineUpDown.StartCutScene(false);
             OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
             UDebug.Print("벗어남 사유 : Q 입력");
@@ -69,6 +70,7 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
                 OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
                 _cSubMarineUpDown.StartCutScene(true);
                 SitCockpit = false;
+                OnPlayerCockpitStateChanged.Publish(false); // 조작 안내 UI 숨김
             }
             // 다음 스테이지 해금 안됨
             else
@@ -86,7 +88,7 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
         yield return UCoroutine.GetWait(1f);
         CineBrain.m_DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Style.Cut, 0f);
         SitCockpit = false;
-        // 여기서 조작 가능하게 만들어야 함.
+        OnPlayerCockpitStateChanged.Publish(false); // 조작 안내 UI 숨김
         OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
         UDebug.Print("벗어남 사유 : 캠투컷");
         _camToCutCoroutine = null;
