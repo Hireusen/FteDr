@@ -31,6 +31,12 @@ public sealed class CPlayerHudController : AMono
     [SerializeField] private Button _btnBag;
     [SerializeField] private Button _btnNet;
 
+    [Header("HUD 요소 토글 (가방/그물 버튼 + 잠수함 레이더 마커)")]
+    [Tooltip("가방/그물 버튼을 감싸는 CanvasGroup. 산소 게이지는 여기 포함시키지 않습니다(항상 표시).")]
+    [SerializeField] private CanvasGroup _toggleableElementsGroup;
+    [Tooltip("이 버튼을 누르면 위 그룹 + 잠수함 레이더 마커가 함께 켜지고 꺼집니다.")]
+    [SerializeField] private Button _btnToggleElements;
+
     [Header("버튼 인터랙션 자동 장착 (호버 스케일 + 클릭 펀치 + 클릭 SFX)")]
     [SerializeField] private float _buttonHoverScale = 1.08f;
     [SerializeField] private float _buttonHoverDuration = 0.15f;
@@ -43,6 +49,7 @@ public sealed class CPlayerHudController : AMono
     // (CSubmarineAreaSensor가 씬에 붙어있어야 "밖으로 나감" 이벤트가 와서 실제로 보이게 됨)
     private bool _isInsideSubmarine = true;
     private bool _windowsAllowHud = true;
+    private bool _elementsVisible = true; // 가방/그물/레이더 마커 토글 상태
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -59,6 +66,11 @@ public sealed class CPlayerHudController : AMono
             _btnNet.onClick.AddListener(() => OnInputNet.Publish());
         }
 
+        if (_btnToggleElements != null)
+        {
+            _btnToggleElements.onClick.AddListener(OnClickToggleElements);
+        }
+
         // HUD 아래(가방/그물 버튼 등)에도 동일한 버튼 연출/사운드를 자동으로 붙인다.
         UButtonFx.AutoEquip(gameObject, _buttonHoverScale, _buttonHoverDuration, _buttonClickSfxId);
     }
@@ -69,10 +81,12 @@ public sealed class CPlayerHudController : AMono
         CEventBus<OnRequestHudVisibility>.Subscribe(HudVisibilityHandler);
         CEventBus<OnGearUpgraded>.Subscribe(GearUpgradedHandler);
         CEventBus<OnPlayerSubmarineAreaChanged>.Subscribe(SubmarineAreaHandler);
+        CEventBus<OnInputToggleHud>.Subscribe(ToggleHudInputHandler);
 
         RefreshOxygen(UPlayer.CurrentFuel, UPlayer.MaxFuel); // 진입 시 현재값 즉시 반영
         ApplySliderHeight(UPlayer.GetGearLevel(EDataType.FuelTank), instant: true); // 진입 시점 레벨 기준으로 즉시 반영 (연출 없음)
         RefreshHudVisibility(); // 시작 시 잠수함 안이라고 가정하고 있으므로 기본은 숨김 상태로 시작
+        ApplyElementsVisibility(); // 가방/그물 토글 초기 상태 반영 (기본 켜짐)
     }
 
     private void OnDisable()
@@ -81,6 +95,7 @@ public sealed class CPlayerHudController : AMono
         CEventBus<OnRequestHudVisibility>.Unsubscribe(HudVisibilityHandler);
         CEventBus<OnGearUpgraded>.Unsubscribe(GearUpgradedHandler);
         CEventBus<OnPlayerSubmarineAreaChanged>.Unsubscribe(SubmarineAreaHandler);
+        CEventBus<OnInputToggleHud>.Unsubscribe(ToggleHudInputHandler);
     }
     #endregion
 
@@ -108,6 +123,19 @@ public sealed class CPlayerHudController : AMono
     {
         if (ctx.gearType != EDataType.FuelTank) return;
         ApplySliderHeight(ctx.newLevel, instant: false);
+    }
+
+    private void OnClickToggleElements()
+    {
+        _elementsVisible = !_elementsVisible;
+        ApplyElementsVisibility();
+        OnRequestHudElementsVisibility.Publish(_elementsVisible); // 잠수함 레이더 마커 등 다른 HUD 요소도 같이 반영
+    }
+
+    // 키보드로 눌렀을 때도 버튼 클릭과 완전히 동일하게 동작한다.
+    private void ToggleHudInputHandler(OnInputToggleHud ctx)
+    {
+        OnClickToggleElements();
     }
     #endregion
 
@@ -161,6 +189,15 @@ public sealed class CPlayerHudController : AMono
             _oxygenCurText.text = string.Format("{0:0}", current);
             _oxygenMaxText.text = string.Format("{0:0}", max);
         }
+    }
+
+    private void ApplyElementsVisibility()
+    {
+        if (_toggleableElementsGroup == null) return;
+
+        _toggleableElementsGroup.alpha = _elementsVisible ? 1f : 0f;
+        _toggleableElementsGroup.blocksRaycasts = _elementsVisible;
+        _toggleableElementsGroup.interactable = _elementsVisible;
     }
     #endregion
 }

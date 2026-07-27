@@ -11,6 +11,7 @@ public class CPauseMenuController : AMono
     [Header("Pause Buttons")]
     [SerializeField] private Button _btnResume;
     [SerializeField] private Button _btnOptions;
+    [SerializeField] private Button _btnTutorial;
     [SerializeField] private Button _btnTitle;
     [SerializeField] private Button _btnQuit;
     #endregion
@@ -26,6 +27,11 @@ public class CPauseMenuController : AMono
         if (_btnOptions != null)
         {
             _btnOptions.onClick.AddListener(() => OnRequestOpenUI.Publish(EUI.SettingsWindow));
+        }
+
+        if (_btnTutorial != null)
+        {
+            _btnTutorial.onClick.AddListener(() => OnRequestOpenUI.Publish(EUI.TutorialWindow));
         }
 
         if (_btnTitle != null)

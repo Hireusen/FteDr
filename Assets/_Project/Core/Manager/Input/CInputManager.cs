@@ -147,6 +147,14 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
             OnInputRotateTwizerRight.Publish(false);
         }
     }
+
+    public void OnToggleHud(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            OnInputToggleHud.Publish();
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────

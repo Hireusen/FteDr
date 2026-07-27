@@ -79,19 +79,27 @@ public sealed class CUIManager : ASingleton<CUIManager>
 
     /// <summary>
     /// 창(CUIWindow)이 자신의 Start()에서 스스로를 등록합니다. 이미 같은 타입이 등록되어 있으면 덮어씁니다.
-    /// 등록 직후에는 기본적으로 숨김 상태로 만듭니다(요청이 와야 열림).
+    /// 처음 등록되는 경우에만 기본적으로 숨김 상태로 만듭니다(요청이 와야 열림).
+    /// 이미 이 인스턴스로 등록되어 있었다면(=프리팹으로 막 생성되어 Open()까지 실행된 직후) 건드리지 않습니다 —
+    /// 안 그러면 방금 페이드 인 하던 창을 Start()가 다시 숨겨버리는 버그가 생깁니다.
     /// </summary>
     public void RegisterWindow(EUI uiType, GameObject instance)
     {
         if (uiType == EUI.None || instance == null) return;
 
-        if (_uiInstanceDict.TryGetValue(uiType, out GameObject existing) && existing != null && existing != instance)
+        bool alreadyRegisteredAsThisInstance = _uiInstanceDict.TryGetValue(uiType, out GameObject existing) && existing == instance;
+
+        if (existing != null && existing != instance)
         {
             UDebug.Print($"CUIManager: EUI '{uiType}'가 이미 다른 인스턴스로 등록되어 있습니다. 같은 타입을 가진 창이 씬에 중복으로 있는지 확인해주세요.", LogType.Warning, instance);
         }
 
         _uiInstanceDict[uiType] = instance;
-        instance.SetActive(false);
+
+        if (!alreadyRegisteredAsThisInstance)
+        {
+            instance.SetActive(false);
+        }
     }
 
     /// <summary>
@@ -122,6 +130,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
             PushStack(targetUI);
             RefreshHudVisibility();
             RefreshCursor();
+            RefreshSortOrder();
             return;
         }
 
@@ -129,11 +138,13 @@ public sealed class CUIManager : ASingleton<CUIManager>
         if (_uiPrefabDict.TryGetValue(targetUI, out GameObject prefab) && prefab != null)
         {
             GameObject newInstance = Instantiate(prefab);
+            DontDestroyOnLoad(newInstance); // 씬이 바뀌어도 이 창(Settings/Credits 등)은 계속 살아있어야 재사용된다
             OpenInstance(newInstance);
             _uiInstanceDict[targetUI] = newInstance;
             PushStack(targetUI);
             RefreshHudVisibility();
             RefreshCursor();
+            RefreshSortOrder();
         }
         else
         {
@@ -153,6 +164,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
         _openStack.Remove(targetUI);
         RefreshHudVisibility();
         RefreshCursor();
+        RefreshSortOrder();
     }
 
     // ESC: 열려있는 게 있으면 가장 최근에 연 것만 닫고, 아무것도 없으면 일시정지창을 새로 연다.
@@ -179,6 +191,26 @@ public sealed class CUIManager : ASingleton<CUIManager>
     {
         _openStack.Remove(uiType);  // 이미 스택에 있었다면 제거 후
         _openStack.Add(uiType);     // 맨 위로 다시 쌓는다 (같은 창을 다시 열어도 순서가 갱신됨)
+    }
+
+    // 스택 순서대로 Canvas.sortingOrder를 다시 매긴다. (나중에 연 창일수록 큰 값 → 항상 위에 그려지고 클릭도 위 창이 받음)
+    // CUIManager의 열림 스택은 논리적인 "ESC로 뭘 닫을지"만 관리하고, 실제 화면 위/아래는 Canvas의 Sort Order가 정하기 때문에
+    // 스택이 바뀔 때마다 이 둘을 일치시켜줘야 한다. 안 그러면 나중에 연 창이 시각적으로만 위에 보이고 클릭은 아래 창이 가로챌 수 있다.
+    private void RefreshSortOrder()
+    {
+        const int BASE_SORT_ORDER = 100;
+
+        int count = _openStack.Count;
+        for (int i = 0; i < count; ++i)
+        {
+            if (!_uiInstanceDict.TryGetValue(_openStack[i], out GameObject instance) || instance == null) continue;
+
+            Canvas canvas = instance.GetComponent<Canvas>();
+            if (canvas == null) continue;
+
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = BASE_SORT_ORDER + i;
+        }
     }
 
     // 씬이 바뀌면(Title↔Game) 커서가 필요한 컨텍스트도 바뀌므로 다시 계산한다.

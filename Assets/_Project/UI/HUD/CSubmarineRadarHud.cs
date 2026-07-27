@@ -6,12 +6,6 @@ using DG.Tweening;
 /// <summary>
 /// 잠수함의 화면 내/외 위치를 실시간으로 계산해 마커(방향 아이콘 + 원/원호 배지 + 거리 텍스트)를 갱신하는 HUD 컴포넌트입니다.
 ///
-/// 하이러키 구조 (권장):
-///   Marker (RectTransform, = _markerRoot) : 스크린 좌표를 따라 이동하는 루트
-///     ├ Icon (RectTransform, = _iconRect) : 방향 아이콘. 화면 밖일 때만 회전
-///     ├ Badge (Image, = _badgeImage) : 원/원호 겸용 이미지 하나. 스프라이트만 교체해서 씀
-///     └ DistanceText (TMP_Text, = _distanceText)
-///
 /// - 화면 안: Badge = 원 스프라이트. 거리에 따라 스케일만 보간 (가까움=0, 중간=1, 멀리=작게)
 /// - 화면 밖: Badge = 원호 스프라이트. 방향으로 회전, 가장자리에 클램프
 /// - 배지가 "안 보임 → 보임"으로 전환되는 순간에만 1회 발견 연출(회전 1바퀴 + 펀치 스케일) 재생
@@ -77,6 +71,7 @@ public sealed class CSubmarineRadarHud : AFrameable, IUpdateFrameable
     private bool _wasBadgeVisible;   // 배지(원/원호)가 지난 프레임에 보이고 있었는지
     private bool _isPlayingDiscoverAnim;
     private bool _isInsideSubmarine = true; // 시작 시 잠수함 안이라고 가정 (CSubmarineAreaSensor가 "밖으로 나감"을 알려줘야 표시)
+    private bool _userWantsVisible = true; // HUD 토글 버튼으로 사용자가 이 마커를 끄고 켰는지
     private float _repeatTimer; // 배지가 보이는 동안 이 값이 _repeatInterval에 도달할 때마다 연출을 다시 재생
     private bool _wasOnScreen; // 화면 안/밖 판정에도 히스테리시스를 주기 위해 지난 프레임 상태를 기억
     #endregion
@@ -86,7 +81,7 @@ public sealed class CSubmarineRadarHud : AFrameable, IUpdateFrameable
 
     public void ExecuteUpdateFrame()
     {
-        if (_isInsideSubmarine || !UScene.Current.IsGameplay() || CStageManager.Current == null || CStageManager.Current.SubMarine == null)
+        if (_isInsideSubmarine || !_userWantsVisible || !UScene.Current.IsGameplay() || CStageManager.Current == null || CStageManager.Current.SubMarine == null)
         {
             SetMarkerVisible(false);
             return;
@@ -139,6 +134,7 @@ public sealed class CSubmarineRadarHud : AFrameable, IUpdateFrameable
         if (_camera == null) _camera = Camera.main;
 
         CEventBus<OnPlayerSubmarineAreaChanged>.Subscribe(SubmarineAreaHandler);
+        CEventBus<OnRequestHudElementsVisibility>.Subscribe(ElementsVisibilityHandler);
 
         if (_circleSprite == null) UDebug.Print("CSubmarineRadarHud: Circle Sprite가 연결되지 않았습니다.", LogType.Warning, gameObject);
         if (_arcSprite == null) UDebug.Print("CSubmarineRadarHud: Arc Sprite가 연결되지 않았습니다.", LogType.Warning, gameObject);
@@ -148,11 +144,18 @@ public sealed class CSubmarineRadarHud : AFrameable, IUpdateFrameable
     {
         base.OnDisable();
         CEventBus<OnPlayerSubmarineAreaChanged>.Unsubscribe(SubmarineAreaHandler);
+        CEventBus<OnRequestHudElementsVisibility>.Unsubscribe(ElementsVisibilityHandler);
     }
 
     private void SubmarineAreaHandler(OnPlayerSubmarineAreaChanged ctx)
     {
         _isInsideSubmarine = ctx.isInsideSubmarine;
+    }
+
+    // HUD 토글 버튼(CPlayerHudController)이 눌리면 이 마커도 같이 켜지고 꺼진다.
+    private void ElementsVisibilityHandler(OnRequestHudElementsVisibility ctx)
+    {
+        _userWantsVisible = ctx.visible;
     }
     #endregion
 
