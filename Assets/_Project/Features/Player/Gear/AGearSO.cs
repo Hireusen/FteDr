@@ -20,12 +20,17 @@ public abstract class AGearSO : ABaseSO
     /// <summary>이 장비가 도달할 수 있는 최대 레벨을 반환합니다.</summary>
     public int MaxLevel => _upgradeCosts != null ? _upgradeCosts.Length + 1 : 0;
 
+    /// <summary>이 레벨이 최대 레벨인지(더 이상 업그레이드 불가) 반환합니다.</summary>
+    /// <param name="level">현재 장비 레벨 (1부터 시작)</param>
+    public bool IsMaxLevel(int level) => level >= MaxLevel;
+
     /// <summary>
     /// 현재 레벨에서 다음 레벨로 업그레이드하기 위한 비용을 반환합니다. (레벨 1부터 시작)
-    /// 배열 범위를 벗어날 경우 -1을 반환합니다.
+    /// 최대 레벨이라 다음 비용이 없으면 -1을 반환합니다. (정상 신호이며 에러 로그를 남기지 않습니다.)
     /// </summary>
     /// <param name="level">현재 장비 레벨</param>
-    public int UpgradeCost(int level) => GetArrayValueSafely(_upgradeCosts, level, -1);
+    public int UpgradeCost(int level)
+        => TryGetArrayValue(_upgradeCosts, level, out int cost) ? cost : -1;
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
