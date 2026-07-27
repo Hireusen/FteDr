@@ -14,6 +14,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     [SerializeField] private GameObject _armEndPivot;
     [SerializeField] private GameObject _twizersAnchor;
     [SerializeField] private CTwizers _twizers;
+    [SerializeField] private CFingerOutCollider _fout1;
+    [SerializeField] private CFingerOutCollider _fout2;
     [SerializeField] private ConfigurableJoint _twizersJointToArm;
     [SerializeField] private float _shootForce = 10f;
     [SerializeField] private float _maxdistance = 4f;
@@ -76,13 +78,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 break;
             case EGrabStatus.Shooting:
                 ExtendArm();
-                /*
-                if (Input.GetKey(KeyCode.U))
-                {
-                    
-                    ChangeStatus(EGrabStatus.Grab);
-                }
-                */
+                
                 break;
             case EGrabStatus.Grab:
                 //물건을 집거나, 집게를 다 닫으면 connect로 이동.
@@ -102,6 +98,9 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 }
                 else
                 {
+                    Vector3 scale = _arm.transform.localScale;
+                    scale.z =1.5f;
+                    _arm.transform.localScale = scale;
                     GetItem();
                     JointFree(_armJoint);
                     _armRigidBody.isKinematic = true;
@@ -134,6 +133,10 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         if (grabStatus == EGrabStatus.Shooting)
         {
             ShootWristContinuous();
+            if (_fout1.CrashCk == true || _fout2.CrashCk == true)
+            {
+                ChangeStatus(EGrabStatus.Grab);
+            }
         }
     }
     #endregion
@@ -251,11 +254,11 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
 
 
                 USound.PlaySfx(Id.SFX_robotics2);
+                _fout1.CancelCrashCk();
+                _fout2.CancelCrashCk();
                 ShootWrist();
                 _aimDir = (aimPos - _twizers.transform.position).normalized;
-                Debug.DrawLine(_twizers.transform.position, aimPos, Color.green, 3);
-                Debug.Log(aimPos);
-                Debug.Log(_twizers.transform.position);
+                
                 _twizersRigidBody.constraints = RigidbodyConstraints.FreezeRotation;
                 _controller.IsControlLockedByGrab = true;
                 _twizers.OpenGrabContinuous();

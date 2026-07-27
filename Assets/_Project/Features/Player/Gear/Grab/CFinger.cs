@@ -54,47 +54,12 @@ public class CFinger : AMono
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void OnCollisionEnter(Collision collision)
     {
-        //objects에 넣은걸 교체하기 위한, crashobjects 코드 추가
-        if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
-        {
-            Objects.Add(collision.gameObject);
-
-
-            Vector3 sumPoint = Vector3.zero;
-            int contactCount = 0;
-            foreach (ContactPoint contact in collision.contacts)
-            {
-                contactCount++;
-                sumPoint += contact.point;
-            }
-            Vector3 avgPoint = sumPoint / contactCount;
-            CrashInfo crashobject= new CrashInfo();
-            crashobject.crashedObject = collision.transform.root.gameObject;
-            crashobject.crashPoint = avgPoint;
-
-            CrashObjects.Add(crashobject);
-            print(_testnum + "attach");
-        }
+        
         
     }
     private void OnCollisionExit(Collision collision)
     {
-        if (collision.gameObject.CompareTag(K.TAG_GRABABLE))
-        {
-            GameObject crashedobj = collision.transform.root.gameObject;
-            if (Objects.Contains(crashedobj))
-            {
-                Objects.Remove(crashedobj);
-                print(_testnum + "deattach");
-            }
-            CrashInfo temp=new CrashInfo();
-            temp.crashedObject = crashedobj;
-            if (CrashObjects.Contains(temp))
-            {
-                CrashObjects.Remove(temp);
-            }
-            
-        }
+        
     }
     private void OnTriggerEnter(Collider collision)
     {
