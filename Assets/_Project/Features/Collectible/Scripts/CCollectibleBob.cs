@@ -18,11 +18,8 @@
 public sealed class CCollectibleBob : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
-    [Header("상하 부유")]
-    [Tooltip("위아래로 흔들리는 진폭(m). 기준점에서 ± 이만큼 움직입니다.")]
-    [SerializeField] private float _amplitude = 0.15f;
-    [Tooltip("부유 속도(초당 라디안). 클수록 빠르게 오르내립니다.")]
-    [SerializeField] private float _frequency = 1.5f;
+    private const float AMPLITUDE = 0.1f; // 위아래 진폭
+    private const float FREQUENCY = 1f; // 부유 속도
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -85,7 +82,7 @@ public sealed class CCollectibleBob : AFrameable, IUpdateFrameable, IFixedUpdate
 
     // 기준 Y에 사인파 오프셋을 더한 목표 Y.
     private float TargetY(float baseY)
-        => baseY + Mathf.Sin(Time.time * _frequency + _phase) * _amplitude;
+        => baseY + Mathf.Sin(Time.time * FREQUENCY + _phase) * AMPLITUDE;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
