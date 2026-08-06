@@ -6,6 +6,10 @@ public enum EScene
     Boot = 0,
     Title = 1,
     Stage_1 = 2,
-    Stage_4 = 3,
-    Continue = 4,
+    Stage_2 = 3,
+    Stage_3 = 4,
+    Stage_4 = 4,
+    Stage_5 = 5,
+    Stage_6 = 6,
+    Ending = 7,
 }

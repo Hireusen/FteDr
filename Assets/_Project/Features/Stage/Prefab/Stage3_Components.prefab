@@ -45,6 +45,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _spawnWaitTimeout: 3
+  _camEffect: {fileID: 0}
+  _respawnFadeOutTime: 1.5
+  _respawnFadeInTime: 1.5
+  _arriveCam: {fileID: 0}
+  _dest: {fileID: 0}
+  _downPos: {fileID: 0}
+  _upPos: {fileID: 0}
 --- !u!1 &4908020491036188519
 GameObject:
   m_ObjectHideFlags: 0
@@ -88,6 +95,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2544519767028896853}
   - component: {fileID: 288451469023036669}
+  - component: {fileID: 5161669249024344756}
   m_Layer: 0
   m_Name: CollectibleSpawner
   m_TagString: Untagged
@@ -123,8 +131,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _spawnData: {fileID: 11400000, guid: 143bedf325a75f5499815b7117dec28a, type: 2}
-  _spawnOnStart: 1
-  _container: {fileID: 2544519767028896853}
   _shape: 1
   _areaCenter: {fileID: 2544519767028896853}
   _boxSizeX: 0
@@ -134,6 +140,31 @@ MonoBehaviour:
   _dropHeight: 0
   _dropHeightJitter: 1
   _fullRandomRotation: 1
+  _groundLayer:
+    serializedVersion: 2
+    m_Bits: 1288
+  _airRayLength: 150
+  _airMinHeight: 3
+  _airMaxHeight: 8
   _sleepSpeed: 0.05
   _sleepHoldTime: 0.4
   _maxSettleTime: 6
+  _cullCamera: {fileID: 0}
+  _hideLayer:
+    serializedVersion: 2
+    m_Bits: 512
+--- !u!114 &5161669249024344756
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9019451907392327117}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 455d62938a3fd9e4d8c2d6909d93a790, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stage: 4
+  _spawnOnStart: 1
+  _spawner: {fileID: 288451469023036669}
