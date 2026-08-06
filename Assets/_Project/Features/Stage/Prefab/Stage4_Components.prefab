@@ -62,6 +62,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8054043517620132381}
   - component: {fileID: 3967343764067154495}
+  - component: {fileID: 3714179675824794789}
   m_Layer: 0
   m_Name: CollectibleSpawner
   m_TagString: Untagged
@@ -97,8 +98,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _spawnData: {fileID: 11400000, guid: ae304db2a9a5c504ba01f6befbdd9831, type: 2}
-  _spawnOnStart: 1
-  _container: {fileID: 8054043517620132381}
   _shape: 1
   _areaCenter: {fileID: 8054043517620132381}
   _boxSizeX: 0
@@ -121,6 +120,21 @@ MonoBehaviour:
   _hideLayer:
     serializedVersion: 2
     m_Bits: 512
+--- !u!114 &3714179675824794789
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4889117081297818053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 455d62938a3fd9e4d8c2d6909d93a790, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stage: 4
+  _spawnOnStart: 1
+  _spawner: {fileID: 3967343764067154495}
 --- !u!1 &5720876921493494057
 GameObject:
   m_ObjectHideFlags: 0
