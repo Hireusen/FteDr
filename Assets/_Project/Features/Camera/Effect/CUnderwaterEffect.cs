@@ -138,15 +138,15 @@ public sealed class CUnderwaterEffect : AMono
     private float _computedVignetteStrength;
 
     // 셰이더 프로퍼티 ID 캐싱
-    private static readonly int ID_Tint = Shader.PropertyToID("_TintColor");
-    private static readonly int ID_TintStr = Shader.PropertyToID("_TintStrength");
-    private static readonly int ID_Vig = Shader.PropertyToID("_VignetteColor");
-    private static readonly int ID_VigStr = Shader.PropertyToID("_VignetteStrength");
-    private static readonly int ID_VigSoft = Shader.PropertyToID("_VignetteSoftness");
-    private static readonly int ID_DistStr = Shader.PropertyToID("_DistortStrength");
-    private static readonly int ID_DistSpd = Shader.PropertyToID("_DistortSpeed");
-    private static readonly int ID_DistScl = Shader.PropertyToID("_DistortScale");
-    private static readonly int ID_Sat = Shader.PropertyToID("_Saturation");
+    private static readonly int _tintID = Shader.PropertyToID("_TintColor");
+    private static readonly int _tintStrID = Shader.PropertyToID("_TintStrength");
+    private static readonly int _vigID = Shader.PropertyToID("_VignetteColor");
+    private static readonly int _vigStrID = Shader.PropertyToID("_VignetteStrength");
+    private static readonly int _vigSoftID = Shader.PropertyToID("_VignetteSoftness");
+    private static readonly int _distStrID = Shader.PropertyToID("_DistortStrength");
+    private static readonly int _distSpdID = Shader.PropertyToID("_DistortSpeed");
+    private static readonly int _distSclID = Shader.PropertyToID("_DistortScale");
+    private static readonly int _satID = Shader.PropertyToID("_Saturation");
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -241,15 +241,15 @@ public sealed class CUnderwaterEffect : AMono
             return;
         }
 
-        _material.SetColor(ID_Tint, _computedTintColor);
-        _material.SetFloat(ID_TintStr, _computedTintStrength);
-        _material.SetColor(ID_Vig, _computedVignetteColor);
-        _material.SetFloat(ID_VigStr, _computedVignetteStrength);
-        _material.SetFloat(ID_VigSoft, _vignetteSoftness);
-        _material.SetFloat(ID_DistStr, _distortStrength + _divePulseDistort * _divePulse);
-        _material.SetFloat(ID_DistSpd, _distortSpeed);
-        _material.SetFloat(ID_DistScl, _distortScale);
-        _material.SetFloat(ID_Sat, _saturation);
+        _material.SetColor(_tintID, _computedTintColor);
+        _material.SetFloat(_tintStrID, _computedTintStrength);
+        _material.SetColor(_vigID, _computedVignetteColor);
+        _material.SetFloat(_vigStrID, _computedVignetteStrength);
+        _material.SetFloat(_vigSoftID, _vignetteSoftness);
+        _material.SetFloat(_distStrID, _distortStrength + _divePulseDistort * _divePulse);
+        _material.SetFloat(_distSpdID, _distortSpeed);
+        _material.SetFloat(_distSclID, _distortScale);
+        _material.SetFloat(_satID, _saturation);
 
         Graphics.Blit(src, dest, _material);
     }

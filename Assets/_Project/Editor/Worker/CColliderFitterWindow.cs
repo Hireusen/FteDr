@@ -14,7 +14,7 @@ namespace ColliderFitter
 {
     public class CColliderFitterWindow : EditorWindow
     {
-        private const string ChildName = "_Collider";  // 생성하는 콜라이더 자식 이름
+        private const string CHILD_NAME = "_Collider";  // 생성하는 콜라이더 자식 이름
 
         private CFitSettings _settings = new CFitSettings();
 
@@ -58,7 +58,7 @@ namespace ColliderFitter
 
             EditorGUILayout.LabelField("자동 콜라이더 조립기", EditorStyles.boldLabel);
             EditorGUILayout.HelpBox(
-                "회전 박스/캡슐은 자식 오브젝트 \"" + ChildName + "\"에 부착됩니다.\n" +
+                "회전 박스/캡슐은 자식 오브젝트 \"" + CHILD_NAME + "\"에 부착됩니다.\n" +
                 "슬라이더로 조절 후 [적용]을 누르세요.",
                 MessageType.Info);
 
@@ -220,7 +220,7 @@ namespace ColliderFitter
             }
 
             // 회전 필요 → 회전된 자식 생성 후 로컬 축정렬 콜라이더 부착
-            var child = new GameObject(ChildName);
+            var child = new GameObject(CHILD_NAME);
             Undo.RegisterCreatedObjectUndo(child, "Create Collider Child");
 
             var ct = child.transform;
@@ -286,7 +286,7 @@ namespace ColliderFitter
             for (int i = t.childCount - 1; i >= 0; i--)
             {
                 var child = t.GetChild(i);
-                if (child.name == ChildName)
+                if (child.name == CHILD_NAME)
                 {
                     Undo.DestroyObjectImmediate(child.gameObject);
                 }

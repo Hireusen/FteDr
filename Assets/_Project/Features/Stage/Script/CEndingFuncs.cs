@@ -8,7 +8,7 @@ using UnityEngine;
 public class CEndingFuncs : AFrameable, IUpdateFrameable
 {
     [SerializeField] private GameObject _submarine;
-    [SerializeField] private float upspeed = 10f;
+    [SerializeField] private float _upspeed = 10f;
     [SerializeField] private GameObject _arm;
     [SerializeField] private GameObject _armEndpivot;
     [SerializeField] private GameObject _twizers;
@@ -60,7 +60,7 @@ public class CEndingFuncs : AFrameable, IUpdateFrameable
         while (timer < upDuration)
         {
             timer += Time.deltaTime;
-            _submarine.transform.position += _submarine.transform.up * upspeed * Time.deltaTime;
+            _submarine.transform.position += _submarine.transform.up * _upspeed * Time.deltaTime;
             yield return null;
 
         }

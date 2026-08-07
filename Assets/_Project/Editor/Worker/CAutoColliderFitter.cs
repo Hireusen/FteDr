@@ -547,11 +547,11 @@ public class CAutoColliderFitter : EditorWindow
     // 대칭 3x3 고유값/고유벡터(Jacobi 회전)
     private static void JacobiEigen(double[,] a, out double[] eigenvalues, out double[,] eigenvectors)
     {
-        const int n = 3;
+        const int N = 3;
         var v = new double[3, 3];
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < N; i++)
         {
-            for (int j = 0; j < n; j++)
+            for (int j = 0; j < N; j++)
             {
                 v[i, j] = (i == j) ? 1.0 : 0.0;
             }
@@ -562,9 +562,9 @@ public class CAutoColliderFitter : EditorWindow
         for (int iter = 0; iter < 50; iter++)
         {
             double off = 0;
-            for (int p = 0; p < n; p++)
+            for (int p = 0; p < N; p++)
             {
-                for (int q = p + 1; q < n; q++)
+                for (int q = p + 1; q < N; q++)
                 {
                     off += m[p, q] * m[p, q];
                 }
@@ -575,9 +575,9 @@ public class CAutoColliderFitter : EditorWindow
                 break;
             }
 
-            for (int p = 0; p < n; p++)
+            for (int p = 0; p < N; p++)
             {
-                for (int q = p + 1; q < n; q++)
+                for (int q = p + 1; q < N; q++)
                 {
                     if (System.Math.Abs(m[p, q]) < 1e-20)
                     {
@@ -603,7 +603,7 @@ public class CAutoColliderFitter : EditorWindow
                     m[p, q] = 0;
                     m[q, p] = 0;
 
-                    for (int i = 0; i < n; i++)
+                    for (int i = 0; i < N; i++)
                     {
                         if (i != p && i != q)
                         {

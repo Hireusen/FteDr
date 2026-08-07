@@ -1,5 +1,4 @@
-﻿using Unity.VisualScripting;
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 저장 데이터가 존재할 경우 수집품을 배치합니다.
