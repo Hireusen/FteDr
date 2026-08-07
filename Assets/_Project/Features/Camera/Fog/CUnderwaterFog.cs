@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
 /// 카메라에 부착해 깊이(카메라로부터의 거리) 기반 수중 안개를 화면 전체에 적용합니다.
@@ -25,10 +25,10 @@ public sealed class CUnderwaterFog : AMono
     private Material _material;
     private Camera _camera;
 
-    private static readonly int ID_FogColor = Shader.PropertyToID("_FogColor");
-    private static readonly int ID_FogStart = Shader.PropertyToID("_FogStart");
-    private static readonly int ID_FogEnd = Shader.PropertyToID("_FogEnd");
-    private static readonly int ID_FogMaxDensity = Shader.PropertyToID("_FogMaxDensity");
+    private static readonly int _fogColorID = Shader.PropertyToID("_FogColor");
+    private static readonly int _fogStartID = Shader.PropertyToID("_FogStart");
+    private static readonly int _fogEndID = Shader.PropertyToID("_FogEnd");
+    private static readonly int _fogMaxDensityID = Shader.PropertyToID("_FogMaxDensity");
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -47,10 +47,10 @@ public sealed class CUnderwaterFog : AMono
             return;
         }
 
-        _material.SetColor(ID_FogColor, _fogColor);
-        _material.SetFloat(ID_FogStart, _fogStart);
-        _material.SetFloat(ID_FogEnd, _fogEnd);
-        _material.SetFloat(ID_FogMaxDensity, _fogMaxDensity);
+        _material.SetColor(_fogColorID, _fogColor);
+        _material.SetFloat(_fogStartID, _fogStart);
+        _material.SetFloat(_fogEndID, _fogEnd);
+        _material.SetFloat(_fogMaxDensityID, _fogMaxDensity);
 
         Graphics.Blit(src, dest, _material);
     }

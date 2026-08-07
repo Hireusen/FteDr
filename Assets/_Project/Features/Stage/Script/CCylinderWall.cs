@@ -9,7 +9,7 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
     [SerializeField] private float _offset=1f;
     [SerializeField] private Image _fogImage;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private CapsuleCollider col;
+    private CapsuleCollider _col;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -30,7 +30,7 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
-        col = GetComponent<CapsuleCollider>();
+        _col = GetComponent<CapsuleCollider>();
     }
     private void OnTriggerStay(Collider other)
     {
@@ -43,7 +43,7 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
         dir.y = 0; 
 
         float distance = dir.magnitude;
-        float radius = col.radius * transform.localScale.x;
+        float radius = _col.radius * transform.localScale.x;
         distance = Mathf.Clamp(distance, radius - _offset, radius);
         Color tmp = _fogImage.color;
         tmp.a =  Mathf.Clamp((1-((radius-distance)/_offset)),0,0.8f);
