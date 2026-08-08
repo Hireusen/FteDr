@@ -19,7 +19,8 @@ Shader "Distant Lands/Stylized Coral"
 		CGPROGRAM
 		#include "UnityShaderVariables.cginc"
 		#pragma target 3.0
-		#pragma surface surf Standard keepalpha addshadow fullforwardshadows instancing 
+		#pragma instancing_options forwardadd
+		#pragma surface surf Standard keepalpha addshadow fullforwardshadows instancing
 		
 		struct Input
 		{
