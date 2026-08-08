@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 /// <summary>
 /// 게임을 껐다 켜도 유지되는 영속 데이터입니다.

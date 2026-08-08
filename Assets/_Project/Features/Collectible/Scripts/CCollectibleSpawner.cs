@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 /// <summary>
-/// 스테이지 진입 시 수집품을 공중에 스폰하고 중력으로 낙하시킨 후 Rigidbody를 제거합니다.
+/// 수집품을 생성하는 기능을 제공합니다.
 /// </summary>
 public sealed class CCollectibleSpawner : AMono
 {
@@ -11,12 +11,6 @@ public sealed class CCollectibleSpawner : AMono
     [Header("스폰 데이터")]
     [Tooltip("이 스테이지에서 스폰할 수집품 목록 SO")]
     [SerializeField] private CStageSpawnSO _spawnData;
-
-    [Header("생성 옵션")]
-    [Tooltip("씬 시작 시 자동으로 Spawn 호출")]
-    [SerializeField] private bool _spawnOnStart = true;
-    [Tooltip("생성된 오브젝트를 담을 부모(비우면 이 오브젝트)")]
-    [SerializeField] private Transform _container;
 
     [Header("스폰 범위")]
     [SerializeField] private ESpawnShape _shape = ESpawnShape.Box;
@@ -103,13 +97,39 @@ public sealed class CCollectibleSpawner : AMono
         _spawned = true;
         SpawnAll();
     }
+
+    /// <summary>
+    /// 저장된 데이터를 바탕으로 수집품을 생성합니다.
+    /// </summary>
+    public void SpawnExact(string soName, Vector3 pos, Quaternion rot, Vector3 scale)
+    {
+        _spawned = true;
+
+        CCollectibleSO targetSO = UData.Collectible(soName);
+        // 방어 코드
+        if (targetSO == null || targetSO.Prefab == null)
+        {
+            UDebug.Print($"수집품 로드 실패. {soName} SO를 찾을 수 없습니다.", LogType.Warning);
+            return;
+        }
+
+        // 배치
+        GameObject go = Instantiate(targetSO.Prefab, pos, rot);
+        go.transform.localScale = scale;
+
+        // 공중 수집품일 경우
+        if (targetSO.IsAir)
+        {
+            CCollectibleBob bob = go.GetOrAddComponent<CCollectibleBob>();
+            bob.Initialize();
+        }
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
     // 엔트리별 개수를 결정한 뒤 그 수만큼 생성한다.
     private void SpawnAll()
     {
-        Transform parent = _container != null ? _container : transform;
         IReadOnlyList<CStageSpawnSO.SpawnEntry> entries = _spawnData.Entries;
 
         int[] counts = DecideCounts(entries);
@@ -337,14 +357,6 @@ public sealed class CCollectibleSpawner : AMono
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    private void Start()
-    {
-        if (_spawnOnStart)
-        {
-            Spawn();
-        }
-    }
-
     // 에디터에서 스폰 범위를 시각화한다.
     private void OnDrawGizmosSelected()
     {

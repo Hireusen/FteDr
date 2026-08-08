@@ -513,7 +513,7 @@ namespace ColliderFitter
         // 대칭 3x3 행렬 Jacobi 고유분해
         private static void JacobiEigen(double[,] a, out double[] eigVals, out double[][] eigVecs)
         {
-            const int dim = 3;
+            const int DIM = 3;
             var v = new double[3, 3] { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } };
 
             for (int iter = 0; iter < 50; iter++)
@@ -521,9 +521,9 @@ namespace ColliderFitter
                 // 가장 큰 비대각 성분 위치
                 int p = 0, q = 1;
                 double maxOff = 0;
-                for (int i = 0; i < dim; i++)
+                for (int i = 0; i < DIM; i++)
                 {
-                    for (int j = i + 1; j < dim; j++)
+                    for (int j = i + 1; j < DIM; j++)
                     {
                         if (System.Math.Abs(a[i, j]) > maxOff)
                         {
@@ -539,19 +539,19 @@ namespace ColliderFitter
                 double phi = 0.5 * System.Math.Atan2(2 * apq, aqq - app);
                 double c = System.Math.Cos(phi), sn = System.Math.Sin(phi);
 
-                for (int i = 0; i < dim; i++)
+                for (int i = 0; i < DIM; i++)
                 {
                     double aip = a[i, p], aiq = a[i, q];
                     a[i, p] = c * aip - sn * aiq;
                     a[i, q] = sn * aip + c * aiq;
                 }
-                for (int i = 0; i < dim; i++)
+                for (int i = 0; i < DIM; i++)
                 {
                     double api = a[p, i], aqi = a[q, i];
                     a[p, i] = c * api - sn * aqi;
                     a[q, i] = sn * api + c * aqi;
                 }
-                for (int i = 0; i < dim; i++)
+                for (int i = 0; i < DIM; i++)
                 {
                     double vip = v[i, p], viq = v[i, q];
                     v[i, p] = c * vip - sn * viq;

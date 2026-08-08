@@ -20,6 +20,7 @@ Shader "Distant Lands/Stylized Glass"
 		struct Input
 		{
 			half filler;
+			UNITY_VERTEX_INPUT_INSTANCE_ID
 		};
 
 		uniform float4 _Tint;
@@ -27,6 +28,8 @@ Shader "Distant Lands/Stylized Glass"
 
 		void surf( Input i , inout SurfaceOutputStandard o )
 		{
+			UNITY_SETUP_INSTANCE_ID(i);
+
 			o.Albedo = _Tint.rgb;
 			o.Smoothness = _Smoothess;
 			o.Alpha = _Tint.a;
@@ -34,7 +37,7 @@ Shader "Distant Lands/Stylized Glass"
 
 		ENDCG
 		CGPROGRAM
-		#pragma surface surf Standard alpha:fade keepalpha fullforwardshadows 
+		#pragma surface surf Standard alpha:fade keepalpha fullforwardshadows instancing 
 
 		ENDCG
 		Pass
@@ -103,14 +106,3 @@ Shader "Distant Lands/Stylized Glass"
 	}
 	Fallback "Diffuse"
 }
-/*ASEBEGIN
-Version=18900
-63;119.5;938;499;1137.495;262.1266;1.570079;True;False
-Node;AmplifyShaderEditor.RangedFloatNode;2;-267.6717,91.14101;Inherit;False;Property;_Smoothess;Smoothess;1;0;Create;True;0;0;0;False;0;False;0.5;0;0;0;0;1;FLOAT;0
-Node;AmplifyShaderEditor.ColorNode;1;-537.1486,17.23489;Inherit;False;Property;_Tint;Tint;0;0;Create;True;0;0;0;False;0;False;1,1,1,0.4901961;0,0,0,0;True;0;5;COLOR;0;FLOAT;1;FLOAT;2;FLOAT;3;FLOAT;4
-Node;AmplifyShaderEditor.StandardSurfaceOutputNode;0;0,0;Float;False;True;-1;2;;0;0;Standard;Distant Lands/Stylized Glass;False;False;False;False;False;False;False;False;False;False;False;False;False;False;True;False;False;False;False;False;False;Off;0;False;-1;0;False;-1;False;0;False;-1;0;False;-1;False;0;Transparent;0.5;True;True;0;False;Transparent;;Transparent;All;14;all;True;True;True;True;0;False;-1;False;0;False;-1;255;False;-1;255;False;-1;0;False;-1;0;False;-1;0;False;-1;0;False;-1;0;False;-1;0;False;-1;0;False;-1;0;False;-1;False;2;15;10;25;False;0.5;True;2;5;False;-1;10;False;-1;0;0;False;-1;0;False;-1;0;False;-1;0;False;-1;0;False;0;0,0,0,0;VertexOffset;True;False;Cylindrical;False;Relative;0;;-1;-1;-1;-1;0;False;0;0;False;-1;-1;0;False;-1;0;0;0;False;0.1;False;-1;0;False;-1;False;16;0;FLOAT3;0,0,0;False;1;FLOAT3;0,0,0;False;2;FLOAT3;0,0,0;False;3;FLOAT;0;False;4;FLOAT;0;False;5;FLOAT;0;False;6;FLOAT3;0,0,0;False;7;FLOAT3;0,0,0;False;8;FLOAT;0;False;9;FLOAT;0;False;10;FLOAT;0;False;13;FLOAT3;0,0,0;False;11;FLOAT3;0,0,0;False;12;FLOAT3;0,0,0;False;14;FLOAT4;0,0,0,0;False;15;FLOAT3;0,0,0;False;0
-WireConnection;0;0;1;0
-WireConnection;0;4;2;0
-WireConnection;0;9;1;4
-ASEEND*/
-//CHKSM=086A3E3FB894A32F93B161A938ABC2EC2CBB6D6C
