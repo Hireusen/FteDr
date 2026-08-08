@@ -37,6 +37,7 @@ Shader "Distant Lands/Stylized Caustics"
             #pragma vertex ASECustomRenderTextureVertexShader
             #pragma fragment frag
             #pragma target 3.0
+			#pragma instancing_options forwardadd
 			#include "UnityShaderVariables.cginc"
 
 

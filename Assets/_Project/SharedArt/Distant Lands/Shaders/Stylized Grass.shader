@@ -25,6 +25,7 @@ Shader "Distant Lands/Stylized Grass"
 		#include "UnityShaderVariables.cginc"
 		#pragma target 3.0
 		#pragma multi_compile_instancing
+		#pragma instancing_options forwardadd
 		#pragma surface surf Standard keepalpha addshadow fullforwardshadows vertex:vertexDataFunc 
 		struct Input
 		{
