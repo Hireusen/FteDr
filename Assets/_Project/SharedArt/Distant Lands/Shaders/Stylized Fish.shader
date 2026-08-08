@@ -19,6 +19,7 @@ Shader "Distant Lands/Stylized Fish"
 		CGPROGRAM
 		#include "UnityShaderVariables.cginc"
 		#pragma target 3.0
+		#pragma instancing_options forwardadd
 		#pragma surface surf Standard keepalpha addshadow fullforwardshadows vertex:vertexDataFunc instancing 
 		
 		struct Input

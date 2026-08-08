@@ -4,12 +4,17 @@ using UnityEditor.Build.Reporting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// 씬이 로드/빌드될 때 오브젝트를 삭제하고 GPU 인스턴싱으로 대체합니다.
 /// </summary>
 public class CGPUInstancingBuilder : IProcessSceneWithReport
 {
+    private const string MANAGER_NAME = "GPU Instancing Manager";
+    private const float GRID_SIZE = 30f;
+    private const float BOUNDS_EXPAND = 10f; // 팝인 현상 방지
+
     // 인터페이스가 요구하는 콜백 순서
     public int callbackOrder => 0;
 
@@ -22,8 +27,8 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
         var targets = UObject.FindComponents<CGPUInstancingTarget>();
         if (targets.Length == 0) return;
 
-        // 동일한 Mesh와 Material을 사용하는 오브젝트끼리 그룹화
-        var groupedTargets = new Dictionary<(Mesh, Material), List<Matrix4x4>>();
+        // 동일한 메시, 머티리얼끼리 그룹화
+        var groupedTargets = new Dictionary<(Mesh, Material, int, Vector3Int), InstancingGroup>();
         for (int i = 0; i < targets.Length; i++)
         {
             var target = targets[i];
@@ -34,13 +39,23 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
             // 필터나 렌더러 누락 검사
             if (filter == null || renderer == null) continue;
 
+            Vector3 pos = target.transform.position;
+            // 3D 그리드 인덱스
+            Vector3Int gridPos = new Vector3Int(
+                Mathf.FloorToInt(pos.x / GRID_SIZE),
+                Mathf.FloorToInt(pos.y / GRID_SIZE),
+                Mathf.FloorToInt(pos.z / GRID_SIZE)
+            );
+
+            int layer = target.gameObject.layer;
             // 튜플 키 만들어서 넣기
-            var key = (filter.sharedMesh, renderer.sharedMaterial);
+            var key = (filter.sharedMesh, renderer.sharedMaterial, layer, gridPos);
             if (!groupedTargets.ContainsKey(key))
             {
-                groupedTargets[key] = new List<Matrix4x4>();
+                groupedTargets[key] = new InstancingGroup();
             }
-            groupedTargets[key].Add(target.transform.localToWorldMatrix);
+            groupedTargets[key].matrices.Add(target.transform.localToWorldMatrix);
+            groupedTargets[key].positions.Add(target.transform.position);
 
             // 콜라이더 존재 여부에 따라 삭제 범위 결정
             if (target.GetComponent<Collider>() != null)
@@ -64,24 +79,59 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
             // 변수 준비
             Mesh targetMesh = kvp.Key.Item1;
             Material targetMat = kvp.Key.Item2;
-            List<Matrix4x4> matrices = kvp.Value;
+            int targetLayer = kvp.Key.Item3;
+            var group = kvp.Value;
 
             // 매니저 오브젝트 생성
-            GameObject managerObj = new GameObject($"GPU_Instancing_Manager_{managerIndex++}");
+            GameObject managerObj = new GameObject($"{MANAGER_NAME}_{managerIndex++}");
 
             // 렌더러 설정
             var instancingRenderer = managerObj.AddComponent<GPUInstancingRenderer>();
-            instancingRenderer.SetMeshAndMaterial(targetMesh, targetMat);
+            instancingRenderer.SetMeshAndMaterial(targetMesh, targetMat, targetLayer);
 
             // 행렬 분할 저장
-            for (int i = 0; i < matrices.Count; i += 1023)
+            for (int i = 0; i < group.matrices.Count; i += 1023)
             {
-                int length = Mathf.Min(1023, matrices.Count - i);
+                int length = Mathf.Min(1023, group.matrices.Count - i);
+                // 배치 생성
                 Matrix4x4[] batch = new Matrix4x4[length];
-                matrices.CopyTo(i, batch, 0, length);
-                instancingRenderer.AddMatrix(batch);
+                Vector3[] posBatch = new Vector3[length];
+                group.matrices.CopyTo(i, batch, 0, length);
+                group.positions.CopyTo(i, posBatch, 0, length);
+
+                // 바운딩 박스 생성
+                Bounds checkBounds = new Bounds(posBatch[0], Vector3.zero);
+                for (int j = 0; j < length; ++j)
+                {
+                    checkBounds.Encapsulate(posBatch[j]);
+                }
+                checkBounds.Expand(BOUNDS_EXPAND); // 애니메이션과 메시 크기 고려 → 여유 공간 확보
+
+                // 빛 정보 추출
+                var mpb = BuildMPB(posBatch, length);
+
+                // 완성된 데이터 주입
+                instancingRenderer.AddMatrix(batch, mpb, checkBounds);
             }
         }
+    }
+
+    // 빛 정보 추출하기
+    private MaterialPropertyBlock BuildMPB(in Vector3[] posBatch, int length)
+    {
+        SphericalHarmonicsL2[] lightProbes = new SphericalHarmonicsL2[length]; // 3차원 공간 조명 정보
+        LightProbes.CalculateInterpolatedLightAndOcclusionProbes(posBatch, lightProbes, null);
+
+        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+        mpb.CopySHCoefficientArraysFrom(lightProbes);
+        return mpb;
+    }
+
+    // 매트릭스와 빛 연산을 위한 좌표를 저장
+    private class InstancingGroup
+    {
+        public List<Matrix4x4> matrices = new();
+        public List<Vector3> positions = new();
     }
 }
 #endif
