@@ -11,10 +11,14 @@ using UnityEngine.Rendering;
 /// </summary>
 public class CGPUInstancingBuilder : IProcessSceneWithReport
 {
+    #region ─────────────────────────▷ 내부 변수 ◁─────────────────────────
+    private static Transform _root;
     private const string MANAGER_NAME = "GPU Instancing Manager";
     private const float GRID_SIZE = 30f;
     private const float BOUNDS_EXPAND = 10f; // 팝인 현상 방지
+    #endregion
 
+    #region ─────────────────────────▷ 공개 멤버 ◁─────────────────────────
     // 인터페이스가 요구하는 콜백 순서
     public int callbackOrder => 0;
 
@@ -83,7 +87,11 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
             var group = kvp.Value;
 
             // 매니저 오브젝트 생성
-            GameObject managerObj = new GameObject($"{MANAGER_NAME}_{managerIndex++}");
+            if (_root == null)
+            {
+                _root = UObject.Create(MANAGER_NAME).transform;
+            }
+            GameObject managerObj = UObject.Create($"{MANAGER_NAME}_{managerIndex++}", _root);
 
             // 렌더러 설정
             var instancingRenderer = managerObj.AddComponent<GPUInstancingRenderer>();
@@ -115,7 +123,9 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
             }
         }
     }
+    #endregion
 
+    #region ─────────────────────────▷ 내부 메서드 ◁─────────────────────────
     // 빛 정보 추출하기
     private MaterialPropertyBlock BuildMPB(in Vector3[] posBatch, int length)
     {
@@ -133,5 +143,6 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
         public List<Matrix4x4> matrices = new();
         public List<Vector3> positions = new();
     }
+    #endregion
 }
 #endif
