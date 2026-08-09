@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿#if UNITY_EDITOR
+using UnityEditor;
 using UnityEngine;
 
 /// <summary>
@@ -18,3 +19,4 @@ public class ReadOnlyDrawer : PropertyDrawer
         return base.GetPropertyHeight(property, label);
     }
 }
+#endif

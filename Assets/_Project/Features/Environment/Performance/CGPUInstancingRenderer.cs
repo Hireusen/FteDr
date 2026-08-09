@@ -53,14 +53,14 @@ public class GPUInstancingRenderer : AFrameable, IUpdateFrameable
         if (_instanceMesh == null || _instanceMaterial == null) return;
 
         // 카메라의 시야 평면 추출
-        //GeometryUtility.CalculateFrustumPlanes(mainCam, _frustumPlanes);
+        GeometryUtility.CalculateFrustumPlanes(mainCam, _frustumPlanes);
 
         // 렌더링
         int count = _matrixBatches.Count;
         for (int i = 0; i < count; ++i)
         {
             // 각 청크의 바운딩 박스가 카메라 시야에 들어오는가?
-            //if (!GeometryUtility.TestPlanesAABB(_frustumPlanes, _boundsBatches[i])) continue;
+            if (!GeometryUtility.TestPlanesAABB(_frustumPlanes, _boundsBatches[i])) continue;
 
             Matrix4x4[] batch = _matrixBatches[i];
 
@@ -79,19 +79,27 @@ public class GPUInstancingRenderer : AFrameable, IUpdateFrameable
         if (_matrixBatches == null || _matrixBatches.Count == 0) return;
 
         // 준비
-        const float DRAWLINE_LENGTH = 3f;
+        const float DECAY_COUNT = 1f / 50f;
+        const float DRAWLINE_MIN_LENGTH = 1.5f;
+        const float DRAWLINE_MAX_LENGTH = 20f;
         Gizmos.color = new Color(1f, 0.6f, 0f, 0.8f);
 
+        // 레이 길이 계산
+        float t = UMath.GetSmoothT(_count, DECAY_COUNT);
+        float lineLength = Mathf.Lerp(DRAWLINE_MAX_LENGTH, DRAWLINE_MIN_LENGTH, t);
+
         // 모든 렌더러 순회
-        foreach(var batch in _matrixBatches)
+        foreach (var batch in _matrixBatches)
         {
-            for (int i = 0; i < batch.Length; ++i)
+            int length = batch.Length;
+
+            // 배치 안에 속한 모든 오브젝트 레이 그리기
+            for (int i = 0; i < length; ++i)
             {
                 Vector3 objPos = batch[i].GetPosition();
-                UDebug.UpRay(objPos, DRAWLINE_LENGTH);
+                UDebug.UpRay(objPos, lineLength);
             }
         }
-
     }
 #endif
     #endregion
