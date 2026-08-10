@@ -25,11 +25,14 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     [SerializeField] private int _currentDistantLevel = 0;
     [SerializeField] private int _currentSpeedLevel = 0;
     [SerializeField] private Transform _playerCam;
+    [SerializeField] private CDiverToAim _diverToAim;
+    [SerializeField] private float _shoulderReadyTime=1f;
+
 
     //test모드가 활성화 중이면 테스트 데이터(스피드,거리)로 작동 
     [SerializeField] private bool _testmode = false;
     #endregion
-
+    
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private ConfigurableJoint _armJoint;
     private Rigidbody _armRigidBody;
@@ -43,6 +46,9 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
 
     private bool _rotateLeftHeld;
     private bool _rotateRightHeld;
+
+    private Vector3 _shoulderReadyPos = new Vector3(-0.8f, 7.72f, 23.9f);
+    private Vector3 _shoulderWaitPos = new Vector3(1.9f, 7.7f, 0.3f);
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -216,8 +222,21 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 _twizers.GrabSetting(false);
                 USound.PlaySfx("SFX_v2_metal_02");
                 _controller.IsControlLockedByGrab = false;
-                print("상태변경>wait");
+                UDebug.Print("상태변경>wait");
                 grabStatus = EGrabStatus.Wait;
+                //집게 가리는 코드 추가해야함.
+                StartCoroutine(WaitTwizersCo());
+                _diverToAim.AimCanvas.SetActive(false);
+                _controller.MoveLockOFF();
+                break;
+            case EGrabStatus.ReadyShoot:
+                //USound(조준효과음)
+                _diverToAim.AimCanvas.SetActive(true);
+                //스피드 제한 추가.(지금은 일단 잠금)
+                _controller.MoveLockOn();
+                //집게 연출 코루틴 안에서 연출 종료 후 상태변경
+                StartCoroutine(ReadyTwizersCo());
+                
                 break;
             case EGrabStatus.Shooting:
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
@@ -294,6 +313,35 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 break;
         }
     }
+    private IEnumerator ReadyTwizersCo()
+    {
+        //Vector3.MoveTowards(_)
+        USound.PlaySfx("SFX_v2_metal_02");
+        float timer = 0f;
+        while (timer < _shoulderReadyTime)
+        {
+            timer += Time.deltaTime;
+            _shoulder.transform.localPosition=Vector3.Lerp(_shoulder.transform.localPosition, _shoulderReadyPos, timer / _shoulderReadyTime);
+            yield return null;
+        }
+        _shoulder.transform.localPosition = _shoulderReadyPos;
+        UDebug.Print("상태변경>Readyshoot");
+        grabStatus = EGrabStatus.ReadyShoot;
+
+    }
+    private IEnumerator WaitTwizersCo()
+    {
+        //Vector3.MoveTowards(_)
+        float timer = 0f;
+        while (timer < _shoulderReadyTime)
+        {
+            timer += Time.deltaTime;
+            _shoulder.transform.localPosition = Vector3.Lerp(_shoulder.transform.localPosition, _shoulderWaitPos, timer / _shoulderReadyTime);
+            yield return null;
+        }
+        _shoulder.transform.localPosition = _shoulderWaitPos;
+
+    }
     private CCollectible GetItem()
     {
         CCollectible item = null;
@@ -332,11 +380,25 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         // if (UPlayer.CurrentFuel <= 0f) return;
         if (_controller.IsControlLocked) return;
         if (Time.timeScale == 0f) return;
-
-        ChangeStatus(EGrabStatus.Shooting);
+        //조준 단계 추가
+        if (grabStatus == EGrabStatus.Wait)
+        {
+            ChangeStatus(EGrabStatus.ReadyShoot);
+            return;
+        }
+        if (grabStatus == EGrabStatus.ReadyShoot)
+        {
+            ChangeStatus(EGrabStatus.Shooting);
+        }
     }
     private void CollectInputHandler(OnInputCollect ctx)
     {
+        //조준 단계 추가
+        if (grabStatus == EGrabStatus.ReadyShoot)
+        {
+            ChangeStatus(EGrabStatus.Wait);
+            return;
+        }
         if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
     }
     private IEnumerator ArmToOriginCo()
@@ -406,6 +468,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     public enum EGrabStatus
     {
         Wait,
+        ReadyShoot,
         Shooting,
         Connect,
         Grab,

@@ -94,7 +94,8 @@ public class CAimShow : AFrameable, IUpdateFrameable
     {
         var player = CGameManager.Player;
         var comp=player.GetComponent<CDiverToAim>();
-        (_grabScript, _armTransform, _cam) = comp.GetReference();
+        (_grabScript, _armTransform, _cam) = comp.GetReference(this.gameObject);
+        this.gameObject.SetActive(false);
 
     }
     #endregion

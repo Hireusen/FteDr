@@ -69,6 +69,9 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     private bool _lockByFuel = false;
 
     private EMoveLockReason _uiLockReasons = EMoveLockReason.None;
+
+    //이동 조작 막기용 변수
+    private bool _movelock = false;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -79,10 +82,20 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     /// <summary>하나의 사유라도 서 있으면 조작이 잠깁니다.</summary>
     public bool IsControlLocked => _lockByGrab || _lockByFuel || _uiLockReasons != EMoveLockReason.None;
 
+    public void MoveLockOn()
+    {
+        _movelock = true;
+    }
+    public void MoveLockOFF()
+    {
+        _movelock = false;
+    }
+
     /// <summary>
     /// 시선(회전)을 제외한 실제 이동 조작(이동/상승)이 들어오고 있는지 여부입니다.
     /// 연료 소모 판정용이며, 조작이 잠긴 동안에는 실제 이동이 없으므로 false입니다.
     /// </summary>
+
     public bool HasMovementInput
     {
         get
@@ -164,6 +177,7 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
         _moveDirection = CalcMoveDirection();
         if (IsControlLocked) _moveDirection = Vector3.zero; // 잠금: 이동 무시
+        if(_movelock==true) _moveDirection = Vector3.zero; //이동만 잠그는 용도
 
         if (_currentState == EPlayerState.Swimming)
         {
