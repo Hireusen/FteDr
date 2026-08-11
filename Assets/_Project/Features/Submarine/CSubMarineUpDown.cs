@@ -250,6 +250,17 @@ public class CSubMarineUpDown : AMono
         }
 
         _moveOn = false;
+
+        CheckAndShowPendingSellNotice();
+    }
+
+    private void CheckAndShowPendingSellNotice()
+    {
+        if (!string.IsNullOrEmpty(CShopSellController.PendingSellNotice))
+        {
+            OnRequestNotice.Publish(CShopSellController.PendingSellNotice);
+            CShopSellController.PendingSellNotice = null;
+        }
     }
     #endregion
 }
