@@ -11,6 +11,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     [SerializeField] private Transform _cam;
     [SerializeField] private Transform _armTransform;
     [SerializeField] private LayerMask _collectibleLayout;
+    [SerializeField] private AimInfo _aimInfo;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectible _currentAimObject;
     #endregion
@@ -29,13 +30,18 @@ public class CAimShow : AFrameable, IUpdateFrameable
         RaycastHit hit;
         if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 4, _collectibleLayout))
         {
-            //아웃라인용
+            //아웃라인용+ 조준모드 툴팁표시
             CCollectible temp=hit.transform.root.gameObject.GetComponent<CCollectible>();
             if (temp != _currentAimObject)
             {
-                if(_currentAimObject!=null)_currentAimObject.HideOutline();
-
+                if (_currentAimObject != null)
+                {
+                    _currentAimObject.HideOutline();
+                    _aimInfo.HideTooltip();
+                }
                 _currentAimObject=temp;
+
+                _aimInfo.ShowTooltip(_currentAimObject);
                 _currentAimObject.ShowOutline();
                 print("outlineshow");
                 
@@ -57,6 +63,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
             if (_currentAimObject != null)
             {
                 _currentAimObject.HideOutline();
+                _aimInfo.HideTooltip();
                 _currentAimObject = null;
             }
         }

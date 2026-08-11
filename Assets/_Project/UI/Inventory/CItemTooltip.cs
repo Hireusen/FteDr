@@ -38,11 +38,15 @@ public sealed class CItemTooltip : AFrameable, IUpdateFrameable
 
     [Header("등급 색상 매핑")]
     [SerializeField] private List<RarityVisualData> _rarityVisuals = new();
+
+    [Header("조준모드에 띄우는건지 확인")]
+    [SerializeField] private bool _zozunMode = false;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private Dictionary<ECollectibleRarity, RarityVisualData> _rarityLookup;
     private bool _isVisible;
+    
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -52,7 +56,7 @@ public sealed class CItemTooltip : AFrameable, IUpdateFrameable
     public void ExecuteUpdateFrame()
     {
         if (!_isVisible) return;
-
+        if (_zozunMode) return;
         UpdatePosition(Input.mousePosition);
     }
     #endregion
