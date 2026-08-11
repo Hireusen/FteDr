@@ -355,7 +355,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         // 배낭 입력 성공 및 아이템 삭제
         if (success)
         {
-            Destroy(itemObj);
+            itemObj.SetActive(false);
         }
         // 배낭 입력 실패 및 아이템 놓기
         else
