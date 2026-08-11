@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 /// <summary>
 /// 저장 데이터가 존재할 경우 수집품을 배치합니다.
@@ -71,6 +72,31 @@ public class CStageLoader : AMono
         return data;
     }
 
+    // 부트 매니저가 준비될 때까지 대기
+    private IEnumerator CreateCollectiblesCo()
+    {
+        while (!CBootManager.IsInitialized)
+        {
+            yield return null;
+        }
+        CreateCollectibles();
+    }
+
+    // 수집품을 불러오기 또는 생성
+    private void CreateCollectibles()
+    {
+        // 씬 재진입
+        if (IsExistSaveData)
+        {
+            LoadCollectible();
+        }
+        // 씬 최초 로딩
+        else if (_spawnOnStart)
+        {
+            _spawner.Spawn();
+        }
+    }
+
     private void SceneLoadStartHandler(OnSceneLoadStart ctx)
     {
         SaveCollectible();
@@ -95,16 +121,7 @@ public class CStageLoader : AMono
 
     private void Start()
     {
-        // 씬 재진입
-        if (IsExistSaveData)
-        {
-            LoadCollectible();
-        }
-        // 씬 최초 로딩
-        else if (_spawnOnStart)
-        {
-            _spawner.Spawn();
-        }
+        StartCoroutine(CreateCollectiblesCo());
     }
     #endregion
 
