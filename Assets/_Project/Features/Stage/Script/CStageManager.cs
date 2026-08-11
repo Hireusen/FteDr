@@ -60,6 +60,7 @@ public class CStageManager : AFrameable, IUpdateFrameable
             return;
         }
         _respawnRoutine = StartCoroutine(RespawnCo());
+        
     }
     #endregion
 

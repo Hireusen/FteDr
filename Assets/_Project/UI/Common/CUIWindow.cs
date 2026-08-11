@@ -107,7 +107,7 @@ public sealed class CUIWindow : AMono, IUIWindow
         }
         else
         {
-            UDebug.Print($"CUIWindow({_uiType}): 닫기 버튼이 연결되지 않았습니다. 모든 창은 닫기 버튼을 가져야 합니다.", LogType.Warning, gameObject);
+            UDebug.Print($"CUIWindow({_uiType}): 닫기 버튼이 연결되지 않았습니다.", LogType.Log, gameObject);
         }
 
         // 이 창 아래의 모든 버튼(닫기 버튼 포함)에 호버/클릭 연출 + 클릭 SFX를 자동으로 붙인다.
