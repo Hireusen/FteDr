@@ -7,6 +7,7 @@ using System.Collections.Generic;
 [RequireComponent(typeof(LightProbeGroup))]
 public class CLightProbeGenerator : MonoBehaviour
 {
+#if UNITY_EDITOR
     [Header("프로브 간격 (X, Z축)")]
     public float spacing = 10f;
 
@@ -58,7 +59,7 @@ public class CLightProbeGenerator : MonoBehaviour
         probeGroup.probePositions = probePositions.ToArray();
         UDebug.Print($"{probePositions.Count}개의 라이트 프로브 자동 배치 완료!");
     }
-
+#endif
     private void Awake()
     {
         BoxCollider box = GetComponent<BoxCollider>();

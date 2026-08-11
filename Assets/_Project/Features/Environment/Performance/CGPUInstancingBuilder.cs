@@ -11,10 +11,15 @@ using UnityEngine.Rendering;
 /// </summary>
 public class CGPUInstancingBuilder : IProcessSceneWithReport
 {
+    #region ─────────────────────────▷ 내부 변수 ◁─────────────────────────
+    private static Transform _root;
     private const string MANAGER_NAME = "GPU Instancing Manager";
-    private const float GRID_SIZE = 30f;
-    private const float BOUNDS_EXPAND = 10f; // 팝인 현상 방지
+    private const float GRID_SIZE = 50f;
+    private const float BOUNDS_EXPAND = 5f; // 팝인 현상 방지
+    private const int MIN_INSTANCE_COUNT = 50;
+    #endregion
 
+    #region ─────────────────────────▷ 공개 멤버 ◁─────────────────────────
     // 인터페이스가 요구하는 콜백 순서
     public int callbackOrder => 0;
 
@@ -56,34 +61,62 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
             }
             groupedTargets[key].matrices.Add(target.transform.localToWorldMatrix);
             groupedTargets[key].positions.Add(target.transform.position);
+            groupedTargets[key].originalTargets.Add(target);
+        }
 
-            // 콜라이더 존재 여부에 따라 삭제 범위 결정
-            if (target.GetComponent<Collider>() != null)
-            {
-                // 콜라이더 존재 시 렌더러, 필터, 타겟만 삭제
-                Object.DestroyImmediate(renderer);
-                Object.DestroyImmediate(filter);
-                Object.DestroyImmediate(target);
-            }
-            else
-            {
-                // 콜라이더 없을 시 전부 삭제
-                Object.DestroyImmediate(target.gameObject);
-            }
+        {
+
         }
 
         // 그룹별로 매니저 오브젝트 및 렌더러 생성
         int managerIndex = 0;
         foreach (var kvp in groupedTargets)
         {
+            var group = kvp.Value;
+            // 개수가 적을 시 인스턴싱 생략
+            if (group.matrices.Count < MIN_INSTANCE_COUNT)
+            {
+                foreach (var target in group.originalTargets)
+                {
+                    if (target != null) Object.DestroyImmediate(target); // 컴포넌트만 제거
+                }
+                continue;
+            }
+
+            // GPU 인스턴싱할 오브젝트 청소
+            foreach (var target in group.originalTargets)
+            {
+                if (target == null) continue;
+
+                // 콜라이더 존재 여부에 따라 삭제 범위 결정
+                if (target.GetComponent<Collider>() != null)
+                {
+                    // 콜라이더 존재 시 렌더러, 필터, 타겟만 삭제
+                    var renderer = target.GetComponent<Renderer>();
+                    var filter = target.GetComponent<MeshFilter>();
+
+                    if (renderer != null) Object.DestroyImmediate(renderer);
+                    if (filter != null) Object.DestroyImmediate(filter);
+                    Object.DestroyImmediate(target);
+                }
+                else
+                {
+                    // 콜라이더 없을 시 전부 삭제
+                    Object.DestroyImmediate(target.gameObject);
+                }
+            }
+
             // 변수 준비
             Mesh targetMesh = kvp.Key.Item1;
             Material targetMat = kvp.Key.Item2;
             int targetLayer = kvp.Key.Item3;
-            var group = kvp.Value;
 
             // 매니저 오브젝트 생성
-            GameObject managerObj = new GameObject($"{MANAGER_NAME}_{managerIndex++}");
+            if (_root == null)
+            {
+                _root = UObject.Create(MANAGER_NAME).transform;
+            }
+            GameObject managerObj = UObject.Create($"{MANAGER_NAME}_{managerIndex++}", _root);
 
             // 렌더러 설정
             var instancingRenderer = managerObj.AddComponent<GPUInstancingRenderer>();
@@ -115,7 +148,9 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
             }
         }
     }
+    #endregion
 
+    #region ─────────────────────────▷ 내부 메서드 ◁─────────────────────────
     // 빛 정보 추출하기
     private MaterialPropertyBlock BuildMPB(in Vector3[] posBatch, int length)
     {
@@ -132,6 +167,8 @@ public class CGPUInstancingBuilder : IProcessSceneWithReport
     {
         public List<Matrix4x4> matrices = new();
         public List<Vector3> positions = new();
+        public List<CGPUInstancingTarget> originalTargets = new();
     }
+    #endregion
 }
 #endif
