@@ -14,25 +14,31 @@ public sealed class CShopSellController : AMono
     [SerializeField] private Button _btnSellAll;
     #endregion
 
+    #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    public static string PendingSellNotice = null;
+    #endregion
+
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Start()
     {
         if (_btnSellAll != null)
         {
-            _btnSellAll.onClick.AddListener(OnClickSellAll);
+            _btnSellAll.onClick.AddListener(() => ExecuteSellAll(true));
         }
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private void OnClickSellAll()
+    public static void ExecuteSellAll(bool showResultUI)
     {
         var bagItems = UPlayer.BagItems;
         if (bagItems.Count == 0)
         {
-            OnRequestNotice.Publish("판매할 아이템이 없습니다.");
+            if (showResultUI) OnRequestNotice.Publish("판매할 아이템이 없습니다.");
             return;
         }
+
+        int totalItemCount = bagItems.Count;
 
         // id별 개수 집계
         Dictionary<string, int> counts = new();
@@ -57,7 +63,7 @@ public sealed class CShopSellController : AMono
             totalGold += subtotal;
         }
 
-        // 가방 비우기 (CPlayerManager를 건드리지 않고 공개된 Runtime 직접 조작 + 이벤트 수동 발행)
+        // 가방 비우기 
         CPlayerManager manager = CPlayerManager.Ins;
         if (manager != null)
         {
@@ -66,14 +72,21 @@ public sealed class CShopSellController : AMono
             OnPlayerWeightChanged.Publish(0f, UPlayer.MaxWeight);
         }
 
-        // 골드 지급 (이미 있는 메서드 재사용, OnMoneyChanged는 내부에서 자동 발행됨)
+        // 골드 지급 
         UPlayer.AddMoney(totalGold);
 
-        // 먼저 Result 창을 열어 CResultController를 활성화(구독 시작)시킨 뒤
-        OnRequestOpenUI.Publish(EUI.ResultWindow);
+        // showResultUI 플래그에 따라 결산 창 호출 여부 결정
+        if (showResultUI)
+        {
+            OnRequestOpenUI.Publish(EUI.ResultWindow);
+        }
+        else
+        {
+            PendingSellNotice = $"총 {totalItemCount}개의 아이템을 판매하여 {totalGold}골드를 얻었습니다.";
+        }
 
-        // 그 다음에 데이터를 전달한다
-        OnItemsSold.Publish(entries, totalGold);
+            // 데이터 전달
+            OnItemsSold.Publish(entries, totalGold);
     }
     #endregion
 }
