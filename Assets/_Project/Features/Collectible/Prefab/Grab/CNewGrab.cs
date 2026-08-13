@@ -356,6 +356,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         if (success)
         {
             itemObj.SetActive(false);
+
+            CPlayerManager.Ins.StoreHiddenItem(itemObj);
         }
         // 배낭 입력 실패 및 아이템 놓기
         else
