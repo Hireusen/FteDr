@@ -217,6 +217,15 @@ public class AssetDeduplicator : EditorWindow
                 if (text.Contains(oldGUID))
                 {
                     text = text.Replace(oldGUID, newGUID);
+
+                    // 읽기 전용 해제
+                    FileInfo fileInfo = new FileInfo(assetPath);
+                    if (fileInfo.IsReadOnly)
+                    {
+                        fileInfo.IsReadOnly = false;
+                        Debug.Log($"[읽기 전용] {Path.GetFileName(assetPath)}의 읽기 전용 속성을 해제했습니다.");
+                    }
+
                     File.WriteAllText(assetPath, text);
                     Debug.Log($"[레퍼런스 수정됨] {Path.GetFileName(assetPath)} 내부의 {oldGUID}를 {newGUID}로 교체했습니다.");
                 }
