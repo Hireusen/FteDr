@@ -67,6 +67,14 @@ public class CPlayerToCockpit : AFrameable, IUpdateFrameable
             UDebug.Print($"목표 스테이지 : {nextStage}, 해금된 스테이지 : {UPlayer.UnlockedStage}");
             if (UPlayer.IsStageUnlocked(nextStage))
             {
+                PlayerRuntimeData runtimeData = CPlayerManager.Ins.Runtime;
+
+                if (runtimeData.bagItems.Count > 0)
+                {
+                    UDebug.Print($"가방에 있는 아이템 갯수 : {runtimeData.bagItems.Count}");
+                    CShopSellController.ExecuteSellAll(false);
+                }
+
                 OnSetMoveLockReason.Publish(EMoveLockReason.Submarine, false);
                 _cSubMarineUpDown.StartCutScene(true);
                 SitCockpit = false;
