@@ -52,6 +52,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    public static CNewGrab Instance;
+
     public EGrabStatus grabStatus = EGrabStatus.Wait;
     public void ShootWrist()
     {
@@ -420,10 +422,12 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     }
     private void RotateLeftHandler(OnInputRotateTwizerLeft ctx)
     {
+        if (grabStatus != EGrabStatus.ReadyShoot) return;
         _rotateLeftHeld = ctx.leftPressed;
     }
     private void RotateRightHandler(OnInputRotateTwizerRight ctx)
     {
+        if (grabStatus != EGrabStatus.ReadyShoot) return;
         _rotateRightHeld = ctx.rightPressed;
     }
     #endregion
@@ -431,6 +435,12 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
         _armJoint = _arm.GetComponent<ConfigurableJoint>();
         _twizersJointToArm = _twizersAnchor.GetComponent<ConfigurableJoint>();
         _armRigidBody = _arm.GetComponent<Rigidbody>();
