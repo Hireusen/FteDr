@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// 플레이어의 런타임 데이터를 보유하고 스탯을 계산하는 매니저입니다.
@@ -9,6 +11,8 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     private readonly PlayerRuntimeData _runtime = new();
 
     private EFuelState _fuelState = EFuelState.Normal;
+
+    private readonly List<GameObject> _hiddenItems = new();
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -18,6 +22,33 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     public PlayerRuntimeData Runtime => _runtime;
 
     public EFuelState FuelState => _fuelState;
+
+    /// <summary>
+    /// 수집에 성공하여 비활성화된 수집품 오브젝트를 보관합니다.
+    /// </summary>
+    /// <param name="itemObj"></param>
+    public void StoreHiddenItem(GameObject itemObj)
+    {
+        if (itemObj != null)
+        {
+            _hiddenItems.Add(itemObj);
+        }
+    }
+
+    /// <summary>
+    /// 상점에서 아이템을 판매할 때 호출하여, 가방에 들어있던 비활성화 수집품들을 메모리에서 완전히 파괴합니다.
+    /// </summary>
+    public void DestroyHiddenItems()
+    {
+        foreach (GameObject go in _hiddenItems)
+        {
+            if (go != null)
+            {
+                Destroy(go);
+            }
+        }
+        _hiddenItems.Clear();
+    }
     #endregion
 
     #region ─────────────────────────▶ 연료 ◀─────────────────────────
@@ -164,6 +195,101 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
 
         _runtime.heldSpecialItem = specialId;
         return true;
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 사망 / 드롭 처리 ◀─────────────────────────
+    public void DropAllBagItems(Vector3 dropCenter, CPlayerDropConfig config = null)
+    {
+        if (_runtime.bagItems.Count == 0) return;
+
+        float radius = config != null ? config.ScatterRadius : 3f;
+        float upForce = config != null ? config.ScatterUpForce : 5f;
+        float outForce = config != null ? config.ScatterOutForce : 3f;
+
+        foreach (string collectibleId in _runtime.bagItems)
+        {
+            CCollectibleSO so = UData.Collectible(collectibleId);
+            if (so != null && so.Prefab != null)
+            {
+                Vector2 randomCircle = UnityEngine.Random.insideUnitCircle * radius;
+                Vector3 targetPos = dropCenter + new Vector3(randomCircle.x, 1f, randomCircle.y);
+
+                Vector3 spawnPos = dropCenter + new Vector3(randomCircle.x * 0.2f, 1f, randomCircle.y * 0.2f);
+                Quaternion randomRot = UnityEngine.Random.rotationUniform;
+
+                GameObject go = Instantiate(so.Prefab, spawnPos, randomRot);
+                go.transform.localScale = so.Prefab.transform.localScale * so.GetRandomScale();
+
+                if (!so.IsAir)
+                {
+                    Rigidbody rb = go.GetOrAddComponent<Rigidbody>();
+                    rb.mass = Mathf.Max(0.01f, so.Weight);
+                    rb.isKinematic = false;
+                    rb.useGravity = true;
+
+                    Vector3 forceDir = (targetPos - dropCenter).normalized;
+                    forceDir.y = 0f;
+                    rb.AddForce(forceDir * outForce + Vector3.up * upForce, ForceMode.Impulse);
+
+                    StartCoroutine(SettleDroppedItemRoutine(go, rb));
+                }
+                else
+                {
+                    go.transform.position = targetPos;
+                    if (go.TryGetComponent(out CCollectibleBob bob))
+                    {
+                        bob.Initialize();
+                    }
+                }
+            }
+        }
+
+        foreach (GameObject hiddenObj in _hiddenItems)
+        {
+            if (hiddenObj != null) Destroy(hiddenObj);
+        }
+
+        // 3. 데이터 초기화
+        _runtime.bagItems.Clear();
+        _hiddenItems.Clear();
+        PublishBag();
+    }
+
+    private IEnumerator SettleDroppedItemRoutine(GameObject go, Rigidbody rb)
+    {
+        float elapsed = 0f;
+        float stillTime = 0f;
+        float sleepSqr = 0.05f * 0.05f;
+
+        while (go != null && rb != null)
+        {
+            if (rb.velocity.sqrMagnitude <= sleepSqr)
+            {
+                stillTime += Time.deltaTime;
+                if (stillTime >= 0.4f)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                stillTime = 0f;
+            }
+
+            elapsed += Time.deltaTime;
+            if (elapsed >= 6f)
+            {
+                break;
+            }
+
+            yield return null;
+        }
+
+        if (rb != null)
+        {
+            Destroy(rb);
+        }
     }
     #endregion
 

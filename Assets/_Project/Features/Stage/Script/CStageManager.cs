@@ -59,6 +59,15 @@ public class CStageManager : AFrameable, IUpdateFrameable
             UDebug.Print("리스폰 연출이 이미 진행 중이라 요청을 무시합니다.", LogType.Warning);
             return;
         }
+
+        if (CGameManager.Player != null)
+        {
+            Vector3 playerPos = CGameManager.Player.transform.position;
+            CPlayerDropConfig dropConfig = CGameManager.Player.GetComponent<CPlayerDropConfig>();
+
+            CPlayerManager.Ins.DropAllBagItems(playerPos, dropConfig);
+        }
+
         _respawnRoutine = StartCoroutine(RespawnCo());
         
     }
