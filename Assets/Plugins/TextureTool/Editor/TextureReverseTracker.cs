@@ -2,7 +2,6 @@
 using UnityEditor;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 public class TextureReverseTracker : EditorWindow
 {
@@ -11,7 +10,6 @@ public class TextureReverseTracker : EditorWindow
     private Vector2 scrollPos;
     private bool hasSearched = false;
 
-    // 향후 프리팹 관련 에디터들을 따로 분류해두실 계획에 맞춰 메뉴 경로를 설정했습니다.
     [MenuItem("Tools/Prefab Editor/텍스처 역추적 (폴더 의존성 검사)")]
     public static void ShowWindow()
     {
@@ -99,47 +97,66 @@ public class TextureReverseTracker : EditorWindow
             return;
         }
 
-        // 2. 프로젝트 내 모든 프리팹 경로 수집
-        string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab");
-        List<string> allPrefabPaths = new List<string>();
-        foreach (string guid in prefabGuids)
-        {
-            allPrefabPaths.Add(AssetDatabase.GUIDToAssetPath(guid));
-        }
-
-        // 진행률 바 표시 (프리팹이 많으면 시간이 걸릴 수 있음)
-        int totalPrefabs = allPrefabPaths.Count;
+        // [최적화 1] 선택된 텍스처 정보를 딕셔너리로 캐싱 (O(1) 고속 검색용)
+        Dictionary<string, Texture2D> targetTexDict = new Dictionary<string, Texture2D>();
+        Dictionary<string, string> targetTexDirs = new Dictionary<string, string>(); // 미리 폴더 경로도 계산
 
         foreach (Texture2D tex in selectedObjects)
         {
+            string path = AssetDatabase.GetAssetPath(tex);
+            targetTexDict[path] = tex;
+            targetTexDirs[path] = Path.GetDirectoryName(path).Replace("\\", "/");
+
             safeRefs[tex] = new List<string>();
             warningRefs[tex] = new List<string>();
-            string texPath = AssetDatabase.GetAssetPath(tex);
-            string texDir = Path.GetDirectoryName(texPath).Replace("\\\\", "/");
+        }
 
-            for (int i = 0; i < totalPrefabs; i++)
+        // 2. 프로젝트 내 모든 프리팹 경로 수집
+        string[] prefabGuids = AssetDatabase.FindAssets("t:Prefab");
+        int totalPrefabs = prefabGuids.Length;
+
+        // [최적화 2] 텍스처 기준이 아닌 '프리팹 기준'으로 단 한 번만 순회
+        for (int i = 0; i < totalPrefabs; i++)
+        {
+            // 진행률 바 업데이트 (취소 기능 추가)
+            if (i % 50 == 0)
             {
-                string prefabPath = allPrefabPaths[i];
+                bool isCanceled = EditorUtility.DisplayCancelableProgressBar(
+                    "역추적 중...",
+                    $"프리팹 의존성 검사 중 ({i}/{totalPrefabs})",
+                    (float)i / totalPrefabs);
 
-                if (i % 50 == 0)
+                if (isCanceled)
                 {
-                    EditorUtility.DisplayProgressBar("역추적 중...", $"{tex.name} 검사 중 ({i}/{totalPrefabs})", (float)i / totalPrefabs);
+                    Debug.LogWarning("텍스처 역추적 작업이 사용자에 의해 취소되었습니다.");
+                    break;
                 }
+            }
 
-                // 해당 프리팹의 의존성에 이 텍스처가 포함되어 있는지 확인
-                string[] dependencies = AssetDatabase.GetDependencies(prefabPath, true);
-                if (dependencies.Contains(texPath))
+            string prefabPath = AssetDatabase.GUIDToAssetPath(prefabGuids[i]);
+
+            // 이 프리팹이 참조하는 모든 에셋을 가져옴 (재귀적)
+            string[] dependencies = AssetDatabase.GetDependencies(prefabPath, true);
+            string prefabDir = null; // 지연 평가를 위해 null로 초기화
+
+            foreach (string dep in dependencies)
+            {
+                // [최적화 3] Contains 배열 검색 대신 Dictionary를 통해 즉시 매칭 확인
+                if (targetTexDict.TryGetValue(dep, out Texture2D matchedTex))
                 {
-                    string prefabDir = Path.GetDirectoryName(prefabPath).Replace("\\\\", "/");
+                    // 매칭되었을 때만 프리팹 경로 계산 (문자열 연산 최소화)
+                    if (prefabDir == null)
+                        prefabDir = Path.GetDirectoryName(prefabPath).Replace("\\", "/");
 
-                    // 폴더 비교: 프리팹이 텍스처와 같은 폴더(혹은 하위 폴더)에 있는지 확인
+                    string texDir = targetTexDirs[dep];
+
                     if (prefabDir.StartsWith(texDir))
                     {
-                        safeRefs[tex].Add(prefabPath);
+                        safeRefs[matchedTex].Add(prefabPath);
                     }
                     else
                     {
-                        warningRefs[tex].Add(prefabPath);
+                        warningRefs[matchedTex].Add(prefabPath);
                     }
                 }
             }

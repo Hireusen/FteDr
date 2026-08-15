@@ -14,10 +14,10 @@ public class CBGMChange : AMono
         Id.BGM_サカナだった頃, // Title
         Id.BGM_Cleyton_RX_Underwater, // Stage 1
         Id.BGM_Underwater_Theme_II,
-        Id.BGM_海の中の旋律, // Id.BGM_珊瑚礁,
+        Id.BGM_珊瑚礁, // ,
         Id.BGM_Blue_Water,
         Id.BGM_Observing_The_Star,
-        null, // Stage 6
+        Id.BGM_Underwater_Exploration, // Stage 6
         null, // Ending
     };
     #endregion
