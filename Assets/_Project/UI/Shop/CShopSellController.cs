@@ -68,6 +68,9 @@ public sealed class CShopSellController : AMono
         if (manager != null)
         {
             manager.Runtime.bagItems.Clear();
+
+            manager.DestroyHiddenItems();
+
             OnPlayerBagChanged.Publish(0, UPlayer.BagCapacity);
             OnPlayerWeightChanged.Publish(0f, UPlayer.MaxWeight);
         }

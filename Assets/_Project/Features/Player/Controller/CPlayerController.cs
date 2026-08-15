@@ -187,12 +187,12 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
             if (_isJumpPressed && !IsControlLocked)
             {
-                _rb.AddForce(Vector3.up * (_verticalForce * _fuelSpeedMultiplier), ForceMode.Force);
+                _rb.AddForce(Vector3.up * (movespeed * _fuelSpeedMultiplier), ForceMode.Force);
             }
 
             if (_isDescentPressed && !IsControlLocked)
             {
-                _rb.AddForce(Vector3.down * (_verticalForce * _fuelSpeedMultiplier), ForceMode.Force);
+                _rb.AddForce(Vector3.down * (movespeed * _fuelSpeedMultiplier), ForceMode.Force);
             }
         }
         else
