@@ -8,8 +8,8 @@ public enum EScene
     Stage_1 = 2,
     Stage_2 = 3,
     Stage_3 = 4,
-    Stage_4 = 4,
-    Stage_5 = 5,
-    Stage_6 = 6,
-    Ending = 7,
+    Stage_4 = 5,
+    Stage_5 = 6,
+    Stage_6 = 7,
+    Ending = 8,
 }
