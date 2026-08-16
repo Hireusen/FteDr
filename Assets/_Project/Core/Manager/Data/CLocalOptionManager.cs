@@ -54,7 +54,7 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     }
     #endregion
 
-    #region ─────────────────────────▶ 화면 ◀─────────────────────────
+    #region ─────────────────────────▶ 화면 및 그래픽 ◀─────────────────────────
     /// <summary>해상도와 전체화면 모드를 설정하고 화면에 적용한 뒤 저장합니다.</summary>
     /// <param name="width">가로 해상도</param>
     /// <param name="height">세로 해상도</param>
@@ -65,6 +65,20 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         _option.resolutionHeight = height;
         _option.fullScreenMode = fullScreenMode;
         ApplyResolution();
+        Save();
+    }
+
+    public void SetTargetFrameRate(int frameRate)
+    {
+        _option.targetFrameRate = frameRate;
+        ApplyFrameAndVSync();
+        Save();
+    }
+
+    public void SetVSync(bool vSync)
+    {
+        _option.vSync = vSync;
+        ApplyFrameAndVSync();
         Save();
     }
     #endregion
@@ -79,7 +93,11 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     public void Load()
     {
         _option = USaveFile.Load(FILE_NAME, new OptionData());
+
+        ValidateFrameOption();
+
         ApplyResolution();
+        ApplyFrameAndVSync();
         PublishVolume();
     }
     #endregion
@@ -89,8 +107,22 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     protected override void Initialize()
     {
         _option = USaveFile.Load(FILE_NAME, new OptionData());
+
+        ValidateFrameOption();
+
         ApplyResolution();
+        ApplyFrameAndVSync();
         PublishVolume();
+    }
+
+    private void ValidateFrameOption()
+    {
+        if (_option.targetFrameRate == 0)
+        {
+            _option.targetFrameRate = K.DEFAULT_TARGET_FRAME_RATE;
+            _option.vSync = K.DEFAULT_VSYNC;
+            Save();
+        }
     }
 
     // 볼륨 변경 공통 처리: (선택적) 저장 후 이벤트 발행
@@ -121,6 +153,14 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
             _option.resolutionWidth,
             _option.resolutionHeight,
             _option.fullScreenMode);
+    }
+
+    private void ApplyFrameAndVSync()
+    {
+        QualitySettings.vSyncCount = _option.vSync ? 1 : 0;
+        Application.targetFrameRate = _option.targetFrameRate;
+
+        OnOptionFrameSyncChanged.Publish(_option.targetFrameRate, _option.vSync);
     }
     #endregion
 }
