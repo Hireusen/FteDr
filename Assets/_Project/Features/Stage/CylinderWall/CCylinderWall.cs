@@ -10,6 +10,8 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
     [SerializeField] private Image _fogImage;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CapsuleCollider _col;
+    private GameObject _player;
+    private Rigidbody _rb;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -19,7 +21,34 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
     // 프레임 매니저에게 호출당할 함수
     public void ExecuteFixedUpdateFrame()
     {
-        
+        Vector3 center = transform.position;
+        Vector3 playerPos = _player.transform.position;
+
+        Vector3 dir = playerPos - center;
+        dir.y = 0;
+
+        float distance = dir.magnitude;
+        UDebug.Print(distance);
+        float radius = _col.radius * transform.localScale.x;
+        distance = Mathf.Clamp(distance, radius - _offset, radius);
+        Color tmp = _fogImage.color;
+        tmp.a = Mathf.Clamp((1 - ((radius - distance) / _offset)), 0, 0.8f);
+        _fogImage.color = tmp;
+        if (distance >=radius)
+        {
+            Vector3 boundaryPos = center + dir.normalized * radius;
+            boundaryPos.y = _player.transform.position.y;
+
+            _rb.position = boundaryPos;
+
+            Vector3 normal = dir.normalized;
+            float normalVelocity = Vector3.Dot(_rb.velocity, normal);
+
+            if (normalVelocity > 0)
+            {
+                _rb.velocity -= normal * normalVelocity;
+            }
+        }
     }
     #endregion
 
@@ -31,38 +60,12 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
     private void Awake()
     {
         _col = GetComponent<CapsuleCollider>();
+        _player = CNewGrab.Instance.gameObject;
+        _rb = _player.GetComponent<Rigidbody>();
     }
     private void OnTriggerStay(Collider other)
     {
-        if (!other.CompareTag("Player")) return;
-        Rigidbody rb = other.transform.root.GetComponent<Rigidbody>();
-        Vector3 center = transform.position;
-        Vector3 playerPos = other.transform.position;
-
-        Vector3 dir = playerPos - center;
-        dir.y = 0; 
-
-        float distance = dir.magnitude;
-        float radius = _col.radius * transform.localScale.x;
-        distance = Mathf.Clamp(distance, radius - _offset, radius);
-        Color tmp = _fogImage.color;
-        tmp.a =  Mathf.Clamp((1-((radius-distance)/_offset)),0,0.8f);
-        _fogImage.color = tmp;
-        if (distance > radius)
-        {
-            Vector3 boundaryPos = center + dir.normalized * radius;
-            boundaryPos.y = other.transform.position.y;
-
-            rb.position = boundaryPos;
-
-            Vector3 normal = dir.normalized;
-            float normalVelocity = Vector3.Dot(rb.velocity, normal);
-
-            if (normalVelocity > 0)
-            {
-                rb.velocity -= normal * normalVelocity;
-            }
-        }
+        
     }
     #endregion
 }
