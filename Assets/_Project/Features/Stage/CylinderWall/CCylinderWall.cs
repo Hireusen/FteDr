@@ -60,7 +60,7 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
     private void Awake()
     {
         _col = GetComponent<CapsuleCollider>();
-        _player = CNewGrab.Instance.gameObject;
+        _player = null; //CNewGrab.Instance.gameObject;
         _rb = _player.GetComponent<Rigidbody>();
     }
     private void OnTriggerStay(Collider other)
