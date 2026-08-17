@@ -15,12 +15,16 @@ public class OptionData
     public float ambienceVolume = 0.7f;
     #endregion
 
-    #region ─────────────────────────▶ 화면 ◀─────────────────────────
+    #region ─────────────────────────▶ 화면 및 그래픽 ◀─────────────────────────
     // 해상도
     public int resolutionWidth = K.SCREEN_WIDTH;
     public int resolutionHeight = K.SCREEN_HEIGHT;
 
     // 전체화면
     public FullScreenMode fullScreenMode = FullScreenMode.FullScreenWindow;
+
+    // 프레임 및 수직동기화
+    public int targetFrameRate = K.DEFAULT_TARGET_FRAME_RATE;
+    public bool vSync = K.DEFAULT_VSYNC;
     #endregion
 }

@@ -26,12 +26,26 @@ public sealed class CSettingController : AMono
         new ResolutionOption { width = 2560, height = 1080, label = "2560 x 1080" },
     };
     [SerializeField] private Toggle _fullscreenToggle;
+
+    [Header("프레임 및 수직동기화")]
+    [SerializeField] private TMP_Dropdown _frameLimitDropdown;
+    [SerializeField]
+    private List<FrameOption> _frameOptions = new()
+    {
+        new FrameOption { frameRate = 30, label = "30 FPS" },
+        new FrameOption { frameRate = 60, label = "60 FPS" },
+        new FrameOption { frameRate = 120, label = "120 FPS" },
+        new FrameOption { frameRate = 144, label = "144 FPS" },
+        new FrameOption { frameRate = -1, label = "제한 없음" }
+    };
+    [SerializeField] private Toggle _vsyncToggle;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
         BuildResolutionDropdown();
+        BuildFrameLimitDropdown();
 
         if (_masterSlider != null) _masterSlider.onValueChanged.AddListener(OnMasterChanged);
         if (_bgmSlider != null) _bgmSlider.onValueChanged.AddListener(OnBgmChanged);
@@ -40,6 +54,9 @@ public sealed class CSettingController : AMono
 
         if (_resolutionDropdown != null) _resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
         if (_fullscreenToggle != null) _fullscreenToggle.onValueChanged.AddListener(OnFullscreenChanged);
+
+        if (_frameLimitDropdown != null) _frameLimitDropdown.onValueChanged.AddListener(OnFrameLimitChanged);
+        if (_vsyncToggle != null) _vsyncToggle.onValueChanged.AddListener(OnVSyncChanged);
     }
 
     private void OnEnable()
@@ -62,6 +79,19 @@ public sealed class CSettingController : AMono
         _resolutionDropdown.AddOptions(labels);
     }
 
+    private void BuildFrameLimitDropdown()
+    {
+        if (_frameLimitDropdown == null) return;
+
+        _frameLimitDropdown.ClearOptions();
+        List<string> labels = new(_frameOptions.Count);
+        for (int i = 0; i < _frameOptions.Count; ++i)
+        {
+            labels.Add(_frameOptions[i].label);
+        }
+        _frameLimitDropdown.AddOptions(labels);
+    }
+
     // 창이 열릴 때마다(OnEnable) 현재 저장된 옵션 값으로 UI를 맞춰준다. (리스너가 다시 발동하지 않도록 SetValueWithoutNotify 사용)
     private void RefreshFromCurrentOption()
     {
@@ -81,6 +111,17 @@ public sealed class CSettingController : AMono
         {
             int index = _resolutionOptions.FindIndex(r => r.width == option.resolutionWidth && r.height == option.resolutionHeight);
             _resolutionDropdown.SetValueWithoutNotify(Mathf.Max(0, index));
+        }
+
+        if (_vsyncToggle != null)
+        {
+            _vsyncToggle.SetIsOnWithoutNotify(option.vSync);
+        }
+
+        if (_frameLimitDropdown != null)
+        {
+            int index = _frameOptions.FindIndex(f => f.frameRate == option.targetFrameRate);
+            _frameLimitDropdown.SetValueWithoutNotify(Mathf.Max(0, index));
         }
     }
     #endregion
@@ -109,6 +150,19 @@ public sealed class CSettingController : AMono
         FullScreenMode mode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
         CLocalOptionManager.Ins.SetResolution(option.resolutionWidth, option.resolutionHeight, mode);
     }
+
+    private void OnFrameLimitChanged(int index)
+    {
+        if (index < 0 || index >= _frameOptions.Count) return;
+
+        int targetFPS = _frameOptions[index].frameRate;
+        CLocalOptionManager.Ins.SetTargetFrameRate(targetFPS);
+    }
+
+    private void OnVSyncChanged(bool isOn)
+    {
+        CLocalOptionManager.Ins.SetVSync(isOn);
+    }
     #endregion
 
     #region ─────────────────────────▶ 중첩 타입 ◀─────────────────────────
@@ -117,6 +171,13 @@ public sealed class CSettingController : AMono
     {
         public int width;
         public int height;
+        public string label;
+    }
+
+    [Serializable]
+    public struct FrameOption
+    {
+        public int frameRate; // -1일 경우 제한 없음
         public string label;
     }
     #endregion

@@ -7,6 +7,10 @@ public static partial class K
     public const int SCREEN_WIDTH = 1920;
     public const int SCREEN_HEIGHT = 1080;
 
+    // 그래픽 기본 설정
+    public const int DEFAULT_TARGET_FRAME_RATE = 60;
+    public const bool DEFAULT_VSYNC = false;
+
     // 상수
     public const float SMALL_DISTANCE = 0.001f;
 }
