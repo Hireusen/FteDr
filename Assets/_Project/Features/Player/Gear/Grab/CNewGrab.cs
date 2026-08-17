@@ -26,13 +26,13 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     [SerializeField] private int _currentSpeedLevel = 0;
     [SerializeField] private Transform _playerCam;
     [SerializeField] private CDiverToAim _diverToAim;
-    [SerializeField] private float _shoulderReadyTime=1f;
+    [SerializeField] private float _shoulderReadyTime = 1f;
 
 
     //test모드가 활성화 중이면 테스트 데이터(스피드,거리)로 작동 
     [SerializeField] private bool _testmode = false;
     #endregion
-    
+
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private ConfigurableJoint _armJoint;
     private Rigidbody _armRigidBody;
@@ -52,6 +52,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+    public static CNewGrab Instance;
+
     public EGrabStatus grabStatus = EGrabStatus.Wait;
     public void ShootWrist()
     {
@@ -236,7 +238,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 _controller.MoveLockOn();
                 //집게 연출 코루틴 안에서 연출 종료 후 상태변경
                 StartCoroutine(ReadyTwizersCo());
-                
+
                 break;
             case EGrabStatus.Shooting:
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
@@ -321,7 +323,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         while (timer < _shoulderReadyTime)
         {
             timer += Time.deltaTime;
-            _shoulder.transform.localPosition=Vector3.Lerp(_shoulder.transform.localPosition, _shoulderReadyPos, timer / _shoulderReadyTime);
+            _shoulder.transform.localPosition = Vector3.Lerp(_shoulder.transform.localPosition, _shoulderReadyPos, timer / _shoulderReadyTime);
             yield return null;
         }
         _shoulder.transform.localPosition = _shoulderReadyPos;
@@ -422,10 +424,12 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     }
     private void RotateLeftHandler(OnInputRotateTwizerLeft ctx)
     {
+        if (grabStatus != EGrabStatus.ReadyShoot) return;
         _rotateLeftHeld = ctx.leftPressed;
     }
     private void RotateRightHandler(OnInputRotateTwizerRight ctx)
     {
+        if (grabStatus != EGrabStatus.ReadyShoot) return;
         _rotateRightHeld = ctx.rightPressed;
     }
     #endregion
@@ -433,6 +437,12 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Awake()
     {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
         _armJoint = _arm.GetComponent<ConfigurableJoint>();
         _twizersJointToArm = _twizersAnchor.GetComponent<ConfigurableJoint>();
         _armRigidBody = _arm.GetComponent<Rigidbody>();
