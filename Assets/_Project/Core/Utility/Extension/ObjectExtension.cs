@@ -14,4 +14,13 @@ public static class ObjectExtension
     {
         return go.TryGetComponent(out T component) ? component : go.AddComponent<T>();
     }
+
+    /// <summary>
+    /// 트랜스폼으로 컴포넌트를 부착합니다.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static T AddComponent<T>(this Transform tr) where T : Component
+    {
+        return tr.gameObject.AddComponent<T>();
+    }
 }
