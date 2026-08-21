@@ -27,12 +27,22 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
         Vector3 dir = playerPos - center;
         dir.y = 0;
 
+        Vector3 playerforward=_player.transform.forward;
+        playerforward.y = 0;
+        
+        //안개를 바라볼수록 각도가 작아짐.
+        float fogAngle = Vector3.Angle(dir, playerforward);
+
+
         float distance = dir.magnitude;
-        UDebug.Print(distance);
         float radius = _col.radius * transform.localScale.x;
         distance = Mathf.Clamp(distance, radius - _offset, radius);
+
+
         Color tmp = _fogImage.color;
-        tmp.a = Mathf.Clamp((1 - ((radius - distance) / _offset)), 0, 0.8f);
+        UDebug.Print((1.0f - fogAngle / 180));
+        //거리에 따른 불투명도 * 각도에 따른 불투명도
+        tmp.a = Mathf.Clamp((1 - ((radius - distance) / _offset)), 0, 0.8f)*(1.0f-fogAngle/180.0f);
         _fogImage.color = tmp;
         if (distance >=radius)
         {

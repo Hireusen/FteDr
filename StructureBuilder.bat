@@ -14,6 +14,9 @@ if not exist "Assets\_Project" (
   echo ===== FOLDERS =====
   dir /s /b /ad "Assets\_Project"
   echo.
+  echo ===== ASMDEF ^(.asmdef^) =====
+  dir /s /b "Assets\_Project\*.asmdef"
+  echo.
   echo ===== SCRIPTS ^(.cs^) =====
   dir /s /b "Assets\_Project\*.cs"
 ) > "%~dp0structure.txt"
