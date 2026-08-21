@@ -22,10 +22,21 @@ public sealed class CSettingController : AMono
     [SerializeField]
     private List<ResolutionOption> _resolutionOptions = new()
     {
-        new ResolutionOption { width = 1920, height = 1080, label = "1920 x 1080" },
-        new ResolutionOption { width = 2560, height = 1080, label = "2560 x 1080" },
+        new ResolutionOption { width = 1280, height = 720, label = "1280 × 720 (16:9)" },
+        new ResolutionOption { width = 1600, height = 900, label = "1600 × 900 (16:9)" },
+        new ResolutionOption { width = 1920, height = 1080, label = "1920 × 1080 (16:9)" },
+        new ResolutionOption { width = 1280, height = 800, label = "1280 × 800 (16:10)" },
+        new ResolutionOption { width = 1920, height = 1200, label = "1920 × 1200 (16:10)" },
+        new ResolutionOption { width = 2560, height = 1080, label = "2560 × 1080 (21:9)" },
     };
-    [SerializeField] private Toggle _fullscreenToggle;
+    [SerializeField] private TMP_Dropdown _screenModeDropdown;
+    [SerializeField]
+    private List<ScreenModeOption> _screenModeOptions = new()
+    {
+        new ScreenModeOption { mode = FullScreenMode.ExclusiveFullScreen, label = "전체화면" },
+        new ScreenModeOption { mode = FullScreenMode.FullScreenWindow, label = "테두리 없는 창모드" },
+        new ScreenModeOption { mode = FullScreenMode.Windowed, label = "창모드" }
+    };
 
     [Header("프레임 및 수직동기화")]
     [SerializeField] private TMP_Dropdown _frameLimitDropdown;
@@ -45,6 +56,7 @@ public sealed class CSettingController : AMono
     private void Awake()
     {
         BuildResolutionDropdown();
+        BuildScreenModeDropdown();
         BuildFrameLimitDropdown();
 
         if (_masterSlider != null) _masterSlider.onValueChanged.AddListener(OnMasterChanged);
@@ -53,7 +65,7 @@ public sealed class CSettingController : AMono
         if (_ambienceSlider != null) _ambienceSlider.onValueChanged.AddListener(OnAmbienceChanged);
 
         if (_resolutionDropdown != null) _resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
-        if (_fullscreenToggle != null) _fullscreenToggle.onValueChanged.AddListener(OnFullscreenChanged);
+        if (_screenModeDropdown != null) _screenModeDropdown.onValueChanged.AddListener(OnScreenModeChanged);
 
         if (_frameLimitDropdown != null) _frameLimitDropdown.onValueChanged.AddListener(OnFrameLimitChanged);
         if (_vsyncToggle != null) _vsyncToggle.onValueChanged.AddListener(OnVSyncChanged);
@@ -79,6 +91,19 @@ public sealed class CSettingController : AMono
         _resolutionDropdown.AddOptions(labels);
     }
 
+    private void BuildScreenModeDropdown()
+    {
+        if (_screenModeDropdown == null) return;
+
+        _screenModeDropdown.ClearOptions();
+        List<string> labels = new(_screenModeOptions.Count);
+        for (int i = 0; i < _screenModeOptions.Count; i++)
+        {
+            labels.Add(_screenModeOptions[i].label);
+        }
+        _screenModeDropdown.AddOptions(labels);
+    }
+
     private void BuildFrameLimitDropdown()
     {
         if (_frameLimitDropdown == null) return;
@@ -102,13 +127,22 @@ public sealed class CSettingController : AMono
         if (_sfxSlider != null) _sfxSlider.SetValueWithoutNotify(option.sfxVolume);
         if (_ambienceSlider != null) _ambienceSlider.SetValueWithoutNotify(option.ambienceVolume);
 
-        if (_fullscreenToggle != null)
+        if (_screenModeDropdown != null)
         {
-            _fullscreenToggle.SetIsOnWithoutNotify(option.fullScreenMode != FullScreenMode.Windowed);
+            int index = _screenModeOptions.FindIndex(s => s.mode == option.screenMode);
+            _screenModeDropdown.SetValueWithoutNotify(Mathf.Max(0, index));
         }
 
         if (_resolutionDropdown != null)
         {
+            bool canChangeResolution = (option.screenMode != FullScreenMode.FullScreenWindow);
+            _resolutionDropdown.interactable = canChangeResolution;
+
+            if (_resolutionDropdown.TryGetComponent<CanvasGroup>(out var canvasGroup))
+            {
+                canvasGroup.alpha = canChangeResolution ? 1.0f : 0.3f;
+            }
+
             int index = _resolutionOptions.FindIndex(r => r.width == option.resolutionWidth && r.height == option.resolutionHeight);
             _resolutionDropdown.SetValueWithoutNotify(Mathf.Max(0, index));
         }
@@ -137,18 +171,29 @@ public sealed class CSettingController : AMono
         if (index < 0 || index >= _resolutionOptions.Count) return;
 
         ResolutionOption selected = _resolutionOptions[index];
-        FullScreenMode mode = (_fullscreenToggle != null && _fullscreenToggle.isOn)
-            ? FullScreenMode.FullScreenWindow
-            : FullScreenMode.Windowed;
+        FullScreenMode currentMode = CLocalOptionManager.Ins.Option.screenMode;
 
-        CLocalOptionManager.Ins.SetResolution(selected.width, selected.height, mode);
+        CLocalOptionManager.Ins.SetResolution(selected.width, selected.height, currentMode);
     }
 
-    private void OnFullscreenChanged(bool isFullscreen)
+    private void OnScreenModeChanged(int index)
     {
+        if (index < 0 || index >= _screenModeOptions.Count) return;
+
+        FullScreenMode selectedMode = _screenModeOptions[index].mode;
         OptionData option = CLocalOptionManager.Ins.Option;
-        FullScreenMode mode = isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
-        CLocalOptionManager.Ins.SetResolution(option.resolutionWidth, option.resolutionHeight, mode);
+
+        int targetWidth = option.resolutionWidth;
+        int targetHeight = option.resolutionHeight;
+
+        if (selectedMode == FullScreenMode.FullScreenWindow)
+        {
+            targetWidth = Screen.currentResolution.width;
+            targetHeight = Screen.currentResolution.height;
+        }
+
+        CLocalOptionManager.Ins.SetResolution(targetWidth, targetHeight, selectedMode);
+        RefreshFromCurrentOption();
     }
 
     private void OnFrameLimitChanged(int index)
@@ -171,6 +216,13 @@ public sealed class CSettingController : AMono
     {
         public int width;
         public int height;
+        public string label;
+    }
+
+    [Serializable]
+    public struct ScreenModeOption
+    {
+        public FullScreenMode mode;
         public string label;
     }
 
