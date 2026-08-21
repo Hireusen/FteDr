@@ -40,7 +40,6 @@ public class CCylinderWall : AFrameable, IFixedUpdateFrameable
 
 
         Color tmp = _fogImage.color;
-        UDebug.Print((1.0f - fogAngle / 180));
         //거리에 따른 불투명도 * 각도에 따른 불투명도
         tmp.a = Mathf.Clamp((1 - ((radius - distance) / _offset)), 0, 0.8f)*(1.0f-fogAngle/180.0f);
         _fogImage.color = tmp;
