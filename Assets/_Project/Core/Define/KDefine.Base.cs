@@ -1,4 +1,6 @@
-﻿/// <summary>
+﻿using UnityEngine;
+
+/// <summary>
 /// 프로젝트의 기본적인 상수를 정의하는 매크로 클래스입니다.
 /// </summary>
 public static partial class K
@@ -8,6 +10,7 @@ public static partial class K
     public const int SCREEN_HEIGHT = 1080;
 
     // 그래픽 기본 설정
+    public const FullScreenMode DEFAULT_SCREEN_MODE = FullScreenMode.FullScreenWindow;
     public const int DEFAULT_TARGET_FRAME_RATE = 60;
     public const bool DEFAULT_VSYNC = false;
 

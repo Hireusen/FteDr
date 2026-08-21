@@ -160,7 +160,7 @@ public sealed class CTester : AMono
         OptionData opt = CLocalOptionManager.Ins.Option;
         GUILayout.Label("── 옵션(읽기) ──");
         GUILayout.Label($"볼륨 M:{opt.masterVolume:F2} B:{opt.bgmVolume:F2} S:{opt.sfxVolume:F2} A:{opt.ambienceVolume:F2}");
-        GUILayout.Label($"해상도 {opt.resolutionWidth}x{opt.resolutionHeight} / {opt.fullScreenMode}");
+        GUILayout.Label($"해상도 {opt.resolutionWidth}x{opt.resolutionHeight} / {opt.screenMode}");
     }
     #endregion
 

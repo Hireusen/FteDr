@@ -87,7 +87,7 @@ public sealed class CTestOption : AFrameable, IUpdateFrameable
         GUILayout.Label($"Master {opt.masterVolume:F2} / BGM {opt.bgmVolume:F2}");
         GUILayout.Label($"SFX {opt.sfxVolume:F2} / Ambience {opt.ambienceVolume:F2}");
         GUILayout.Label($"해상도: {opt.resolutionWidth}x{opt.resolutionHeight}");
-        GUILayout.Label($"모드: {opt.fullScreenMode}");
+        GUILayout.Label($"모드: {opt.screenMode}");
         GUILayout.EndArea();
     }
     #endregion
