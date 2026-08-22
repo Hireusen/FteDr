@@ -14,6 +14,7 @@ public static class UFade
     private static Image _fadeImage;
     private static CanvasGroup _canvasGroup;
     private static MonoBehaviour _coroutineRunner;
+    private static Coroutine _currentCoroutine;
 
     private static readonly Color _defaultColor = Color.black;
     #endregion
@@ -94,9 +95,17 @@ public static class UFade
     public static void StopFade()
     {
         if (!_isInitialize) return;
-        _coroutineRunner.StopAllCoroutines();
+        StopCoroutine();
         ResetVisual();
         IsFading = false;
+    }
+
+    private static void StopCoroutine()
+    {
+        if (_currentCoroutine == null) return;
+
+        _coroutineRunner.StopCoroutine(_currentCoroutine);
+        _currentCoroutine = null;
     }
     #endregion
 
@@ -104,14 +113,14 @@ public static class UFade
     private static void ExecuteFade(
         float startAlpha, float targetAlpha, float duration, bool blockRaycasts, Action onComplete)
     {
-        _coroutineRunner.StopAllCoroutines();
+        StopCoroutine();
         _canvasGroup.blocksRaycasts = blockRaycasts;
 
         // 지속시간 0 방어
         if (duration <= 0f)
         {
             _canvasGroup.alpha = targetAlpha;
-            _canvasGroup.blocksRaycasts = false;
+            _canvasGroup.blocksRaycasts = targetAlpha > 0f ? blockRaycasts : false;
             IsFading = false;
             onComplete?.Invoke();
             return;
@@ -121,12 +130,12 @@ public static class UFade
         _canvasGroup.alpha = startAlpha;
         IsFading = true; // 호출 직후 동기적으로 true 보장
 
-        _coroutineRunner.StartCoroutine(
-            DoFade(startAlpha, targetAlpha, duration, onComplete));
+        _currentCoroutine = _coroutineRunner.StartCoroutine(
+            DoFade(startAlpha, targetAlpha, duration, blockRaycasts, onComplete));
     }
 
     private static IEnumerator DoFade(
-        float startAlpha, float targetAlpha, float duration, Action onComplete)
+        float startAlpha, float targetAlpha, float duration, bool blockRaycasts, Action onComplete)
     {
         float time = 0f;
 
@@ -134,6 +143,7 @@ public static class UFade
         {
             time += Time.unscaledDeltaTime; // 일시정지 상태 무관
             _canvasGroup.alpha = Mathf.Lerp(startAlpha, targetAlpha, time / duration);
+            _canvasGroup.blocksRaycasts = targetAlpha > 0f ? blockRaycasts : false;
             yield return null;
         }
 
@@ -142,6 +152,7 @@ public static class UFade
         _canvasGroup.blocksRaycasts = false;
         IsFading = false;
         onComplete?.Invoke();
+        _currentCoroutine = null;
     }
 
     private static void EnsureInitialized()
