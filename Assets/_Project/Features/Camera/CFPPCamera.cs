@@ -181,7 +181,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     /// </summary>
     private void UpdateGrabLook()
     {
-        bool grabbing = _grabTool != null && _grabTool.grabStatus != CNewGrab.EGrabStatus.Wait && _grabTool.grabStatus != CNewGrab.EGrabStatus.ReadyShoot;
+        bool grabbing = _grabTool != null && _grabTool.grabStatus != CNewGrab.EGrabStatus.Wait && _grabTool.grabStatus != CNewGrab.EGrabStatus.ReadyShoot && _grabTool.grabStatus!=CNewGrab.EGrabStatus.WaittoReady;
 
         if (grabbing && !_grabLook)
         {

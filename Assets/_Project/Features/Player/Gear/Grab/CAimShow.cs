@@ -48,6 +48,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
             }
 
             //에임용
+            if (_grabScript.grabStatus != CNewGrab.EGrabStatus.ReadyShoot) return;
             if ((_armTransform.position - hit.point).magnitude < _grabScript.GetMaxDistance())
             {
                 ChangeState(EAimStatus.Reached);
@@ -59,6 +60,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
         }
         else
         {
+            if (_grabScript.grabStatus != CNewGrab.EGrabStatus.ReadyShoot) return;
             ChangeState(EAimStatus.Normal);
             if (_currentAimObject != null)
             {

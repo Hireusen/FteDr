@@ -84,6 +84,24 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                     //오른집게회전
                 }
                 break;
+            case EGrabStatus.ReadyShoot:
+                if (_rotateLeftHeld)
+                {
+                    //왼쪽집게회전
+                    _twizersAnchor.transform.Rotate(
+                    Vector3.left,
+                    _twizersRotateSpeed * Time.deltaTime,
+                    Space.Self);
+                }
+                if (_rotateRightHeld)
+                {
+                    _twizersAnchor.transform.Rotate(
+                    Vector3.right,
+                    _twizersRotateSpeed * Time.deltaTime,
+                    Space.Self);
+                    //오른집게회전
+                }
+                break;
             case EGrabStatus.Shooting:
                 ExtendArm();
 
@@ -247,12 +265,15 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 }
                 else if (grabStatus == EGrabStatus.ReadyShoot)
                 {
+                    _controller.MoveLockOFF();
                     grabStatus = EGrabStatus.WaittoReady;
                     StartCoroutine(ReadyTwizersCo(EGrabStatus.Wait));
                     
                 }
                     break;
             case EGrabStatus.ReadyShoot:
+                grabStatus = EGrabStatus.ReadyShoot;
+                _controller.MoveLockOn();
                 _diverToAim.AimCanvas.SetActive(true);
 
                 break;
@@ -349,7 +370,10 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
             _shoulder.transform.localPosition = _shoulderReadyPos;
             UDebug.Print("상태변경>Readyshoot");
             grabStatus = EGrabStatus.ReadyShoot;
-        }else if(status == EGrabStatus.Wait)
+            _controller.MoveLockOn();
+
+        }
+        else if(status == EGrabStatus.Wait)
         {
             float timer = 0f;
             while (timer < _shoulderReadyTime*0.5f)
@@ -506,8 +530,6 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         CEventBus<OnInputCollect>.Unsubscribe(CollectInputHandler);
         CEventBus<OnInputRotateTwizerLeft>.Unsubscribe(RotateLeftHandler);
         CEventBus<OnInputRotateTwizerRight>.Unsubscribe(RotateRightHandler);
-
-
     }
 
     #endregion
