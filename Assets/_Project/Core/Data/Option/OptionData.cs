@@ -20,8 +20,8 @@ public class OptionData
     public int resolutionWidth = K.SCREEN_WIDTH;
     public int resolutionHeight = K.SCREEN_HEIGHT;
 
-    // 전체화면
-    public FullScreenMode fullScreenMode = FullScreenMode.FullScreenWindow;
+    // 화면 모드
+    public FullScreenMode screenMode = K.DEFAULT_SCREEN_MODE;
 
     // 프레임 및 수직동기화
     public int targetFrameRate = K.DEFAULT_TARGET_FRAME_RATE;
