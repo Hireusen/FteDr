@@ -8,13 +8,17 @@ Shader "Distant Lands/Stylized Fish"
 		_WaveAmount("Wave Amount", Vector) = (0,0,0,0)
 		_TimeScale("Time Scale", Vector) = (1,1,0,0)
 		_WaveWidth("Wave Width", Vector) = (1,1,0,0)
+        
+        // C# 스크립트에서 넘겨주는 UV 오프셋을 받기 위한 프로퍼티 추가
+		_UVOffset("UV Offset", Vector) = (0,0,0,0) 
+        
 		[HideInInspector] _texcoord( "", 2D ) = "white" {}
 		[HideInInspector] __dirty( "", Int ) = 1
 	}
 
 	SubShader
 	{
-		Tags{ "RenderType" = "Opaque"  "Queue" = "Geometry+0" }
+		Tags{ "RenderType" = "Opaque"  "Queue" = "Geometry+0" "DisableBatching" = "True" }
 		Cull Off
 		CGPROGRAM
 		#include "UnityShaderVariables.cginc"
@@ -33,6 +37,11 @@ Shader "Distant Lands/Stylized Fish"
 		uniform float2 _WaveAmount;
 		uniform sampler2D _Atlas;
 		uniform float4 _Atlas_ST;
+
+        // GPU 인스턴싱 버퍼 선언 (개별 물고기마다 다른 UV 값을 가질 수 있도록 설정)
+        UNITY_INSTANCING_BUFFER_START(Props)
+            UNITY_DEFINE_INSTANCED_PROP(float4, _UVOffset)
+        UNITY_INSTANCING_BUFFER_END(Props)
 
 
 		float3 RotateAroundAxis( float3 center, float3 original, float3 u, float angle )
@@ -77,7 +86,13 @@ Shader "Distant Lands/Stylized Fish"
 		{
 			UNITY_SETUP_INSTANCE_ID(i);
 
+            // 인스턴싱 버퍼에서 해당 개체의 UV 오프셋 추출
+            float2 uvOffset = UNITY_ACCESS_INSTANCED_PROP(Props, _UVOffset).xy;
 			float2 uv_Atlas = i.uv_texcoord * _Atlas_ST.xy + _Atlas_ST.zw;
+            
+            // 기존 UV 좌표에 난수 오프셋을 더하여 아틀라스의 다른 칸을 참조하도록 변경
+            uv_Atlas += uvOffset;
+
 			o.Albedo = tex2D( _Atlas, uv_Atlas ).rgb;
 			o.Alpha = 1;
 		}
