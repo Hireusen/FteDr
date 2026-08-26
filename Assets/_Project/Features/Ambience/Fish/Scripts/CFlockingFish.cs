@@ -1,10 +1,7 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 군집 이동(Flocking) 행동을 하는 개별 물고기 클래스입니다.
-/// 응집(Cohesion)·분리(Separation)·정렬(Alignment) 3규칙에
-/// 월드 좌표 경계 박스(AABB) 복귀 힘, 속도/회전 관성, 개체별 노이즈를 더해
-/// 자연스러운 유영을 표현합니다.
+/// 군집(Flocking) 알고리즘을 기반으로 개별 물고기의 유영 행동을 제어합니다.
 /// </summary>
 public sealed class CFlockingFish : AFrameable, IUpdateFrameable
 {
@@ -40,13 +37,16 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private float _speed;
-    private float _targetSpeed;
-    private float _phase;              // 개체별 노이즈 위상차
-    private Vector3 _heading;          // 현재 진행 방향(정규화)
-    private CFlockingGroup _flock;
+    private int _fishIndex;            // 프레임 연산 분산용 고유 식별 인덱스
+    private CFlockingGroup _flock;     // 소속 군집 참조
+    private Vector3 _heading;          // 현재 바라보는 진행 방향 (정규화 벡터)
 
-    // 순회 중 매번 곱하지 않도록 제곱값을 미리 캐싱합니다.
+    // 속도 및 노이즈 관련 변수
+    private float _speed;              // 현재 유영 속도
+    private float _targetSpeed;        // 도달하고자 하는 목표 속도
+    private float _phase;              // 개체별 흔들림(노이즈) 위상차
+
+    // 연산 최적화용 캐싱 변수 (제곱 거리)
     private float _neighborDistanceSqr;
     private float _separationDistanceSqr;
     #endregion
@@ -58,6 +58,12 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
     {
         get => _flock;
         set => _flock = value;
+    }
+
+    /// <summary>개체의 고유 인덱스를 설정합니다. (프레임 연산 분산용)</summary>
+    public int FishIndex
+    {
+        set => _fishIndex = value;
     }
 
     /// <summary>외부 초기화 시 할당받을 평균 속도 프로퍼티입니다.</summary>
@@ -72,67 +78,74 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    /// <summary>시작 시 기본 속도, 방향 및 최적화 변수들을 초기화합니다.</summary>
     private void Start()
     {
+        // 초기 이동 속도 및 노이즈 위상 난수 설정
         _targetSpeed = Random.Range(0.5f, 1.5f) * _averageSpeed;
         _speed = _targetSpeed;
         _phase = Random.Range(0f, Mathf.PI * 2f);
         _heading = transform.forward;
 
+        // 매 프레임 연산을 줄이기 위한 제곱 거리 캐싱
         _neighborDistanceSqr = _neighborDistance * _neighborDistance;
         _separationDistanceSqr = _separationDistance * _separationDistance;
     }
 
+    /// <summary>매 프레임마다 물고기의 조향 및 이동을 처리합니다.</summary>
     public void ExecuteUpdateFrame()
     {
+        // 소속 군집이 없다면 로직 없이 직진만 수행
         if (_flock == null)
         {
             transform.Translate(0f, 0f, Time.deltaTime * _speed);
             return;
         }
 
-        // 성능 분산: 매 프레임 전체 이웃 순회 대신 확률적으로 조향을 갱신합니다.
-        // (조향을 건너뛰는 프레임에도 이동/노이즈는 계속 적용되어 끊김이 없습니다.)
-        if (Random.Range(0, _performance + 1) < 1)
+        // 성능 분산: 프레임과 고유 인덱스를 활용하여 주기적으로만 조향 갱신 (비용 높은 Random 제거)
+        if ((Time.frameCount + _fishIndex) % _performance == 0)
         {
             UpdateHeading();
         }
 
+        // 결정된 목표 수치를 바탕으로 실제 이동 적용
         ApplyMovement();
     }
 
-    /// <summary>보이드 규칙 + 경계 + 타겟을 종합해 진행 방향과 목표 속도를 갱신합니다.</summary>
+    /// <summary>보이드 규칙, 경계, 타겟을 종합하여 진행 방향과 목표 속도를 계산합니다.</summary>
     private void UpdateHeading()
     {
+        // 이웃 순회를 위한 기본 변수 세팅
         Vector3 selfPos = transform.position;
-
         var allFish = _flock.AllFish;
         int fishCount = allFish.Count;
 
-        Vector3 cohesion = Vector3.zero;      // 이웃 중심으로 모임
-        Vector3 separation = Vector3.zero;    // 너무 가까운 이웃 회피
-        Vector3 alignment = Vector3.zero;     // 이웃 방향에 정렬
+        Vector3 cohesion = Vector3.zero;
+        Vector3 separation = Vector3.zero;
+        Vector3 alignment = Vector3.zero;
         float neighborSpeedSum = 0f;
         int groupSize = 0;
 
+        // 전체 이웃을 순회하며 군집 규칙(응집, 분리, 정렬) 요소 누적
         for (int i = 0; i < fishCount; ++i)
         {
             CFlockingFish other = allFish[i];
             if (other == this || other == null) continue;
 
+            // 제곱 거리 비교를 통한 연산 최적화
             Vector3 offset = other.transform.position - selfPos;
-            // 제곱 거리로 비교하여 매 순회의 sqrt(거리 연산) 비용을 제거합니다.
             float sqrDist = offset.sqrMagnitude;
             if (sqrDist > _neighborDistanceSqr) continue;
 
+            // 응집 및 정렬 성분 누적
             cohesion += other.transform.position;
             alignment += other.transform.forward;
             neighborSpeedSum += other.CurrentSpeed;
             groupSize++;
 
+            // 분리 거리 이내일 경우 밀어내는 힘 누적
             if (sqrDist < _separationDistanceSqr && sqrDist > K.SMALL_DISTANCE)
             {
-                // 가까울수록 강하게 밀어냅니다(거리 반비례). 정규화는 여기서 한 번만 수행.
                 float dist = Mathf.Sqrt(sqrDist);
                 separation += (-offset / dist) / dist;
             }
@@ -140,8 +153,10 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
 
         Vector3 steer = Vector3.zero;
 
+        // 주변 이웃 유무에 따른 조향 및 속도 결정
         if (groupSize > 0)
         {
+            // 누적된 힘의 평균을 내고 가중치 적용
             cohesion = (cohesion / groupSize) - selfPos;
             alignment /= groupSize;
 
@@ -149,38 +164,36 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
             steer += separation * _separationWeight;
             steer += alignment.normalized * _alignmentWeight;
 
-            // 이웃 평균 속도로 목표속도를 부드럽게 맞춰 무리의 페이스를 공유합니다.
+            // 무리의 평균 속도로 동기화
             _targetSpeed = neighborSpeedSum / groupSize;
         }
         else
         {
-            // 이웃이 없으면 개별 난수 속도로 방랑합니다.
+            // 이웃이 없으면 개별 난수 속도로 방랑
             _targetSpeed = Random.Range(0.5f, 1.5f) * _averageSpeed;
         }
 
-        // 타겟(무리 중심)으로의 유도. Free 모드에서는 타겟이 자유롭게 흘러가므로
-        // 물고기는 이 힘으로 무리를 따라가되, 경계 박스가 최종 이탈을 막습니다.
+        // 타겟(무리 중심)을 향한 유도력 추가
         if (_flock.Target != null)
         {
             Vector3 toTarget = _flock.Target.position - selfPos;
             steer += toTarget.normalized * _targetWeight;
         }
 
-        // 월드 좌표 경계 박스(AABB) 복귀 힘.
+        // AABB 경계 박스 복귀 힘 추가
         steer += ComputeBoundarySteer(selfPos);
 
+        // 유효한 조향력이 있다면 최종 진행 방향 갱신
         if (steer.sqrMagnitude > K.SMALL_DISTANCE)
         {
             _heading = steer.normalized;
         }
     }
 
-    /// <summary>
-    /// 축별로 경계에 가까워질수록 안쪽으로 밀어내는 힘을 산출합니다(경계 반사).
-    /// 난수 없이 결정론적으로 동작하며, 각 축 독립적으로 계산해 모서리에서도 안정적입니다.
-    /// </summary>
+    /// <summary>경계 박스에 가까워질수록 안쪽으로 반사시키는 조향력을 계산합니다.</summary>
     private Vector3 ComputeBoundarySteer(Vector3 pos)
     {
+        // 각 축(X, Y, Z)별로 독립적인 경계 복귀 힘 산출
         Vector3 min = _flock.BoundsMin;
         Vector3 max = _flock.BoundsMax;
         Vector3 steer = Vector3.zero;
@@ -192,32 +205,35 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
         return steer * _boundaryWeight;
     }
 
-    /// <summary>단일 축에서 경계 여백 안으로 들어온 정도에 비례한 복귀 성분을 반환합니다.</summary>
+    /// <summary>단일 축에서 경계 여백 침범 정도에 비례한 반환값을 구합니다.</summary>
     private float AxisSteer(float v, float lo, float hi)
     {
+        // 하한선 침범 시 안쪽(+)으로 밀어냄
         if (v < lo + _boundaryMargin)
         {
-            // 하한 여백 안: 안쪽(+)으로. 이미 벗어났으면 1 이상으로 강하게.
             return Mathf.Clamp01((lo + _boundaryMargin - v) / _boundaryMargin)
                    + Mathf.Max(0f, lo - v) / _boundaryMargin;
         }
+        // 상한선 침범 시 안쪽(-)으로 밀어냄
         if (v > hi - _boundaryMargin)
         {
-            // 상한 여백 안: 안쪽(-)으로.
             return -(Mathf.Clamp01((v - (hi - _boundaryMargin)) / _boundaryMargin)
                      + Mathf.Max(0f, v - hi) / _boundaryMargin);
         }
         return 0f;
     }
 
-    /// <summary>관성 있는 회전·가감속과 유영 노이즈를 적용해 실제로 전진시킵니다.</summary>
+    /// <summary>결정된 조향 방향과 속도로 회전 보간 및 전진 처리를 수행합니다.</summary>
     private void ApplyMovement()
     {
+        // 목표 속도로 부드럽게 가감속 보간
         _speed = Mathf.Lerp(_speed, _targetSpeed, _speedLerp * Time.deltaTime);
 
+        // 사인파 기반 좌우 유영 노이즈(Wiggle) 산출
         _phase += _wiggleFrequency * Time.deltaTime;
         Vector3 wiggle = transform.right * (Mathf.Sin(_phase) * _wiggleAmplitude);
 
+        // 노이즈가 더해진 최종 방향으로 트랜스폼 회전
         Vector3 desiredDir = _heading + wiggle * 0.15f;
         if (desiredDir.sqrMagnitude > K.SMALL_DISTANCE)
         {
@@ -229,6 +245,7 @@ public sealed class CFlockingFish : AFrameable, IUpdateFrameable
             );
         }
 
+        // 로컬 Z축을 향해 전진
         transform.Translate(0f, 0f, Time.deltaTime * _speed);
     }
     #endregion

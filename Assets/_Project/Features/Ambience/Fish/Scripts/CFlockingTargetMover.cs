@@ -1,8 +1,7 @@
 ﻿using UnityEngine;
 
 /// <summary>
-/// 물고기 군집의 이동 형태(고정/자유)를 결정하고, SphereCast를 사용해 지형을 회피하며 이동하도록 제어하는 클래스입니다.
-/// Free 모드에서도 소속 군집(CFlockingGroup)의 경계 박스 안에서만 목표점을 선택합니다.
+/// 지형을 회피하며 물고기 군집의 타겟(목표점)을 안전한 위치로 이동시킵니다.
 /// </summary>
 public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
 {
@@ -23,12 +22,14 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private float _timer;
-    private Vector3 _originalPosition; // 스폰 지점 (Anchor 모드 기준점)
-    private Vector3 _targetPosition;
+    private float _timer;              // 다음 목표점 갱신까지 남은 시간
+    private bool _isInitialized;       // 외부 데이터 초기화 완료 여부 플래그
+    private CFlockingGroup _flock;     // 이동 경계를 가져오기 위한 군집 참조
+
+    // 타겟 관련 좌표 및 캐싱 트랜스폼
     private Transform _targetTransform;
-    private CFlockingGroup _flock;     // 경계 박스 참조용
-    private bool _isInitialized = false;
+    private Vector3 _targetPosition;
+    private Vector3 _originalPosition; // Anchor 모드 시 기준이 되는 스폰 원점
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -36,12 +37,11 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
 
     /// <summary>타겟이 한 스텝에 이동할 수 있는 최대 반경입니다.</summary>
     public float MoveRange => _moveRange;
-    /// <summary>현재 이동 모드입니다.</summary>
+    /// <summary>현재 적용 중인 이동 모드입니다.</summary>
     public EMoveMode MoveMode => _moveMode;
 
     /// <summary>
     /// 기즈모용 기준점입니다. Anchor 모드는 스폰 원점을, Free 모드는 타겟 현재 위치를 반환합니다.
-    /// 비재생(에디터) 상태에서는 원점이 아직 잡히지 않았으므로 트랜스폼 위치로 대체합니다.
     /// </summary>
     public Vector3 GizmoBasePosition
     {
@@ -49,30 +49,35 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
         {
             if (_moveMode == EMoveMode.Free && _targetTransform != null)
                 return _targetTransform.position;
-            // Anchor: 재생 중이면 스폰 원점, 아니면 현재 위치.
             return Application.isPlaying ? _originalPosition : transform.position;
         }
     }
     #endregion
 
     #region ─────────────────────────▶ 초기화 ◀─────────────────────────
+    /// <summary>외부 스크립트에서 이동 반경과 속도를 설정하여 컴포넌트를 초기화합니다.</summary>
     public void Initialize(float moveRange, float moveSpeed, Vector2 positionChangeSpeed)
     {
+        // 전달받은 이동 관련 설정 덮어쓰기
         _moveRange = moveRange;
         _moveSpeed = moveSpeed;
         _positionChangeSpeed = positionChangeSpeed;
         _isInitialized = true;
 
+        // 첫 목표점 갱신 타이머 시작
         _timer = Random.Range(_positionChangeSpeed.x, _positionChangeSpeed.y);
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    /// <summary>생성 시 타겟 트랜스폼 및 군집 참조를 가져와 캐싱합니다.</summary>
     private void Awake()
     {
+        // 초기 기준점 및 소속 군집 할당
         _originalPosition = transform.position;
         _flock = GetComponent<CFlockingGroup>();
 
+        // 하위에 할당된 타겟 트랜스폼 검색 및 캐싱
         if (transform.childCount > 0)
         {
             _targetTransform = transform.GetChild(0);
@@ -84,12 +89,14 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
         }
     }
 
+    /// <summary>매 프레임 타겟을 목표점으로 이동시키거나, 타이머 소진 시 새 목적지를 탐색합니다.</summary>
     public void ExecuteUpdateFrame()
     {
         if (_targetTransform == null) return;
 
         if (_timer >= 0f)
         {
+            // 타이머 차감 및 타겟 위치를 향해 스무스 이동
             _timer -= Time.deltaTime;
             _targetTransform.position = Vector3.MoveTowards(
                 _targetTransform.position,
@@ -99,38 +106,37 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
         }
         else
         {
+            // 타이머 리셋 및 안전한 다음 경로 계산
             float minInterval = _isInitialized ? _positionChangeSpeed.x : 3f;
             float maxInterval = _isInitialized ? _positionChangeSpeed.y : 8f;
             _timer = Random.Range(minInterval, maxInterval);
 
-            // 안전 경로 연산을 통해 지형과 부딪히지 않는 최적의 다음 목표점을 선택합니다.
             _targetPosition = GetNextSafeTargetPosition();
         }
     }
 
-    /// <summary>
-    /// 구형 레이캐스트(SphereCast)를 활용하여 지형이 없는 안전한 목적지를 탐색하여 반환합니다.
-    /// Free 모드에서도 최종 후보지는 군집 경계 박스 안으로 클램프됩니다.
-    /// </summary>
+    /// <summary>물리 레이캐스트를 활용하여 지형에 막히지 않는 새 목적지 좌표를 반환합니다.</summary>
     private Vector3 GetNextSafeTargetPosition()
     {
-        // Anchor 모드라면 스폰 원점을 기준으로, Free 모드라면 현재 타겟 위치를 기준으로 난수 좌표를 산출합니다.
+        // 이동 모드에 따른 탐색 기준점 설정
         Vector3 basePos = _moveMode == EMoveMode.Anchor ? _originalPosition : _targetTransform.position;
         Vector3 candidatePos = basePos;
         bool pathIsClear = false;
+        const int MAX_RETRIES = 8; // 무한루프 및 연산 스파이크 방지 제한
 
-        // 연산 부하 방지용 최대 재시도(Retry) 횟수
-        const int MAX_RETRIES = 8;
-
+        // 최대 허용 횟수만큼 난수 목적지를 찍고 검사 반복
         for (int i = 0; i < MAX_RETRIES; ++i)
         {
+            // 새 목적지 후보 생성 후 경계 제한
             Vector3 randomOffset = Random.insideUnitSphere * _moveRange;
             candidatePos = ClampToBounds(basePos + randomOffset);
 
+            // 현재 위치에서 후보지까지의 방향 및 거리 계산
             Vector3 origin = _targetTransform.position;
             Vector3 direction = candidatePos - origin;
             float distance = direction.magnitude;
 
+            // 이동 거리가 매우 짧으면 즉시 통과
             if (distance < K.SMALL_DISTANCE)
             {
                 pathIsClear = true;
@@ -139,16 +145,15 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
 
             direction.Normalize();
 
-            // 구형 레이캐스트를 쏴서 다음 타겟 후보지 경로 사이에 지형이 있는지 검사합니다.
+            // 구체형 레이캐스트를 쏘아 중간에 지형이 겹치는지 체크
             if (!Physics.SphereCast(origin, _avoidanceRadius, direction, out RaycastHit hit, distance, _terrainLayer))
             {
                 pathIsClear = true;
-                break;
+                break; // 막힌 곳이 없다면 탐색 성공
             }
         }
 
-        // 예외 방어: 만약 8번의 난수 생성 결과가 모두 지형에 막혀있다면 (예: 막다른 골목에 고립)
-        // 뒤쪽 방향으로 강제 후퇴 좌표를 만들어 갇히지 않도록 탈출시킵니다.
+        // 반복 검사에도 막혔다면, 강제로 뒤로 후퇴하는 위치 지정
         if (!pathIsClear)
         {
             candidatePos = ClampToBounds(
@@ -158,11 +163,12 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
         return candidatePos;
     }
 
-    /// <summary>후보 좌표를 군집 경계 박스 안으로 제한합니다. 군집 참조가 없으면 그대로 반환합니다.</summary>
+    /// <summary>좌표를 검사해 군집의 경계 박스를 벗어나지 않게 클램프합니다.</summary>
     private Vector3 ClampToBounds(Vector3 pos)
     {
         if (_flock == null) return pos;
 
+        // X, Y, Z 각각에 대해 한계 경계 제한 적용
         Vector3 min = _flock.BoundsMin;
         Vector3 max = _flock.BoundsMax;
         pos.x = Mathf.Clamp(pos.x, min.x, max.x);
