@@ -2,8 +2,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 프리셋 SO 테이블을 참조하여 물고기 군집을 형성하고 제어하는 클래스입니다.
-/// 군집의 이동 가능 범위를 월드 좌표계 기준 경계 박스(AABB)로 제한합니다.
+/// 개체들을 스폰하여 물고기 군집을 형성하고 이동 가능한 월드 경계를 관리합니다.
 /// </summary>
 public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
 {
@@ -26,7 +25,7 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private readonly List<CFlockingFish> _allFish = new();
+    private readonly List<CFlockingFish> _allFish = new(); // 스폰된 전체 물고기 개체 리스트
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -44,8 +43,10 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
+    /// <summary>프리셋을 검증하고 지정된 범위 내에 물고기들을 스폰합니다.</summary>
     private void Start()
     {
+        // 프리셋 및 프리팹 유효성 검사
         if (_preset == null)
         {
             UDebug.Print("CFlockingGroup: 물고기 프리셋 테이블(CFishPresetSO)이 할당되지 않았습니다.", LogType.Error, this);
@@ -59,29 +60,33 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
             return;
         }
 
+        // 초기 스폰 반경 및 부모 트랜스폼 설정
         Transform schoolParent = _fishSchool != null ? _fishSchool.transform : transform;
         int prefabCount = prefabs.Length;
-
-        // 스폰 반경은 경계 박스의 가장 짧은 변의 1/4로 산출해 초기에 뭉치지 않게 합니다.
         Vector3 size = _boundsMax - _boundsMin;
         float spawnRadius = Mathf.Min(size.x, size.y, size.z) * 0.25f;
 
+        // 지정된 마릿수만큼 물고기 개체 생성 및 초기화
         for (int i = 0; i < _numFish; ++i)
         {
+            // 경계 내 안전한 랜덤 스폰 위치 산출
             Vector3 spawnPos = transform.position + Random.insideUnitSphere * spawnRadius;
             spawnPos = ClampToBounds(spawnPos);
 
-            // 프리셋 테이블에 든 물고기 종류들을 쏠림 없이 순차적으로 균등 스폰합니다.
+            // 프리팹 순차 선택 및 씬 생성
             GameObject selectedPrefab = prefabs[i % prefabCount];
-
             GameObject fishGo = Instantiate(selectedPrefab, spawnPos, Quaternion.identity);
+
+            // 크기 및 부모 지정
             fishGo.transform.SetParent(schoolParent, true);
             fishGo.transform.localScale = Vector3.one * (Random.value * 0.2f + 0.9f);
 
+            // 개별 물고기 초기화 및 리스트 등록
             if (fishGo.TryGetComponent(out CFlockingFish fish))
             {
                 fish.Flock = this;
                 fish.AverageSpeed = _averageSpeed;
+                fish.FishIndex = i; // 프레임 분산용 고유 인덱스 할당
                 _allFish.Add(fish);
             }
         }
@@ -89,12 +94,13 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    /// <summary>매 프레임 호출되는 로직입니다. (현재 타겟 이동은 분리되어 처리됨)</summary>
     public void ExecuteUpdateFrame()
     {
         // 목표점 이동은 CFlockingTargetMover가 담당하므로 여기서는 별도 처리가 없습니다.
     }
 
-    /// <summary>주어진 좌표를 경계 박스 안으로 강제로 끌어당깁니다.</summary>
+    /// <summary>주어진 좌표를 경계 박스 내부로 강제 클램프합니다.</summary>
     private Vector3 ClampToBounds(Vector3 pos)
     {
         pos.x = Mathf.Clamp(pos.x, _boundsMin.x, _boundsMax.x);
@@ -105,26 +111,25 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 기즈모 그리기 ◀─────────────────────────
+    /// <summary>에디터 상에서 군집의 한계 경계선과 타겟 반경을 가시화합니다.</summary>
     private void OnDrawGizmos()
     {
-        // 이동 범위 박스(월드 절대 좌표) — 모든 무리가 공유하는 하드 경계.
+        // 이동 가능한 최대 범위 박스 그리기
         Gizmos.color = Color.cyan;
         Vector3 boxCenter = (_boundsMin + _boundsMax) * 0.5f;
         Vector3 boxSize = _boundsMax - _boundsMin;
         Gizmos.DrawWireCube(boxCenter, boxSize);
 
-        // 타겟이 한 스텝에 이동할 수 있는 반경 구.
-        // Anchor 모드: 스폰 원점 중심 = 무리의 전체 배회 범위와 동일.
-        // Free 모드: 타겟 현재 위치 중심 = 한 스텝 이동 반경(전체 범위는 위의 박스).
+        // 이동 모드에 따른 타겟 이동 구역 그리기
         if (TryGetComponent(out CFlockingTargetMover mover))
         {
             Gizmos.color = mover.MoveMode == CFlockingTargetMover.EMoveMode.Anchor
-                ? Color.green   // 고정형: 전체 활동 반경
-                : Color.yellow; // 자유형: 스텝 반경
+                ? Color.green
+                : Color.yellow;
             Gizmos.DrawWireSphere(mover.GizmoBasePosition, mover.MoveRange);
         }
 
-        // 타겟 오브젝트의 실제 위치 표시(작은 점).
+        // 타겟의 현재 위치 표시
         if (_target != null)
         {
             Gizmos.color = Color.white;
