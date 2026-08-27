@@ -84,6 +84,24 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                     //오른집게회전
                 }
                 break;
+            case EGrabStatus.ReadyShoot:
+                if (_rotateLeftHeld)
+                {
+                    //왼쪽집게회전
+                    _twizersAnchor.transform.Rotate(
+                    Vector3.left,
+                    _twizersRotateSpeed * Time.deltaTime,
+                    Space.Self);
+                }
+                if (_rotateRightHeld)
+                {
+                    _twizersAnchor.transform.Rotate(
+                    Vector3.right,
+                    _twizersRotateSpeed * Time.deltaTime,
+                    Space.Self);
+                    //오른집게회전
+                }
+                break;
             case EGrabStatus.Shooting:
                 ExtendArm();
 
@@ -166,21 +184,33 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     }
     private bool DistanceCk()
     {
+        
         float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
         float maxdistance = GetMaxDistance();
-        if (distance < maxdistance) return true;
+        if (distance <= maxdistance) return true;
         else return false;
+        
     }
     private void ShootWristContinuous()
     {
-        _twizersRigidBody.AddForce(_aimDir * GetMaxGrabSpeed(), ForceMode.Force);
+        float distance = GetMaxDistance()-(_arm.transform.position - _twizersAnchor.transform.position).magnitude;
+        float t = Mathf.Clamp01(distance / 1f);
+        float force = GetMaxGrabSpeed() * t;
 
+        _twizersRigidBody.AddForce(_aimDir * force, ForceMode.Force);
+        UDebug.Print(t);
+        if(t<=0.1)
+            ChangeStatus(EGrabStatus.Grab);
+        /*
+        _twizersRigidBody.AddForce(_aimDir * GetMaxGrabSpeed(), ForceMode.Force);
+        UDebug.Print(_twizersRigidBody.velocity);
         //거리제한되면 자동으로 그랩동작을 시행한 다음 상태변경한다. 
         if (!DistanceCk())
         {
             print("거리제한");
             ChangeStatus(EGrabStatus.Grab);
         }
+        */
 
     }
     private bool BringDistanceCk()
@@ -247,12 +277,15 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 }
                 else if (grabStatus == EGrabStatus.ReadyShoot)
                 {
+                    _controller.MoveLockOFF();
                     grabStatus = EGrabStatus.WaittoReady;
                     StartCoroutine(ReadyTwizersCo(EGrabStatus.Wait));
                     
                 }
                     break;
             case EGrabStatus.ReadyShoot:
+                grabStatus = EGrabStatus.ReadyShoot;
+                _controller.MoveLockOn();
                 _diverToAim.AimCanvas.SetActive(true);
 
                 break;
@@ -349,7 +382,10 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
             _shoulder.transform.localPosition = _shoulderReadyPos;
             UDebug.Print("상태변경>Readyshoot");
             grabStatus = EGrabStatus.ReadyShoot;
-        }else if(status == EGrabStatus.Wait)
+            _controller.MoveLockOn();
+
+        }
+        else if(status == EGrabStatus.Wait)
         {
             float timer = 0f;
             while (timer < _shoulderReadyTime*0.5f)
@@ -506,8 +542,6 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         CEventBus<OnInputCollect>.Unsubscribe(CollectInputHandler);
         CEventBus<OnInputRotateTwizerLeft>.Unsubscribe(RotateLeftHandler);
         CEventBus<OnInputRotateTwizerRight>.Unsubscribe(RotateRightHandler);
-
-
     }
 
     #endregion
