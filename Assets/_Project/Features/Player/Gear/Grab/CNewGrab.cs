@@ -184,21 +184,33 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     }
     private bool DistanceCk()
     {
+        
         float distance = (_arm.transform.position - _twizersAnchor.transform.position).magnitude;
         float maxdistance = GetMaxDistance();
-        if (distance < maxdistance) return true;
+        if (distance <= maxdistance) return true;
         else return false;
+        
     }
     private void ShootWristContinuous()
     {
-        _twizersRigidBody.AddForce(_aimDir * GetMaxGrabSpeed(), ForceMode.Force);
+        float distance = GetMaxDistance()-(_arm.transform.position - _twizersAnchor.transform.position).magnitude;
+        float t = Mathf.Clamp01(distance / 1f);
+        float force = GetMaxGrabSpeed() * t;
 
+        _twizersRigidBody.AddForce(_aimDir * force, ForceMode.Force);
+        UDebug.Print(t);
+        if(t<=0.1)
+            ChangeStatus(EGrabStatus.Grab);
+        /*
+        _twizersRigidBody.AddForce(_aimDir * GetMaxGrabSpeed(), ForceMode.Force);
+        UDebug.Print(_twizersRigidBody.velocity);
         //거리제한되면 자동으로 그랩동작을 시행한 다음 상태변경한다. 
         if (!DistanceCk())
         {
             print("거리제한");
             ChangeStatus(EGrabStatus.Grab);
         }
+        */
 
     }
     private bool BringDistanceCk()
