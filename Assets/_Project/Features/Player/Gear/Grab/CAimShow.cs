@@ -51,16 +51,20 @@ public class CAimShow : AFrameable, IUpdateFrameable
             if (_grabScript.grabStatus != CNewGrab.EGrabStatus.ReadyShoot) return;
             if ((_armTransform.position - hit.point).magnitude < _grabScript.GetMaxDistance())
             {
+                //이거 원래 그랩쪽에서 담당했어야할거 같은데, 기능변경전에는 이게 맞음..
+                _grabScript.ReachGrab = (_armTransform.position - hit.point).magnitude;
                 ChangeState(EAimStatus.Reached);
             }
             else
             {
+                _grabScript.ReachGrab = _grabScript.GetMaxDistance();
                 ChangeState(EAimStatus.UnReached);
             }
         }
         else
         {
             if (_grabScript.grabStatus != CNewGrab.EGrabStatus.ReadyShoot) return;
+            _grabScript.ReachGrab = _grabScript.GetMaxDistance();
             ChangeState(EAimStatus.Normal);
             if (_currentAimObject != null)
             {
