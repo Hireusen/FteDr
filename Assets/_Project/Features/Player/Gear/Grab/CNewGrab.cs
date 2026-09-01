@@ -174,13 +174,11 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 ChangeStatus(EGrabStatus.Grab);
                 _grabTimer = 0f;
             }
-
-            /*
-            if (_grabAutoTerritory.CrashCk == true)
+             else if (_grabAutoTerritory.CrashCk == true)
             {
                 ChangeStatus(EGrabStatus.Grab);
             }
-            */
+            
             /*
             if (_fout1.CrashCk == true || _fout2.CrashCk == true)
             {

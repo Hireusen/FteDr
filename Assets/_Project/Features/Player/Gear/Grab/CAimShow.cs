@@ -12,6 +12,9 @@ public class CAimShow : AFrameable, IUpdateFrameable
     [SerializeField] private Transform _armTransform;
     [SerializeField] private LayerMask _collectibleLayout;
     [SerializeField] private AimInfo _aimInfo;
+    [SerializeField] private Image _bigReachedAimImg;
+    [SerializeField] private Image _bigNotReachedAimImg;
+    [SerializeField] private Image _bigNormalAimImg;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectible _currentAimObject;
     #endregion
@@ -19,6 +22,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public enum EAimStatus
     {
+        NotAim,
         Normal,
         UnReached,
         Reached
@@ -44,7 +48,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
                 _aimInfo.ShowTooltip(_currentAimObject);
                 _currentAimObject.ShowOutline();
                 print("outlineshow");
-                
             }
 
             //에임용
