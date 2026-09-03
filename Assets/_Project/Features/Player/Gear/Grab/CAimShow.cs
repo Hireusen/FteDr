@@ -6,15 +6,20 @@ using UnityEngine.UI;
 /// </summary>
 public class CAimShow : AFrameable, IUpdateFrameable
 {
+    [Header("플레이어")]
     [SerializeField] private CNewGrab _grabScript;
-    [SerializeField] private Image _aimImg;
     [SerializeField] private Transform _cam;
     [SerializeField] private Transform _armTransform;
+    [Header("수집품 정보")]
     [SerializeField] private LayerMask _collectibleLayout;
     [SerializeField] private AimInfo _aimInfo;
+    [Header("기본에임 이미지")]
+    [SerializeField] private Image _aimImg;
+    [Header("조준모드 이미지")]
     [SerializeField] private Image _bigReachedAimImg;
     [SerializeField] private Image _bigNotReachedAimImg;
     [SerializeField] private Image _bigNormalAimImg;
+    [SerializeField] private Image _background;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectible _currentAimObject;
     #endregion
@@ -27,7 +32,23 @@ public class CAimShow : AFrameable, IUpdateFrameable
         UnReached,
         Reached
     }
-
+    public struct TransitionInfo
+    {
+        public EAimStatus current;
+        public EAimStatus next;
+    }
+    public TransitionInfo transitionInfo;
+    public EAimStatus currentStatus;
+    public void AimModeOn()
+    {
+        _background.gameObject.SetActive(true);
+        _aimImg.gameObject.SetActive(false);
+    }
+    public void WaitModeOn()
+    {
+        _background.gameObject.SetActive(false);
+        _aimImg.gameObject.SetActive(true);
+    }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
     public void ShowOutLineInDistance()
     {
@@ -90,11 +111,18 @@ public class CAimShow : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    private void Transition(EAimStatus status)
+    {
+        transitionInfo.current = status;
+
+    }
     private void ChangeState(EAimStatus status)
     {
-        EAimStatus nextStatus = status;
-        switch (nextStatus)
+        currentStatus = status;
+        switch (currentStatus)
         {
+            case EAimStatus.NotAim:
+                break;
             case EAimStatus.Normal:
                 _aimImg.color = Color.white;
                 break;
