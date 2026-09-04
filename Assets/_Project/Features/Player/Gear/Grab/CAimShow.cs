@@ -1,4 +1,7 @@
-﻿using UnityEngine;
+﻿using Codice.Client.BaseCommands;
+using TMPro;
+using Unity.VisualScripting.YamlDotNet.Core;
+using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
@@ -6,6 +9,7 @@ using UnityEngine.UI;
 /// </summary>
 public class CAimShow : AFrameable, IUpdateFrameable
 {
+    
     [Header("플레이어")]
     [SerializeField] private CNewGrab _grabScript;
     [SerializeField] private Transform _cam;
@@ -22,15 +26,23 @@ public class CAimShow : AFrameable, IUpdateFrameable
     [SerializeField] private Image _background;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectible _currentAimObject;
+    private struct AimModeImgset
+    {
+        public Image reached;
+        public Image notReached;
+        public Image normal;
+    }
+    private AimModeImgset _aimModeImgs;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+
     public enum EAimStatus
     {
-        NotAim,
         Normal,
         UnReached,
-        Reached
+        Reached,
+        Transition
     }
     public struct TransitionInfo
     {
@@ -39,15 +51,18 @@ public class CAimShow : AFrameable, IUpdateFrameable
     }
     public TransitionInfo transitionInfo;
     public EAimStatus currentStatus;
+    public bool IsAimMode { get; private set; } = false;
     public void AimModeOn()
     {
         _background.gameObject.SetActive(true);
         _aimImg.gameObject.SetActive(false);
+        IsAimMode = true;
     }
     public void WaitModeOn()
     {
         _background.gameObject.SetActive(false);
         _aimImg.gameObject.SetActive(true);
+        IsAimMode = false;
     }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
     public void ShowOutLineInDistance()
@@ -72,7 +87,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
             }
 
             //에임용
-            if (_grabScript.grabStatus != CNewGrab.EGrabStatus.ReadyShoot) return;
             if ((_armTransform.position - hit.point).magnitude < _grabScript.GetMaxDistance())
             {
                 //이거 원래 그랩쪽에서 담당했어야할거 같은데, 기능변경전에는 이게 맞음..
@@ -87,7 +101,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
         }
         else
         {
-            if (_grabScript.grabStatus != CNewGrab.EGrabStatus.ReadyShoot) return;
             _grabScript.ReachGrab = _grabScript.GetMaxDistance();
             ChangeState(EAimStatus.Normal);
             if (_currentAimObject != null)
@@ -106,14 +119,23 @@ public class CAimShow : AFrameable, IUpdateFrameable
     {
         
         ShowOutLineInDistance();
+        switch (currentStatus)
+        {
+            case EAimStatus.Transition:
+                ChangeState(transitionInfo.next);
+                break;
+        }
         
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    
     private void Transition(EAimStatus status)
     {
         transitionInfo.current = status;
+        transitionInfo.next = status;
+        currentStatus = EAimStatus.Transition;
 
     }
     private void ChangeState(EAimStatus status)
@@ -121,8 +143,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
         currentStatus = status;
         switch (currentStatus)
         {
-            case EAimStatus.NotAim:
-                break;
             case EAimStatus.Normal:
                 _aimImg.color = Color.white;
                 break;
@@ -138,8 +158,8 @@ public class CAimShow : AFrameable, IUpdateFrameable
     {
         var player = CGameManager.Player;
         var comp=player.GetComponent<CDiverToAim>();
-        (_grabScript, _armTransform, _cam) = comp.GetReference(this.gameObject);
-        this.gameObject.SetActive(false);
+        (_grabScript, _armTransform, _cam) = comp.GetReference(this);
+        WaitModeOn();
 
     }
     #endregion
@@ -148,6 +168,9 @@ public class CAimShow : AFrameable, IUpdateFrameable
     private void Awake()
     {
         SetReference();
+        _aimModeImgs.reached = _bigReachedAimImg;
+        _aimModeImgs.notReached = _bigNotReachedAimImg;
+        _aimModeImgs.normal = _bigNormalAimImg;
     }
     #endregion
 }

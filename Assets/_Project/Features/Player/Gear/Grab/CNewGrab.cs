@@ -284,14 +284,16 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 }
                 UDebug.Print("상태변경>wait");
                 grabStatus = EGrabStatus.Wait;
-                _diverToAim.AimCanvas.SetActive(false);
+                //_diverToAim.AimCanvas.SetActive(false);
+                _diverToAim.AimCanvas.WaitModeOn();
                 _controller.MoveLockOFF();
                 break;
             case EGrabStatus.WaittoReady:
                 if (grabStatus == EGrabStatus.Wait)
                 {
                     grabStatus = EGrabStatus.WaittoReady;
-                    _diverToAim.AimCanvas.SetActive(true);
+                    //_diverToAim.AimCanvas.SetActive(true);
+                    _diverToAim.AimCanvas.AimModeOn();
                     //스피드 제한 추가.(지금은 일단 잠금)
                     _controller.MoveLockOn();
                     //집게 연출 코루틴 안에서 연출 종료 후 상태변경
@@ -308,8 +310,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
             case EGrabStatus.ReadyShoot:
                 grabStatus = EGrabStatus.ReadyShoot;
                 _controller.MoveLockOn();
-                _diverToAim.AimCanvas.SetActive(true);
-
+                //_diverToAim.AimCanvas.SetActive(true);
+                _diverToAim.AimCanvas.AimModeOn();
                 break;
             case EGrabStatus.Shooting:
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
