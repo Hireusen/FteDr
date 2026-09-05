@@ -1,4 +1,5 @@
 ﻿using Codice.Client.BaseCommands;
+using Project;
 using TMPro;
 using Unity.VisualScripting.YamlDotNet.Core;
 using UnityEngine;
@@ -20,19 +21,11 @@ public class CAimShow : AFrameable, IUpdateFrameable
     [Header("기본에임 이미지")]
     [SerializeField] private Image _aimImg;
     [Header("조준모드 이미지")]
-    [SerializeField] private Image _bigReachedAimImg;
-    [SerializeField] private Image _bigNotReachedAimImg;
-    [SerializeField] private Image _bigNormalAimImg;
+    [SerializeField] private CBigAimShow _bigAimShow;
     [SerializeField] private Image _background;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectible _currentAimObject;
-    private struct AimModeImgset
-    {
-        public Image reached;
-        public Image notReached;
-        public Image normal;
-    }
-    private AimModeImgset _aimModeImgs;
+    
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -56,13 +49,18 @@ public class CAimShow : AFrameable, IUpdateFrameable
     {
         _background.gameObject.SetActive(true);
         _aimImg.gameObject.SetActive(false);
+        _bigAimShow.gameObject.SetActive(true);
         IsAimMode = true;
     }
     public void WaitModeOn()
     {
         _background.gameObject.SetActive(false);
         _aimImg.gameObject.SetActive(true);
+        _bigAimShow.gameObject.SetActive(false);
         IsAimMode = false;
+        _aimInfo.HideTooltip();
+        _currentAimObject?.HideOutline();
+
     }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
     public void ShowOutLineInDistance()
@@ -71,19 +69,22 @@ public class CAimShow : AFrameable, IUpdateFrameable
         if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 4, _collectibleLayout))
         {
             //아웃라인용+ 조준모드 툴팁표시
-            CCollectible temp=hit.transform.root.gameObject.GetComponent<CCollectible>();
-            if (temp != _currentAimObject)
-            {
-                if (_currentAimObject != null)
+            if (IsAimMode)
+            { 
+                CCollectible temp = hit.transform.root.gameObject.GetComponent<CCollectible>();
+                if (temp != _currentAimObject)
                 {
-                    _currentAimObject.HideOutline();
-                    _aimInfo.HideTooltip();
-                }
-                _currentAimObject=temp;
+                    if (_currentAimObject != null)
+                    {
+                        _currentAimObject.HideOutline();
+                        _aimInfo.HideTooltip();
+                    }
+                    _currentAimObject = temp;
 
-                _aimInfo.ShowTooltip(_currentAimObject);
-                _currentAimObject.ShowOutline();
-                print("outlineshow");
+                    _aimInfo.ShowTooltip(_currentAimObject);
+                    _currentAimObject.ShowOutline();
+                    print("outlineshow");
+                }
             }
 
             //에임용
@@ -145,12 +146,15 @@ public class CAimShow : AFrameable, IUpdateFrameable
         {
             case EAimStatus.Normal:
                 _aimImg.color = Color.white;
+                _bigAimShow.ShowTypeAim(CBigAimShow.EAimtype.normal);
                 break;
             case EAimStatus.UnReached:
                 _aimImg.color = Color.red;
+                _bigAimShow.ShowTypeAim(CBigAimShow.EAimtype.notreached);
                 break;
             case EAimStatus.Reached:
                 _aimImg.color = Color.green;
+                _bigAimShow.ShowTypeAim(CBigAimShow.EAimtype.reached);
                 break;
         }
     }
@@ -168,9 +172,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
     private void Awake()
     {
         SetReference();
-        _aimModeImgs.reached = _bigReachedAimImg;
-        _aimModeImgs.notReached = _bigNotReachedAimImg;
-        _aimModeImgs.normal = _bigNormalAimImg;
     }
     #endregion
 }
