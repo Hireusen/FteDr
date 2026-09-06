@@ -172,7 +172,10 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
             if (_grabTimer>0.5f&&speedDot < 0.1f)
             {
                 ChangeStatus(EGrabStatus.Grab);
-                _grabTimer = 0f;
+                //_grabTimer = 0f;
+                UDebug.Print($"자동당기기{_grabTimer}");
+                
+
             }
              else if (_grabAutoTerritory.CrashCk == true)
             {
@@ -273,6 +276,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         switch (status)
         {
             case EGrabStatus.Wait:
+                _grabTimer = 0f;
                 _twizers.GrabSetting(false);
                 
                 _controller.IsControlLockedByGrab = false;
@@ -309,6 +313,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                     break;
             case EGrabStatus.ReadyShoot:
                 grabStatus = EGrabStatus.ReadyShoot;
+                _grabTimer = 0f;
                 _controller.MoveLockOn();
                 //_diverToAim.AimCanvas.SetActive(true);
                 _diverToAim.AimCanvas.AimModeOn();
@@ -493,7 +498,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
             ChangeStatus(EGrabStatus.WaittoReady);
             return;
         }
-        if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
+        //if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
     }
 
     private IEnumerator ArmToOriginCo()
