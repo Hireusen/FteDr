@@ -10,6 +10,9 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
     [Header("물고기 테이블 프리셋")]
     [SerializeField] private CFishPresetSO _preset;
 
+    [Header("렌더링 레이어")]
+    [SerializeField] private LayerMask _renderingLayer;
+
     [Header("군집 설정")]
     [SerializeField, Min(1)] private int _numFish = 100;
     [SerializeField, Min(0.1f)] private float _averageSpeed = 2f;
@@ -45,6 +48,7 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
+    private int _layerIndex;
     private readonly List<VirtualBatch> _batches = new();
     private static readonly int UV_OFFSET_ID = Shader.PropertyToID("_UVOffset");
     #endregion
@@ -58,6 +62,19 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
+    private void Awake()
+    {
+        int mask = _renderingLayer.value;
+        int count = _renderingLayer.GetLayerCount();
+        if (count == 1)
+        {
+            _layerIndex = _renderingLayer.GetLayerIndex();
+            return;
+        }
+
+        UDebug.Print("물고기 인스턴싱 매니저의 레이어가 두 개 이상 설정되어 있습니다.", LogType.Error, this);
+    }
+
     /// <summary>프리팹을 스폰하지 않고 메시 정보만 추출하여 가상 데이터 배열을 초기화합니다.</summary>
     private void Start()
     {
@@ -153,8 +170,9 @@ public sealed class CFlockingGroup : AFrameable, IUpdateFrameable
                 batch.matrices,
                 batch.count,
                 batch.mpb,
-                UnityEngine.Rendering.ShadowCastingMode.Off,
-                false
+                UnityEngine.Rendering.ShadowCastingMode.On,
+                true,
+                _layerIndex
             );
         }
     }

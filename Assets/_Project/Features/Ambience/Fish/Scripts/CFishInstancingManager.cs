@@ -6,6 +6,8 @@ using UnityEngine;
 /// </summary>
 public sealed class CFishInstancingManager : AFrameable, ILateUpdateFrameable
 {
+    [SerializeField] private LayerMask _renderingLayer;
+
     #region ─────────────────────────▶ 내부 클래스 ◀─────────────────────────
     /// <summary>동일한 메시를 공유하는 물고기들을 묶어 관리하는 배치(Batch) 단위입니다.</summary>
     private class InstancedBatch
@@ -24,6 +26,7 @@ public sealed class CFishInstancingManager : AFrameable, ILateUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
+    private int _layerIndex;
     private readonly List<InstancedBatch> _batches = new();                      // 생성된 전체 렌더링 배치 리스트
     private static readonly int UV_OFFSET_ID = Shader.PropertyToID("_UVOffset"); // 셰이더 프로퍼티 ID 캐싱
     #endregion
@@ -101,6 +104,19 @@ public sealed class CFishInstancingManager : AFrameable, ILateUpdateFrameable
             }
         }
     }
+
+    private void Awake()
+    {
+        int mask = _renderingLayer.value;
+        int count = _renderingLayer.GetLayerCount();
+        if(count == 1)
+        {
+            _layerIndex = _renderingLayer.GetLayerIndex();
+            return;
+        }
+
+        UDebug.Print("물고기 인스턴싱 매니저의 레이어가 두 개 이상 설정되어 있습니다.", LogType.Error, this);
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
@@ -124,8 +140,9 @@ public sealed class CFishInstancingManager : AFrameable, ILateUpdateFrameable
                 batch.matrices,
                 batch.count,
                 batch.mpb,
-                UnityEngine.Rendering.ShadowCastingMode.Off,
-                false
+                UnityEngine.Rendering.ShadowCastingMode.On,
+                true,
+                _layerIndex
             );
         }
     }

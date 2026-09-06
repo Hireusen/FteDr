@@ -124,9 +124,19 @@ public static class LayerExtension
     }
 
     /// <summary>
+    /// 마스크에 있는 레이어 인덱스를 하나 반환합니다.
+    /// </summary>
+    /// <param name="mask"></param>
+    /// <returns></returns>
+    public static int GetLayerIndex(this LayerMask mask)
+    {
+        return Mathf.RoundToInt(Mathf.Log(mask.value, 2));
+    }
+
+    /// <summary>
     /// 마스크에 포함된 모든 레이어 인덱스를 반환합니다.
     /// </summary>
-    public static List<int> GetLayers(this LayerMask mask)
+    public static List<int> GetLayerIndexs(this LayerMask mask)
     {
         List<int> layers = new List<int>();
         for (int i = 0; i < 32; i++)
