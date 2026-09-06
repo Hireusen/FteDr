@@ -276,6 +276,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         switch (status)
         {
             case EGrabStatus.Wait:
+                _twizersAnchor.transform.localRotation = _arm.transform.localRotation * _grabOffset;
                 _grabTimer = 0f;
                 _twizers.GrabSetting(false);
                 
