@@ -482,6 +482,12 @@ public sealed class CGameManager : ASingleton<CGameManager>
     // 플레이 모드가 종료될 경우 호출
     private void OnApplicationQuit()
     {
+        // Alt+F4·창 닫기 등 일시정지 창을 거치지 않는 종료 경로. 팝업을 띄울 수 없으므로 저장만 시도한다.
+        // 타이틀 등 비게임플레이 씬에서는 저장할 진행상황이 없고, 종료 중 매니저 지연 생성만 유발하므로 건너뛴다.
+        if (_curScene.IsGameplay())
+        {
+            USave.TrySaveAll(out _);
+        }
         ClearStaticMember();
     }
 

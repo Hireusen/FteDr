@@ -141,10 +141,10 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
     /// <summary>저장된 진행도 파일이 존재하는지 여부입니다.</summary>
     public bool HasSave => USaveFile.Exists(FILE_NAME);
 
-    /// <summary>현재 진행도를 로컬 파일에 저장합니다.</summary>
-    public void Save()
+    /// <summary>현재 진행도를 로컬 파일에 저장하고 성공 여부를 반환합니다.</summary>
+    public bool Save()
     {
-        USaveFile.Save(FILE_NAME, _progress);
+        return USaveFile.Save(FILE_NAME, _progress);
     }
 
     /// <summary>로컬 파일에서 진행도를 다시 불러옵니다.</summary>

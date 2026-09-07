@@ -18,16 +18,16 @@ public class CStageLoader : AMono
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public string StageID { get; private set; }
     public bool IsExistSaveData => USaveFile.Exists(StageID);
+
+    /// <summary>씬의 수집품을 모두 저장하고 성공 여부를 반환합니다.</summary>
+    public bool SaveCollectible()
+    {
+        CCollectible[] collectibles = UObject.FindComponents<CCollectible>(false);
+        return USaveFile.Save(StageID, BuildStageCollectibleData(collectibles));
+    }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    // 씬의 수집품 모두 저장
-    private void SaveCollectible()
-    {
-        CCollectible[] collectibles = UObject.FindComponents<CCollectible>(false);
-        USaveFile.Save(StageID, BuildStageCollectibleData(collectibles));
-    }
-
     // 씬에 수집품 배치
     private void LoadCollectible()
     {

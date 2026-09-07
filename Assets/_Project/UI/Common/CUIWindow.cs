@@ -142,6 +142,11 @@ public sealed class CUIWindow : AMono, IUIWindow
     private void RequestClose()
     {
         OnRequestCloseUI.Publish(_uiType);
+
+        if (_uiType == EUI.ShopWindow)
+        {
+            OnRequestNotice.Publish("자동 저장되었습니다.", 0.5f);
+        }
     }
 
     private void SetInteractable(bool value)

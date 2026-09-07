@@ -26,7 +26,7 @@ public class CEnemyController : AFrameable, IUpdateFrameable
 
     [Header("맵 경계 (배회 볼륨)")]
     [Tooltip("배회 볼륨의 중심. 비우면 월드 원점(0,0,0)을 사용합니다.")]
-    [SerializeField] private Transform _spanwPoint;
+    [SerializeField] private Transform _spawnPoint;
     [Tooltip("배회 볼륨의 전체 크기(가로/세로/깊이). 이 박스 안에서 목적지를 뽑습니다.")]
     [SerializeField] private Vector3 _mapSize = new Vector3(60f, 20f, 60f);
     [Tooltip("경계 안쪽 이 거리부터 안으로 돌아오도록 서서히 조향을 시작합니다.")]
@@ -133,7 +133,7 @@ public class CEnemyController : AFrameable, IUpdateFrameable
 
     /// <summary>상어의 스폰위치(배회 중심)를 외부에서 주입합니다. (보통은 인스펙터에서 직접 지정)</summary>
     /// <param name="spawnPoint"></param>
-    public void SetSpawnPoint(Transform spawnPoint) => _spanwPoint = spawnPoint;
+    public void SetSpawnPoint(Transform spawnPoint) => _spawnPoint = spawnPoint;
 
     // 프레임 매니저에게 호출당할 함수
     public void ExecuteUpdateFrame()
@@ -542,7 +542,7 @@ public class CEnemyController : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 순찰 목적지 / 경계 ◀─────────────────────────
-    private Vector3 MapCenter => _spanwPoint != null ? _spanwPoint.position : Vector3.zero;
+    private Vector3 MapCenter => _spawnPoint != null ? _spawnPoint.position : Vector3.zero;
 
     // 배회 볼륨 안에서 기지 반경을 피해 랜덤 목적지를 뽑습니다.
     private void PickNewPatrolDestination()
