@@ -23,6 +23,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     [Header("조준모드 이미지")]
     [SerializeField] private CBigAimShow _bigAimShow;
     [SerializeField] private Image _background;
+    [SerializeField] private CFlash _flashUtility;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectible _currentAimObject;
     
@@ -51,6 +52,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
         _aimImg.gameObject.SetActive(false);
         _bigAimShow.gameObject.SetActive(true);
         IsAimMode = true;
+        _flashUtility.FlashShow(0.3f, 0.3f);
     }
     public void WaitModeOn()
     {
@@ -60,7 +62,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
         IsAimMode = false;
         _aimInfo.HideTooltip();
         _currentAimObject?.HideOutline();
-
+        _flashUtility.FlashShow(0.3f, 0.3f);
     }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
     public void ShowOutLineInDistance()
