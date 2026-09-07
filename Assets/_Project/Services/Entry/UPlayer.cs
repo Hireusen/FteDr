@@ -83,6 +83,15 @@ public static class UPlayer
     /// <summary>지정한 장비의 레벨을 1 올립니다. (최대 레벨이면 실패)</summary>
     /// <param name="gearType">장비 타입</param>
     public static bool UpgradeGear(EDataType gearType) => Progress.UpgradeGear(gearType);
+
+    /// <summary>지정한 장비의 최대 레벨(SO 기준)을 반환합니다.</summary>
+    /// <param name="gearType">장비 타입</param>
+    public static int GetMaxGearLevel(EDataType gearType)
+    {
+        // CProgressManager에 이미 구현된 GetGearSO를 활용합니다.
+        AGearSO gear = Progress.GetGearSO(gearType);
+        return gear != null ? gear.MaxLevel : 1; // 혹시 null일 경우를 대비한 안전 장치
+    }
     #endregion
 
     #region ─────────────────────────▶ 진행 상황 (영속) ◀─────────────────────────

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-public class ClickToPlaceTool : EditorWindow
+public class BrushPlacementTool : EditorWindow
 {
     private GameObject prefabToPlace;
     private bool isPainting = false;
@@ -12,35 +12,34 @@ public class ClickToPlaceTool : EditorWindow
     private bool randomScale = true;
     private Vector2 scaleRange = new Vector2(0.8f, 1.2f);
 
-    [MenuItem("Tools/Click To Place Tool")]
+    // 브러쉬 간격 옵션
+    private bool randomSpacing = true;
+    private float fixedSpacing = 2.0f;
+    private Vector2 spacingRange = new Vector2(1.9f, 2.1f);
+
+    // 내부 상태 추적용 필드 (메모리 할당 방지)
+    private Vector3 lastPlacedPosition = Vector3.positiveInfinity;
+    private float currentTargetSpacing = 0f;
+
+    [MenuItem("Tools/Brush Placement Tool")]
     public static void ShowWindow()
     {
-        GetWindow<ClickToPlaceTool>("클릭 배치 툴");
+        GetWindow<BrushPlacementTool>("브러쉬 배치 툴");
     }
 
-    // 씬 뷰에 이벤트 연결
-    private void OnEnable()
-    {
-        SceneView.duringSceneGui += OnSceneGUI;
-    }
-
-    private void OnDisable()
-    {
-        SceneView.duringSceneGui -= OnSceneGUI;
-    }
+    private void OnEnable() => SceneView.duringSceneGui += OnSceneGUI;
+    private void OnDisable() => SceneView.duringSceneGui -= OnSceneGUI;
 
     private void OnGUI()
     {
         GUILayout.Space(10);
-        EditorGUILayout.LabelField("🎯 마우스 클릭 오브젝트 배치 툴", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("🎨 마우스 드래그 오브젝트 배치 툴", EditorStyles.boldLabel);
         EditorGUILayout.Space();
 
-        // 프리팹 할당
         prefabToPlace = (GameObject)EditorGUILayout.ObjectField("배치할 프리팹", prefabToPlace, typeof(GameObject), false);
 
         GUILayout.Space(10);
 
-        // 옵션 설정
         EditorGUILayout.LabelField("배치 옵션", EditorStyles.boldLabel);
         alignToNormal = EditorGUILayout.Toggle("지형 굴곡(Normal)에 맞춤", alignToNormal);
         randomYRotation = EditorGUILayout.Toggle("Y축 랜덤 회전", randomYRotation);
@@ -49,11 +48,24 @@ public class ClickToPlaceTool : EditorWindow
         scaleRange = EditorGUILayout.Vector2Field("크기 범위 (Min/Max)", scaleRange);
         EditorGUILayout.EndToggleGroup();
 
+        GUILayout.Space(10);
+
+        EditorGUILayout.LabelField("브러쉬 옵션", EditorStyles.boldLabel);
+        randomSpacing = EditorGUILayout.Toggle("랜덤 배치 간격 사용", randomSpacing);
+
+        if (randomSpacing)
+        {
+            spacingRange = EditorGUILayout.Vector2Field("간격 범위 (Min/Max)", spacingRange);
+        }
+        else
+        {
+            fixedSpacing = EditorGUILayout.FloatField("고정 배치 간격", fixedSpacing);
+        }
+
         GUILayout.Space(20);
 
-        // 페인팅 모드 토글 버튼
         GUI.backgroundColor = isPainting ? new Color(1f, 0.4f, 0.4f) : new Color(0.4f, 0.8f, 0.4f);
-        string buttonText = isPainting ? "배치 모드 종료 (클릭 시 중지)" : "배치 모드 시작 (Scene 뷰 클릭)";
+        string buttonText = isPainting ? "배치 모드 종료 (ESC)" : "배치 모드 시작";
 
         if (GUILayout.Button(buttonText, GUILayout.Height(40)))
         {
@@ -63,13 +75,12 @@ public class ClickToPlaceTool : EditorWindow
                 return;
             }
             isPainting = !isPainting;
+
+            // 페인팅 시작 시 위치 및 초기 간격 셋업
+            lastPlacedPosition = Vector3.positiveInfinity;
+            currentTargetSpacing = randomSpacing ? Random.Range(spacingRange.x, spacingRange.y) : fixedSpacing;
         }
         GUI.backgroundColor = Color.white;
-
-        if (isPainting)
-        {
-            EditorGUILayout.HelpBox("Scene 뷰에서 바닥을 좌클릭하면 오브젝트가 생성됩니다.\n종료하려면 위 버튼을 누르거나 'ESC' 키를 누르세요.", MessageType.Info);
-        }
     }
 
     private void OnSceneGUI(SceneView sceneView)
@@ -78,7 +89,6 @@ public class ClickToPlaceTool : EditorWindow
 
         Event e = Event.current;
 
-        // ESC 키를 누르면 배치 모드 종료
         if (e.type == EventType.KeyDown && e.keyCode == KeyCode.Escape)
         {
             isPainting = false;
@@ -86,51 +96,43 @@ public class ClickToPlaceTool : EditorWindow
             return;
         }
 
-        // 배치 모드 중에는 다른 오브젝트가 선택되지 않도록 클릭 이벤트 가로채기
         int controlID = GUIUtility.GetControlID(FocusType.Passive);
         HandleUtility.AddDefaultControl(controlID);
 
-        // 마우스 좌클릭 시
-        if (e.type == EventType.MouseDown && e.button == 0)
+        if ((e.type == EventType.MouseDown || e.type == EventType.MouseDrag) && e.button == 0 && !e.alt)
         {
-            // 마우스 커서 위치에서 씬을 향해 레이(Ray) 발사
             Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
 
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                PlaceObject(hit);
-                e.Use(); // 이벤트를 소모하여 다른 동작(선택 등) 방지
+                // 현재 캐싱된 목표 간격(currentTargetSpacing)을 기준으로 거리 체크
+                if (e.type == EventType.MouseDown || Vector3.Distance(hit.point, lastPlacedPosition) >= currentTargetSpacing)
+                {
+                    PlaceObject(hit);
+                    lastPlacedPosition = hit.point;
+
+                    // 배치 직후, 다음 배치에 필요한 목표 간격을 즉시 계산하여 캐싱
+                    currentTargetSpacing = randomSpacing ? Random.Range(spacingRange.x, spacingRange.y) : fixedSpacing;
+                }
+                e.Use();
             }
+        }
+
+        if (e.type == EventType.MouseUp && e.button == 0)
+        {
+            lastPlacedPosition = Vector3.positiveInfinity;
         }
     }
 
     private void PlaceObject(RaycastHit hit)
     {
-        // 프리팹 연결을 유지한 채로 인스턴스화
         GameObject newObj = (GameObject)PrefabUtility.InstantiatePrefab(prefabToPlace);
+        Undo.RegisterCreatedObjectUndo(newObj, "Brush Place Object");
 
-        // Ctrl+Z 지원
-        Undo.RegisterCreatedObjectUndo(newObj, "Click Place Object");
-
-        // 1. 위치 설정
         newObj.transform.position = hit.point;
 
-        // 2. 지형 노멀에 맞춤
-        if (alignToNormal)
-        {
-            newObj.transform.up = hit.normal;
-        }
-
-        // 3. Y축 랜덤 회전 (자신의 로컬 축 기준)
-        if (randomYRotation)
-        {
-            newObj.transform.Rotate(0, Random.Range(0f, 360f), 0, Space.Self);
-        }
-
-        // 4. 랜덤 크기
-        if (randomScale)
-        {
-            newObj.transform.localScale = Vector3.one * Random.Range(scaleRange.x, scaleRange.y);
-        }
+        if (alignToNormal) newObj.transform.up = hit.normal;
+        if (randomYRotation) newObj.transform.Rotate(0, Random.Range(0f, 360f), 0, Space.Self);
+        if (randomScale) newObj.transform.localScale = Vector3.one * Random.Range(scaleRange.x, scaleRange.y);
     }
 }

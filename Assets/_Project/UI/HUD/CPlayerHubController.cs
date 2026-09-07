@@ -20,11 +20,11 @@ public sealed class CPlayerHudController : AMono
     [SerializeField] private TMP_Text _oxygenMaxText;
     [SerializeField] private string _oxygenFormat = "{0:0} / {1:0}";
 
-    [Header("산소 게이지 세로 길이 (레벨업 시 증가)")]
+    [Header("산소 게이지 세로 길이 (업그레이드 비율에 따라 증가)")]
     [Tooltip("같이 늘어나야 하는 RectTransform들 (예: Background, Fill Area). 전부 동일한 목표 높이로 동시에 커집니다.")]
     [SerializeField] private RectTransform[] _oxygenHeightTargets;
-    [SerializeField] private float _baseSliderHeight = 200f;
-    [SerializeField] private float _heightPerLevel = 20f;
+    [SerializeField] private float _minSliderHeight = 300f; // 1레벨일 때의 최소 세로 길이
+    [SerializeField] private float _maxSliderHeight = 600f; // 최대 레벨일 때의 최대 세로 길이
     [SerializeField] private float _heightGrowDuration = 0.4f;
 
     [Header("버튼")]
@@ -50,6 +50,9 @@ public sealed class CPlayerHudController : AMono
     private bool _isInsideSubmarine = true;
     private bool _windowsAllowHud = true;
     private bool _elementsVisible = true; // 가방/그물/레이더 마커 토글 상태
+
+    private int _cachedMaxFuelLevel = 1;
+    private float _currentMaskHeight = 300f;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -83,8 +86,10 @@ public sealed class CPlayerHudController : AMono
         CEventBus<OnPlayerSubmarineAreaChanged>.Subscribe(SubmarineAreaHandler);
         CEventBus<OnInputToggleHud>.Subscribe(ToggleHudInputHandler);
 
-        RefreshOxygen(UPlayer.CurrentFuel, UPlayer.MaxFuel); // 진입 시 현재값 즉시 반영
+        _cachedMaxFuelLevel = UPlayer.GetMaxGearLevel(EDataType.FuelTank);
+
         ApplySliderHeight(UPlayer.GetGearLevel(EDataType.FuelTank), instant: true); // 진입 시점 레벨 기준으로 즉시 반영 (연출 없음)
+        RefreshOxygen(UPlayer.CurrentFuel, UPlayer.MaxFuel); // 진입 시 현재값 즉시 반영
         RefreshHudVisibility(); // 시작 시 잠수함 안이라고 가정하고 있으므로 기본은 숨김 상태로 시작
         ApplyElementsVisibility(); // 가방/그물 토글 초기 상태 반영 (기본 켜짐)
     }
@@ -155,7 +160,14 @@ public sealed class CPlayerHudController : AMono
     {
         if (_oxygenHeightTargets == null || _oxygenHeightTargets.Length == 0) return;
 
-        float targetHeight = _baseSliderHeight + (fuelTankLevel - 1) * _heightPerLevel;
+        float ratio = 0f;
+        if (_cachedMaxFuelLevel > 1)
+        {
+            ratio = Mathf.Clamp01((float)(fuelTankLevel - 1) / (_cachedMaxFuelLevel - 1));
+        }
+
+        // 구한 목표 높이를 클래스 변수에 저장해둡니다 (RefreshOxygen에서 써야 함)
+        _currentMaskHeight = Mathf.Lerp(_minSliderHeight, _maxSliderHeight, ratio);
 
         int count = _oxygenHeightTargets.Length;
         for (int i = 0; i < count; ++i)
@@ -168,20 +180,27 @@ public sealed class CPlayerHudController : AMono
 
             if (instant || _heightGrowDuration <= 0f)
             {
-                rect.sizeDelta = new Vector2(size.x, targetHeight);
+                rect.sizeDelta = new Vector2(size.x, _currentMaskHeight); // targetHeight 대신 사용
             }
             else
             {
-                rect.DOSizeDelta(new Vector2(size.x, targetHeight), _heightGrowDuration).SetUpdate(true);
+                rect.DOSizeDelta(new Vector2(size.x, _currentMaskHeight), _heightGrowDuration).SetUpdate(true);
             }
         }
+
+        // 업그레이드로 그릇이 커지면 안에 있는 내용물(산소량) 비율도 즉시 다시 맞춰줍니다.
+        RefreshOxygen(UPlayer.CurrentFuel, UPlayer.MaxFuel);
     }
 
     private void RefreshOxygen(float current, float max)
     {
         if (_oxygenFillImage != null)
         {
-            _oxygenFillImage.fillAmount = max > 0f ? Mathf.Clamp01(current / max) : 0f;
+            // 실제 산소 비율 (0.0 ~ 1.0)
+            float fuelRatio = max > 0f ? Mathf.Clamp01(current / max) : 0f;
+
+            // 핵심: 이미지는 늘 최대 크기(600)이므로, 현재 마스크 크기에 맞게 fillAmount를 축소시켜 적용합니다.
+            _oxygenFillImage.fillAmount = fuelRatio * (_currentMaskHeight / _maxSliderHeight);
         }
 
         if (_oxygenCurText != null && _oxygenMaxText != null)
