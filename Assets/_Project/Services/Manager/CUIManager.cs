@@ -180,11 +180,25 @@ public sealed class CUIManager : ASingleton<CUIManager>
         {
             EUI top = _openStack[^1];
             OnRequestCloseUI.Publish(top);
+            return;
         }
-        else
-        {
-            OnRequestOpenUI.Publish(EUI.PauseMenuWindow);
-        }
+
+        // 잠수함 이동/도착 연출 중에는 일시정지 창을 열지 않는다.
+        // 이 창은 Time.timeScale=0을 걸고, 연출 코루틴과 지연 씬 로드는 모두 스케일 시간을 쓰므로
+        // 전환이 통째로 멈춘 채 저장/타이틀 복귀까지 가능해진다.
+        if (IsInCutscene()) return;
+
+        OnRequestOpenUI.Publish(EUI.PauseMenuWindow);
+    }
+
+    // 씬 로드 중이거나 플레이어가 꺼져있으면 연출 중으로 본다.
+    // (잠수함 연출은 시작·도착 양쪽 모두 전역 플레이어를 SetActive(false)로 숨긴다)
+    private bool IsInCutscene()
+    {
+        if (UScene.IsLoading) return true;
+
+        GameObject player = CGameManager.Player;
+        return player == null || !player.activeInHierarchy;
     }
 
     private void PushStack(EUI uiType)
@@ -199,6 +213,9 @@ public sealed class CUIManager : ASingleton<CUIManager>
     private void RefreshSortOrder()
     {
         const int BASE_SORT_ORDER = 100;
+        // 로딩창만 예외로 페이드(UFade 캔버스, 9999) 위에 그린다.
+        // 씬 전환은 대부분 페이드로 화면이 덮인 상태에서 진행되므로, 그 아래에 있으면 진행도가 보이지 않는다.
+        const int LOADING_SORT_ORDER = 10000;
 
         int count = _openStack.Count;
         for (int i = 0; i < count; ++i)
@@ -209,7 +226,7 @@ public sealed class CUIManager : ASingleton<CUIManager>
             if (canvas == null) continue;
 
             canvas.overrideSorting = true;
-            canvas.sortingOrder = BASE_SORT_ORDER + i;
+            canvas.sortingOrder = _openStack[i] == EUI.LoadingWindow ? LOADING_SORT_ORDER : BASE_SORT_ORDER + i;
         }
     }
 

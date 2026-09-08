@@ -92,6 +92,9 @@ public class CSubMarineUpDown : AMono
         if (player == null) return;
 
         player.Teleport(_playerSpawnPoint);
+
+        // 스폰 포인트의 회전이 어떻게 잡혀있든, 조작을 넘겨받는 시점엔 항상 잠수함과 같은 방향을 보게 한다.
+        player.SyncLookYaw(transform.eulerAngles.y);
     }
 
     /// <summary>
@@ -108,10 +111,11 @@ public class CSubMarineUpDown : AMono
         StartCoroutine(MoveSubmarineSlowStartCo(goDeeper, 1.5f));
         UFade.FadeOut(1.5f, true);
 
+        // onProgress를 넘겨야 로딩 진행도(CLoadingController)가 실제 수치를 받는다.
         if (goDeeper)
-            UScene.NextLoad(delay: 2f);
+            UScene.NextLoad(onProgress: p => OnSceneLoadProgress.Publish(p), delay: 2f);
         else
-            UScene.PrevLoad(delay: 2f);
+            UScene.PrevLoad(onProgress: p => OnSceneLoadProgress.Publish(p), delay: 2f);
     }
 
     /// <summary>
