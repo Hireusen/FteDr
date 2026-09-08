@@ -181,6 +181,19 @@ public sealed class CInputManager : ASingleton<CInputManager>, InputDispatcher.I
     #endregion
 
     #region ─────────────────────────▶ 메세지 함수 ◀─────────────────────────
+    // 알트탭·창 전환 등으로 포커스를 잃으면 OS/유니티가 커서 잠금을 풀어버리는데, 포커스가 돌아와도
+    // 자동으로 다시 잠기지는 않는다. 커서 사유(_cursorReasons)가 없는데 잠금이 풀려있으면 어긋난 상태이므로
+    // 매 프레임 되돌린다. 상태가 정상이면 두 번의 비교로 바로 빠져나간다.
+    // 참고: 에디터에서 ESC를 눌렀을 때 커서가 풀리는 것은 에디터 전용 동작이라 이 가드로 막지 못한다.
+    private void Update()
+    {
+        if (_cursorReasons != ECursorReason.None) return;
+        if (Cursor.lockState == CursorLockMode.Locked && !Cursor.visible) return;
+
+        Cursor.lockState = CursorLockMode.Locked;
+        Cursor.visible = false;
+    }
+
     // ↓ 외부에서 호출해도 OK
     public void OnEnable()
     {
