@@ -112,6 +112,28 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     }
 
     /// <summary>
+    /// 시선을 지정한 좌우 각도로 즉시 맞춥니다. (스폰 직후처럼 바라보는 방향을 강제해야 할 때)
+    /// 시선 각도를 실제로 들고 있는 건 이 카메라이므로, 컨트롤러 쪽만 바꾸면
+    /// 다음 LateUpdate에 다시 덮어써집니다. 방향을 강제하려면 반드시 이 메서드를 거쳐야 합니다.
+    /// </summary>
+    /// <param name="yaw">맞출 좌우 각도(월드 기준 Y)</param>
+    public void SyncLookYaw(float yaw)
+    {
+        _yaw = yaw;
+        _pitch = 0f;
+        _currentLookInput = Vector2.zero;
+
+        // 집게 둘러보기 중이었다면 옛 기준각으로 되돌아가지 않도록 함께 정리한다.
+        _grabLook = false;
+        _grabReturning = false;
+        _grabBaseYaw = yaw;
+        _grabBasePitch = 0f;
+
+        if (_playerController != null) _playerController.SetLookAngles(_yaw, _pitch);
+        if (_camTransform != null && _cameraRoot != null) SnapToRoot();
+    }
+
+    /// <summary>
     /// 카메라 제어권을 외부(시네머신 연출 등)에 넘기거나 되돌립니다.
     /// </summary>
     public void SetControlSuspended(bool controlSuspended)
