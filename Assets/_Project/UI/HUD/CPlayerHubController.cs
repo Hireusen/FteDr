@@ -44,6 +44,8 @@ public sealed class CPlayerHudController : AMono
     [SerializeField] private string _buttonClickSfxId = "";
     #endregion
 
+    public static CPlayerHudController instance;
+
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     // 최종 표시 여부 = 잠수함 밖 && UI 창들이 HUD를 허용할 때. 시작 시 잠수함 안이라고 가정해 기본 숨김.
     // (CSubmarineAreaSensor가 씬에 붙어있어야 "밖으로 나감" 이벤트가 와서 실제로 보이게 됨)
@@ -53,8 +55,16 @@ public sealed class CPlayerHudController : AMono
 
     private int _cachedMaxFuelLevel = 1;
     private float _currentMaskHeight = 300f;
-    #endregion
 
+    private bool _isAimMode = false;
+    #endregion
+    public void HudVisibleSet(bool v)
+    {
+        _isAimMode = v;
+        _elementsVisible = v;
+        ApplyElementsVisibility();
+        OnRequestHudElementsVisibility.Publish(_elementsVisible); // 잠수함 레이더 마커 등 다른 HUD 요소도 같이 반영
+    }
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Start()
     {
@@ -130,6 +140,8 @@ public sealed class CPlayerHudController : AMono
         ApplySliderHeight(ctx.newLevel, instant: false);
     }
 
+    
+
     private void OnClickToggleElements()
     {
         _elementsVisible = !_elementsVisible;
@@ -140,6 +152,8 @@ public sealed class CPlayerHudController : AMono
     // 키보드로 눌렀을 때도 버튼 클릭과 완전히 동일하게 동작한다.
     private void ToggleHudInputHandler(OnInputToggleHud ctx)
     {
+        if (_isAimMode)
+            return;
         OnClickToggleElements();
     }
     #endregion
@@ -219,4 +233,14 @@ public sealed class CPlayerHudController : AMono
         _toggleableElementsGroup.interactable = _elementsVisible;
     }
     #endregion
+
+    private void Awake()
+    {
+        if (instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        instance= this;
+    }
 }

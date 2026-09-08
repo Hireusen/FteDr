@@ -172,15 +172,16 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
             if (_grabTimer>0.5f&&speedDot < 0.1f)
             {
                 ChangeStatus(EGrabStatus.Grab);
-                _grabTimer = 0f;
-            }
+                //_grabTimer = 0f;
+                UDebug.Print($"자동당기기{_grabTimer}");
+                
 
-            /*
-            if (_grabAutoTerritory.CrashCk == true)
+            }
+             else if (_grabAutoTerritory.CrashCk == true)
             {
                 ChangeStatus(EGrabStatus.Grab);
             }
-            */
+            
             /*
             if (_fout1.CrashCk == true || _fout2.CrashCk == true)
             {
@@ -223,7 +224,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
 
         _twizersRigidBody.AddForce(_aimDir * force, ForceMode.Force);
         UDebug.Print(t);
-        if(t<=0.1)
+        if(distance<=0.1)
             ChangeStatus(EGrabStatus.Grab);
         /*
         _twizersRigidBody.AddForce(_aimDir * GetMaxGrabSpeed(), ForceMode.Force);
@@ -275,6 +276,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
         switch (status)
         {
             case EGrabStatus.Wait:
+                _twizersAnchor.transform.localRotation = _arm.transform.localRotation * _grabOffset;
+                _grabTimer = 0f;
                 _twizers.GrabSetting(false);
                 
                 _controller.IsControlLockedByGrab = false;
@@ -286,14 +289,16 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 }
                 UDebug.Print("상태변경>wait");
                 grabStatus = EGrabStatus.Wait;
-                _diverToAim.AimCanvas.SetActive(false);
+                //_diverToAim.AimCanvas.SetActive(false);
+                
                 _controller.MoveLockOFF();
                 break;
             case EGrabStatus.WaittoReady:
                 if (grabStatus == EGrabStatus.Wait)
                 {
                     grabStatus = EGrabStatus.WaittoReady;
-                    _diverToAim.AimCanvas.SetActive(true);
+                    //_diverToAim.AimCanvas.SetActive(true);
+                    _diverToAim.AimCanvas.AimModeOn();
                     //스피드 제한 추가.(지금은 일단 잠금)
                     _controller.MoveLockOn();
                     //집게 연출 코루틴 안에서 연출 종료 후 상태변경
@@ -303,15 +308,17 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 {
                     _controller.MoveLockOFF();
                     grabStatus = EGrabStatus.WaittoReady;
+                    _diverToAim.AimCanvas.WaitModeOn();
                     StartCoroutine(ReadyTwizersCo(EGrabStatus.Wait));
                     
                 }
                     break;
             case EGrabStatus.ReadyShoot:
                 grabStatus = EGrabStatus.ReadyShoot;
+                _grabTimer = 0f;
                 _controller.MoveLockOn();
-                _diverToAim.AimCanvas.SetActive(true);
-
+                //_diverToAim.AimCanvas.SetActive(true);
+                _diverToAim.AimCanvas.AimModeOn();
                 break;
             case EGrabStatus.Shooting:
                 Ray ray = new Ray(_playerCam.transform.position, _playerCam.transform.forward);
@@ -493,7 +500,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
             ChangeStatus(EGrabStatus.WaittoReady);
             return;
         }
-        if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
+        //if (grabStatus == EGrabStatus.Shooting) ChangeStatus(EGrabStatus.Grab);
     }
 
     private IEnumerator ArmToOriginCo()
