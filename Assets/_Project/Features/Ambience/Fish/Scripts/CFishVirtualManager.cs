@@ -9,44 +9,40 @@ using Random = UnityEngine.Random;
 
 /// <summary>
 /// 씬 내 모든 CFlockingGroup 데이터를 수집하여 단일 Job으로 병렬 연산 및 통합 렌더링을 수행합니다.
+/// 스케일 제로(Scale-Zero) 컬링을 사용하여 배열 오염 없이 극한의 성능을 냅니다.
 /// </summary>
 public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("렌더링 및 최적화")]
     [SerializeField] private LayerMask _renderingLayer;
-    [SerializeField] private float _shadowDistance = 40f;
-    [SerializeField] private float _cullRadius = 2f;
+    [SerializeField, Tooltip("물고기 크기에 맞춘 컬링 여유 반경입니다.")]
+    private float _cullRadius = 2f;
     #endregion
 
     #region ─────────────────────────▶ 내부 구조체 & 클래스 ◀─────────────────────────
-    /// <summary>NativeArray 충돌을 방지하기 위해 카메라 평면 6개를 값으로 전달하는 구조체입니다.</summary>
     public struct FrustumPlanes
     {
         public float4 p0, p1, p2, p3, p4, p5;
     }
 
-    /// <summary>물고기의 이동, 회전, 프러스텀 컬링을 병렬로 연산하는 잡 구조체입니다.</summary>
     [BurstCompile]
     private struct UnifiedFishUpdateJob : IJobParallelFor
     {
         public float deltaTime;
-        public float3 camPos;
         public FrustumPlanes frustum;
-        public float shadowDistanceSq;
         public float cullRadius;
 
-        [Unity.Collections.ReadOnly] public NativeArray<float3> targetPositions;
-        [Unity.Collections.ReadOnly] public NativeArray<float> turnSpeeds;
-        [Unity.Collections.ReadOnly] public NativeArray<float3> targetOffsets;
-        [Unity.Collections.ReadOnly] public NativeArray<float> speeds;
-        [Unity.Collections.ReadOnly] public NativeArray<float3> scales;
+        [ReadOnly] public NativeArray<float3> targetPositions;
+        [ReadOnly] public NativeArray<float> turnSpeeds;
+        [ReadOnly] public NativeArray<float3> targetOffsets;
+        [ReadOnly] public NativeArray<float> speeds;
+        [ReadOnly] public NativeArray<float3> scales;
 
         public NativeArray<float3> positions;
         public NativeArray<quaternion> rotations;
 
         [WriteOnly] public NativeArray<Matrix4x4> matrices;
-        [WriteOnly] public NativeArray<int> cullStates;
 
         public void Execute(int i)
         {
@@ -63,8 +59,7 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
             float3 pos = positions[i] + forward * (speeds[i] * deltaTime);
             positions[i] = pos;
 
-            matrices[i] = float4x4.TRS(pos, rotations[i], scales[i]);
-
+            // 프러스텀 컬링: 시야 밖으로 나가면 Zero 행렬을 반환하여 GPU가 렌더링을 즉시 취소하도록 유도함
             bool isVisible = true;
             if (math.dot(frustum.p0.xyz, pos) + frustum.p0.w < -cullRadius) isVisible = false;
             else if (math.dot(frustum.p1.xyz, pos) + frustum.p1.w < -cullRadius) isVisible = false;
@@ -73,28 +68,24 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
             else if (math.dot(frustum.p4.xyz, pos) + frustum.p4.w < -cullRadius) isVisible = false;
             else if (math.dot(frustum.p5.xyz, pos) + frustum.p5.w < -cullRadius) isVisible = false;
 
-            if (!isVisible)
+            if (isVisible)
             {
-                cullStates[i] = 0;
+                matrices[i] = float4x4.TRS(pos, rotations[i], scales[i]);
             }
             else
             {
-                cullStates[i] = math.distancesq(camPos, pos) < shadowDistanceSq ? 1 : 2;
+                matrices[i] = default(float4x4); // 스케일 0을 의미하는 빈 행렬
             }
         }
     }
 
-    /// <summary>1023개 이하의 단일 렌더링 배치를 구성하는 데이터 및 메모리 블록입니다.</summary>
     private class VirtualBatch : System.IDisposable
     {
         public Mesh mesh;
         public Material material;
         public int count;
 
-        // 데이터 덮어쓰기 오염 방지를 위해 그림자용/비그림자용 분리
-        public readonly MaterialPropertyBlock mpbShadow = new();
-        public readonly MaterialPropertyBlock mpbNoShadow = new();
-
+        public readonly MaterialPropertyBlock mpb = new();
         public CFlockingGroup[] parentGroups;
 
         public NativeArray<float3> targetPositionsNative;
@@ -105,17 +96,8 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
         public NativeArray<float3> positionsNative;
         public NativeArray<quaternion> rotationsNative;
         public NativeArray<Matrix4x4> matricesNative;
-        public NativeArray<int> cullStatesNative;
 
-        // NativeArray 고속 복사 및 분류용 관리(Managed) 배열
         public Matrix4x4[] matricesManaged;
-        public int[] cullStatesManaged;
-        public Vector4[] originalUVs;
-
-        public Matrix4x4[] shadowMatrices;
-        public Vector4[] shadowUVs;
-        public Matrix4x4[] noShadowMatrices;
-        public Vector4[] noShadowUVs;
 
         public void Dispose()
         {
@@ -127,11 +109,9 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
             if (positionsNative.IsCreated) positionsNative.Dispose();
             if (rotationsNative.IsCreated) rotationsNative.Dispose();
             if (matricesNative.IsCreated) matricesNative.Dispose();
-            if (cullStatesNative.IsCreated) cullStatesNative.Dispose();
         }
     }
 
-    /// <summary>초기화 시 스포너에서 추출한 물고기 생성 데이터를 임시 보관합니다.</summary>
     private struct FishSpawnData
     {
         public CFlockingGroup group;
@@ -157,7 +137,6 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    /// <summary>카메라 참조 캐싱 및 렌더링 레이어 인덱스를 추출합니다.</summary>
     private void Awake()
     {
         _mainCam = Camera.main;
@@ -165,7 +144,6 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
         if (mask != 0 && (mask & (mask - 1)) == 0) _layerIndex = Mathf.RoundToInt(Mathf.Log(mask, 2));
     }
 
-    /// <summary>씬 내 스포너 데이터를 수집하고 렌더링을 위한 배치를 구성합니다.</summary>
     private void Start()
     {
         CFlockingGroup[] allGroups = FindObjectsOfType<CFlockingGroup>();
@@ -223,16 +201,10 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
                     positionsNative = new NativeArray<float3>(count, Allocator.Persistent),
                     rotationsNative = new NativeArray<quaternion>(count, Allocator.Persistent),
                     matricesNative = new NativeArray<Matrix4x4>(count, Allocator.Persistent),
-                    cullStatesNative = new NativeArray<int>(count, Allocator.Persistent),
-
-                    matricesManaged = new Matrix4x4[count],
-                    cullStatesManaged = new int[count],
-                    originalUVs = new Vector4[count],
-                    shadowMatrices = new Matrix4x4[count],
-                    shadowUVs = new Vector4[count],
-                    noShadowMatrices = new Matrix4x4[count],
-                    noShadowUVs = new Vector4[count]
+                    matricesManaged = new Matrix4x4[count]
                 };
+
+                Vector4[] fixedUVs = new Vector4[count];
 
                 for (int i = 0; i < count; i++)
                 {
@@ -247,19 +219,22 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
                     spawnPos.x = Mathf.Clamp(spawnPos.x, data.group.BoundsMin.x, data.group.BoundsMax.x);
                     spawnPos.y = Mathf.Clamp(spawnPos.y, data.group.BoundsMin.y, data.group.BoundsMax.y);
                     spawnPos.z = Mathf.Clamp(spawnPos.z, data.group.BoundsMin.z, data.group.BoundsMax.z);
-                    batch.positionsNative[i] = spawnPos;
 
+                    batch.positionsNative[i] = spawnPos;
                     batch.rotationsNative[i] = quaternion.identity;
-                    batch.originalUVs[i] = data.uv;
                     batch.targetPositionsNative[i] = data.group.Target != null ? data.group.Target.position : data.group.transform.position;
+
+                    fixedUVs[i] = data.uv;
                 }
+
+                // UV 색상은 시작할 때 단 한 번만 고정시켜 덮어쓰기 오염을 완벽히 차단함
+                batch.mpb.SetVectorArray(UV_OFFSET_ID, fixedUVs);
                 _batches.Add(batch);
             }
         }
         _jobHandles = new NativeArray<JobHandle>(_batches.Count, Allocator.Persistent);
     }
 
-    /// <summary>할당된 모든 비관리 메모리를 안전하게 해제합니다.</summary>
     private void OnDestroy()
     {
         JobHandle.CompleteAll(_jobHandles);
@@ -270,7 +245,6 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    /// <summary>이전 프레임의 연산 결과를 렌더링하고, 현재 프레임의 이동 로직을 비동기 스케줄링합니다.</summary>
     public void ExecuteUpdateFrame()
     {
         if (_mainCam == null) return;
@@ -281,37 +255,9 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
         {
             VirtualBatch batch = _batches[i];
 
-            batch.cullStatesNative.CopyTo(batch.cullStatesManaged);
+            // 모든 연산이 끝난 위치/회전/크기 행렬을 통째로 복사 및 렌더링
             batch.matricesNative.CopyTo(batch.matricesManaged);
-
-            int sCount = 0, nCount = 0;
-            for (int j = 0; j < batch.count; j++)
-            {
-                int state = batch.cullStatesManaged[j];
-                if (state == 1)
-                {
-                    batch.shadowMatrices[sCount] = batch.matricesManaged[j];
-                    batch.shadowUVs[sCount] = batch.originalUVs[j];
-                    sCount++;
-                }
-                else if (state == 2)
-                {
-                    batch.noShadowMatrices[nCount] = batch.matricesManaged[j];
-                    batch.noShadowUVs[nCount] = batch.originalUVs[j];
-                    nCount++;
-                }
-            }
-
-            if (sCount > 0)
-            {
-                batch.mpbShadow.SetVectorArray(UV_OFFSET_ID, batch.shadowUVs);
-                Graphics.DrawMeshInstanced(batch.mesh, 0, batch.material, batch.shadowMatrices, sCount, batch.mpbShadow, ShadowCastingMode.On, true, _layerIndex, null, LightProbeUsage.BlendProbes);
-            }
-            if (nCount > 0)
-            {
-                batch.mpbNoShadow.SetVectorArray(UV_OFFSET_ID, batch.noShadowUVs);
-                Graphics.DrawMeshInstanced(batch.mesh, 0, batch.material, batch.noShadowMatrices, nCount, batch.mpbNoShadow, ShadowCastingMode.Off, true, _layerIndex, null, LightProbeUsage.BlendProbes);
-            }
+            Graphics.DrawMeshInstanced(batch.mesh, 0, batch.material, batch.matricesManaged, batch.count, batch.mpb, ShadowCastingMode.On, true, _layerIndex, null, LightProbeUsage.BlendProbes);
         }
 
         GeometryUtility.CalculateFrustumPlanes(_mainCam, _cameraPlanes);
@@ -326,8 +272,6 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
         };
 
         float dt = Time.deltaTime;
-        float3 camPos = _mainCam.transform.position;
-        float shadowDistSq = _shadowDistance * _shadowDistance;
 
         for (int i = 0; i < _batches.Count; i++)
         {
@@ -344,9 +288,7 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
             UnifiedFishUpdateJob job = new UnifiedFishUpdateJob
             {
                 deltaTime = dt,
-                camPos = camPos,
                 frustum = frustumData,
-                shadowDistanceSq = shadowDistSq,
                 cullRadius = _cullRadius,
                 targetPositions = batch.targetPositionsNative,
                 turnSpeeds = batch.turnSpeedsNative,
@@ -355,8 +297,7 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
                 scales = batch.scalesNative,
                 positions = batch.positionsNative,
                 rotations = batch.rotationsNative,
-                matrices = batch.matricesNative,
-                cullStates = batch.cullStatesNative
+                matrices = batch.matricesNative
             };
 
             _jobHandles[i] = job.Schedule(batch.count, 64);
