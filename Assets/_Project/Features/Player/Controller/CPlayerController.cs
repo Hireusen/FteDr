@@ -72,6 +72,8 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
 
     //이동 조작 막기용 변수
     private bool _movelock = false;
+
+    private CFPPCamera _lookCamera; // 시선 각도의 소유자. 프리팹 안에 있으므로 1회만 찾아 캐싱한다.
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -122,6 +124,23 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     {
         _yaw = yaw;
         _pitch = pitch;
+    }
+
+    /// <summary>
+    /// 바라보는 방향(좌우)을 지정한 각도로 즉시 맞춥니다.
+    /// 스폰 직후처럼 방향을 강제해야 할 때 <see cref="Teleport"/> 뒤에 호출합니다.
+    /// 시선 각도의 소유자는 카메라라서, 카메라까지 맞추지 않으면 다음 프레임에 원래 각도로 되돌아갑니다.
+    /// </summary>
+    /// <param name="yaw">맞출 좌우 각도(월드 기준 Y)</param>
+    public void SyncLookYaw(float yaw)
+    {
+        _yaw = yaw;
+        _pitch = 0f;
+
+        if (_rb != null) _rb.rotation = Quaternion.Euler(0f, yaw, 0f);
+
+        CFPPCamera camera = LookCamera;
+        if (camera != null) camera.SyncLookYaw(yaw);
     }
 
     /// <summary>
@@ -255,6 +274,16 @@ public class CPlayerController : AFrameable, IFixedUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    // 시선 각도를 들고 있는 카메라. 같은 프리팹 안에 있으므로 처음 필요할 때 한 번만 찾는다.
+    private CFPPCamera LookCamera
+    {
+        get
+        {
+            if (_lookCamera == null) _lookCamera = GetComponentInChildren<CFPPCamera>(true);
+            return _lookCamera;
+        }
+    }
+
     /// <summary>
     /// 몸과 CameraRoot 에 회전을 적용합니다.
     /// 집게 사용 등으로 잠긴 동안에는 몸 회전을 갱신하지 않아 몸이 고정됩니다.

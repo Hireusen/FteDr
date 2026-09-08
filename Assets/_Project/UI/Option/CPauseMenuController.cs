@@ -56,6 +56,10 @@ public class CPauseMenuController : AMono
 
     private void OnEnable()
     {
+        // 이 창은 전역 UI(DontDestroyOnLoad)에 속해 씬이 바뀌어도 파괴되지 않는다.
+        // 타이틀로 나간 뒤 다시 스테이지에 들어오면 플래그가 남아 나가기가 영구히 막히므로, 창을 열 때마다 초기화한다.
+        _isExiting = false;
+
         // 이 창이 열려있는 동안에는 게임 시간을 멈춘다. (버튼으로 열든 ESC로 열든 동일하게 적용)
         Time.timeScale = 0f;
     }
@@ -74,7 +78,7 @@ public class CPauseMenuController : AMono
     private void DoLoadTitle()
     {
         Time.timeScale = 1f; // 씬 전환 전에 명시적으로 복구 (안전장치)
-        UScene.LoadWithFade(EScene.Title);
+        UScene.LoadWithFade(EScene.Title, onProgress: p => OnSceneLoadProgress.Publish(p));
     }
 
     private void DoQuit()
