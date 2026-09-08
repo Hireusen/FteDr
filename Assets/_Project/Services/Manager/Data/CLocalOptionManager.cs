@@ -83,10 +83,10 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     }
     #endregion
 
-    /// <summary>현재 옵션을 로컬 파일에 저장합니다.</summary>
-    public void Save()
+    /// <summary>현재 옵션을 로컬 파일에 저장하고 성공 여부를 반환합니다.</summary>
+    public bool Save()
     {
-        USaveFile.Save(FILE_NAME, _option);
+        return USaveFile.Save(FILE_NAME, _option);
     }
 
     /// <summary>로컬 파일에서 옵션을 다시 불러오고 화면/볼륨에 재적용합니다.</summary>

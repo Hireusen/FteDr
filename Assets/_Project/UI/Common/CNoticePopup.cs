@@ -52,15 +52,18 @@ public sealed class CNoticePopup : AMono
         if (_messageText != null) _messageText.text = ctx.message;
 
         if (_routine != null) StopCoroutine(_routine);
-        _routine = StartCoroutine(CoShow());
+
+        float durationToUse = ctx.customDuration ?? _holdDuration;
+
+        _routine = StartCoroutine(CoShow(durationToUse));
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    private IEnumerator CoShow()
+    private IEnumerator CoShow(float holdTime)
     {
         yield return CoFade(0f, 1f, _fadeInDuration);
-        yield return new WaitForSecondsRealtime(_holdDuration); // Pause(Time.timeScale=0) 중에도 정상 노출되도록
+        yield return new WaitForSecondsRealtime(holdTime); // Pause(Time.timeScale=0) 중에도 정상 노출되도록
         yield return CoFade(1f, 0f, _fadeOutDuration);
 
         _routine = null;

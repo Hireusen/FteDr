@@ -5,15 +5,28 @@
 public readonly struct OnRequestNotice
 {
     public readonly string message;
+    public readonly float? customDuration;
 
     public OnRequestNotice(string message)
     {
         this.message = message;
+        this.customDuration = null;
+    }
+
+    public OnRequestNotice(string message, float customDuration)
+    {
+        this.message = message;
+        this.customDuration = customDuration;
     }
 
     /// <param name="message">표시할 메시지</param>
     public static void Publish(string message)
     {
         CEventBus<OnRequestNotice>.Publish(new OnRequestNotice(message));
+    }
+
+    public static void Publish(string message, float customDuration)
+    {
+        CEventBus<OnRequestNotice>.Publish(new OnRequestNotice(message, customDuration));
     }
 }
