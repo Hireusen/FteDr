@@ -1,4 +1,8 @@
-﻿using UnityEngine;
+﻿using Codice.Client.BaseCommands;
+using Project;
+using TMPro;
+using Unity.VisualScripting.YamlDotNet.Core;
+using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
@@ -6,49 +10,90 @@ using UnityEngine.UI;
 /// </summary>
 public class CAimShow : AFrameable, IUpdateFrameable
 {
+    
+    [Header("플레이어")]
     [SerializeField] private CNewGrab _grabScript;
-    [SerializeField] private Image _aimImg;
     [SerializeField] private Transform _cam;
     [SerializeField] private Transform _armTransform;
+    [Header("수집품 정보")]
     [SerializeField] private LayerMask _collectibleLayout;
     [SerializeField] private AimInfo _aimInfo;
+    [Header("기본에임 이미지")]
+    [SerializeField] private Image _aimImg;
+    [Header("조준모드 이미지")]
+    [SerializeField] private CBigAimShow _bigAimShow;
+    [SerializeField] private Image _background;
+    [SerializeField] private CFlash _flashUtility;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectible _currentAimObject;
+    
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
+
     public enum EAimStatus
     {
         Normal,
         UnReached,
-        Reached
+        Reached,
+        Transition
     }
+    public struct TransitionInfo
+    {
+        public EAimStatus current;
+        public EAimStatus next;
+    }
+    public TransitionInfo transitionInfo;
+    public EAimStatus currentStatus;
+    public bool IsAimMode { get; private set; } = false;
+    public void AimModeOn()
+    {
+        _background.gameObject.SetActive(true);
+        _aimImg.gameObject.SetActive(false);
+        _bigAimShow.gameObject.SetActive(true);
+        IsAimMode = true;
+        _flashUtility.FlashShow(0.3f, 0.3f);
+        CPlayerHudController.instance.HudVisibleSet(false);
 
+    }
+    public void WaitModeOn()
+    {
+        _background.gameObject.SetActive(false);
+        _aimImg.gameObject.SetActive(true);
+        _bigAimShow.gameObject.SetActive(false);
+        IsAimMode = false;
+        _aimInfo.HideTooltip();
+        _currentAimObject?.HideOutline();
+        _flashUtility.FlashShow(0.3f, 0.3f);
+        CPlayerHudController.instance.HudVisibleSet(true);
+
+    }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
     public void ShowOutLineInDistance()
     {
         RaycastHit hit;
-        if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 4, _collectibleLayout))
+        if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 5, _collectibleLayout))
         {
             //아웃라인용+ 조준모드 툴팁표시
-            CCollectible temp=hit.transform.root.gameObject.GetComponent<CCollectible>();
-            if (temp != _currentAimObject)
-            {
-                if (_currentAimObject != null)
+            if (IsAimMode)
+            { 
+                CCollectible temp = hit.transform.root.gameObject.GetComponent<CCollectible>();
+                if (temp != _currentAimObject)
                 {
-                    _currentAimObject.HideOutline();
-                    _aimInfo.HideTooltip();
-                }
-                _currentAimObject=temp;
+                    if (_currentAimObject != null)
+                    {
+                        _currentAimObject.HideOutline();
+                        _aimInfo.HideTooltip();
+                    }
+                    _currentAimObject = temp;
 
-                _aimInfo.ShowTooltip(_currentAimObject);
-                _currentAimObject.ShowOutline();
-                print("outlineshow");
-                
+                    _aimInfo.ShowTooltip(_currentAimObject);
+                    _currentAimObject.ShowOutline();
+                    print("outlineshow");
+                }
             }
 
             //에임용
-            if (_grabScript.grabStatus != CNewGrab.EGrabStatus.ReadyShoot) return;
             if ((_armTransform.position - hit.point).magnitude < _grabScript.GetMaxDistance())
             {
                 //이거 원래 그랩쪽에서 담당했어야할거 같은데, 기능변경전에는 이게 맞음..
@@ -63,7 +108,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
         }
         else
         {
-            if (_grabScript.grabStatus != CNewGrab.EGrabStatus.ReadyShoot) return;
             _grabScript.ReachGrab = _grabScript.GetMaxDistance();
             ChangeState(EAimStatus.Normal);
             if (_currentAimObject != null)
@@ -82,24 +126,41 @@ public class CAimShow : AFrameable, IUpdateFrameable
     {
         
         ShowOutLineInDistance();
+        switch (currentStatus)
+        {
+            case EAimStatus.Transition:
+                ChangeState(transitionInfo.next);
+                break;
+        }
         
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    
+    private void Transition(EAimStatus status)
+    {
+        transitionInfo.current = status;
+        transitionInfo.next = status;
+        currentStatus = EAimStatus.Transition;
+
+    }
     private void ChangeState(EAimStatus status)
     {
-        EAimStatus nextStatus = status;
-        switch (nextStatus)
+        currentStatus = status;
+        switch (currentStatus)
         {
             case EAimStatus.Normal:
                 _aimImg.color = Color.white;
+                _bigAimShow.ShowTypeAim(CBigAimShow.EAimtype.normal);
                 break;
             case EAimStatus.UnReached:
                 _aimImg.color = Color.red;
+                _bigAimShow.ShowTypeAim(CBigAimShow.EAimtype.notreached);
                 break;
             case EAimStatus.Reached:
                 _aimImg.color = Color.green;
+                _bigAimShow.ShowTypeAim(CBigAimShow.EAimtype.reached);
                 break;
         }
     }
@@ -107,8 +168,8 @@ public class CAimShow : AFrameable, IUpdateFrameable
     {
         var player = CGameManager.Player;
         var comp=player.GetComponent<CDiverToAim>();
-        (_grabScript, _armTransform, _cam) = comp.GetReference(this.gameObject);
-        this.gameObject.SetActive(false);
+        (_grabScript, _armTransform, _cam) = comp.GetReference(this);
+        WaitModeOn();
 
     }
     #endregion
