@@ -224,7 +224,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
 
         _twizersRigidBody.AddForce(_aimDir * force, ForceMode.Force);
         UDebug.Print(t);
-        if(t<=0.1)
+        if(distance<=0.1)
             ChangeStatus(EGrabStatus.Grab);
         /*
         _twizersRigidBody.AddForce(_aimDir * GetMaxGrabSpeed(), ForceMode.Force);
@@ -290,7 +290,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 UDebug.Print("상태변경>wait");
                 grabStatus = EGrabStatus.Wait;
                 //_diverToAim.AimCanvas.SetActive(false);
-                _diverToAim.AimCanvas.WaitModeOn();
+                
                 _controller.MoveLockOFF();
                 break;
             case EGrabStatus.WaittoReady:
@@ -308,6 +308,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 {
                     _controller.MoveLockOFF();
                     grabStatus = EGrabStatus.WaittoReady;
+                    _diverToAim.AimCanvas.WaitModeOn();
                     StartCoroutine(ReadyTwizersCo(EGrabStatus.Wait));
                     
                 }

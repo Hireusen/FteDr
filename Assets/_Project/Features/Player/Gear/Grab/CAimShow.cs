@@ -53,6 +53,8 @@ public class CAimShow : AFrameable, IUpdateFrameable
         _bigAimShow.gameObject.SetActive(true);
         IsAimMode = true;
         _flashUtility.FlashShow(0.3f, 0.3f);
+        CPlayerHudController.instance.HudVisibleSet(false);
+
     }
     public void WaitModeOn()
     {
@@ -63,12 +65,14 @@ public class CAimShow : AFrameable, IUpdateFrameable
         _aimInfo.HideTooltip();
         _currentAimObject?.HideOutline();
         _flashUtility.FlashShow(0.3f, 0.3f);
+        CPlayerHudController.instance.HudVisibleSet(true);
+
     }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
     public void ShowOutLineInDistance()
     {
         RaycastHit hit;
-        if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 4, _collectibleLayout))
+        if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 5, _collectibleLayout))
         {
             //아웃라인용+ 조준모드 툴팁표시
             if (IsAimMode)
