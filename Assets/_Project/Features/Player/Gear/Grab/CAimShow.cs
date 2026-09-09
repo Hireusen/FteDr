@@ -66,6 +66,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
         _currentAimObject?.HideOutline();
         _flashUtility.FlashShow(0.3f, 0.3f);
         CPlayerHudController.instance.HudVisibleSet(true);
+        _currentAimObject = null;
 
     }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
@@ -175,7 +176,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    private void Awake()
+    private void Start()
     {
         SetReference();
     }
