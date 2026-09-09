@@ -23,7 +23,6 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private float _timer;              // 다음 목표점 갱신까지 남은 시간
-    private bool _isInitialized;       // 외부 데이터 초기화 완료 여부 플래그
     private CFlockingGroup _flock;     // 이동 경계를 가져오기 위한 군집 참조
 
     // 타겟 관련 좌표 및 캐싱 트랜스폼
@@ -51,21 +50,6 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
                 return _targetTransform.position;
             return Application.isPlaying ? _originalPosition : transform.position;
         }
-    }
-    #endregion
-
-    #region ─────────────────────────▶ 초기화 ◀─────────────────────────
-    /// <summary>외부 스크립트에서 이동 반경과 속도를 설정하여 컴포넌트를 초기화합니다.</summary>
-    public void Initialize(float moveRange, float moveSpeed, Vector2 positionChangeSpeed)
-    {
-        // 전달받은 이동 관련 설정 덮어쓰기
-        _moveRange = moveRange;
-        _moveSpeed = moveSpeed;
-        _positionChangeSpeed = positionChangeSpeed;
-        _isInitialized = true;
-
-        // 첫 목표점 갱신 타이머 시작
-        _timer = Random.Range(_positionChangeSpeed.x, _positionChangeSpeed.y);
     }
     #endregion
 
@@ -107,8 +91,8 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
         else
         {
             // 타이머 리셋 및 안전한 다음 경로 계산
-            float minInterval = _isInitialized ? _positionChangeSpeed.x : 3f;
-            float maxInterval = _isInitialized ? _positionChangeSpeed.y : 8f;
+            float minInterval = _positionChangeSpeed.x;
+            float maxInterval = _positionChangeSpeed.y;
             _timer = Random.Range(minInterval, maxInterval);
 
             _targetPosition = GetNextSafeTargetPosition();
