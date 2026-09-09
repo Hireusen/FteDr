@@ -168,13 +168,38 @@ public sealed class CFlockingTargetMover : AFrameable, IUpdateFrameable
     {
         if (_flock == null) return pos;
 
-        // X, Y, Z 각각에 대해 한계 경계 제한 적용
+        // X, 시, Z 각각에 대해 한계 경계 제한 적용
         Vector3 min = _flock.BoundsMin;
         Vector3 max = _flock.BoundsMax;
         pos.x = Mathf.Clamp(pos.x, min.x, max.x);
         pos.y = Mathf.Clamp(pos.y, min.y, max.y);
         pos.z = Mathf.Clamp(pos.z, min.z, max.z);
         return pos;
+    }
+    #endregion
+
+    #region ─────────────────────────▶ 기즈모 ◀─────────────────────────
+    private void OnDrawGizmosSelected()
+    {
+        // 1. 타겟이 다음 목표점을 탐색하는 탐색 반경 (구형)
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(GizmoBasePosition, _moveRange);
+
+        // 2. 인스펙터로 설정한 전체 이동 한계 영역 (박스형)
+        // 비플레이(에디터) 상태에서는 Awake가 안 불려 _flock이 null일 수 있으므로 직접 참조
+        CFlockingGroup flock = _flock != null ? _flock : GetComponent<CFlockingGroup>();
+        if (flock != null)
+        {
+            Vector3 min = flock.BoundsMin;
+            Vector3 max = flock.BoundsMax;
+
+            // Min, Max를 기반으로 박스의 중심점과 크기 계산
+            Vector3 center = (min + max) * 0.5f;
+            Vector3 size = max - min;
+
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireCube(center, size);
+        }
     }
     #endregion
 
