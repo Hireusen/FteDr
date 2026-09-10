@@ -17,21 +17,13 @@ public sealed class CInventoryTester : AMono
     {
         Id.Collectible_Armguard_Silver_Black,
         Id.Collectible_Book_Norm_Brown,
-        Id.Collectible_Coin_Bronze_Single,
-        Id.Collectible_Coin_Gold_Single,
-        Id.Collectible_Cross1_Aged_Bronze,
         Id.Collectible_Cross1_Fine_Gold,
         Id.Collectible_CrystalBall_Green,
         Id.Collectible_Egg_Dark_Orange,
-        Id.Collectible_Goldbar1_Aged_Bronze,
         Id.Collectible_Log_Dark,
         Id.Collectible_Log_Light,
-        Id.Collectible_Shield_Silver_Black,
-        Id.Collectible_Wand_Aged_Bronze,
         Id.Collectible_Wand_Fine_Gold,
         Id.Collectible_Wand_Fine_Mixed2,
-        Id.Collectible_WF_EgyptianTombV2_OfferingTable,
-        Id.Collectible_WF_GreekRelics_OwlStele
     };
     #endregion
 
