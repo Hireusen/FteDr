@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Codice.CM.Common;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,6 +12,7 @@ namespace Project
     {
         #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
         [SerializeField] private Image _flashImg;
+        [SerializeField] private Image _screenImg;
         #endregion
 
         #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -47,6 +49,40 @@ namespace Project
 
             _flashImg.color = new Color(1, 1, 1, 0);
         }
+        public void ScreenOn(bool onScreen)
+        {
+            StopAllCoroutines();
+            if (onScreen)
+            {
+                
+                StartCoroutine(ScreenOnCo(0.5f, 1f, 5f));
+            }
+            else
+            {
+                StartCoroutine(ScreenOnCo(1f, 0.5f, 5f));
+            }
+        }
+        private IEnumerator ScreenOnCo(float startScale,float targetXScale,float speed)
+        {
+            Vector3 tempScale = _screenImg.transform.localScale;
+            tempScale.x = startScale;
+            _screenImg.transform.localScale = tempScale;
+            while (Mathf.Abs(targetXScale - _screenImg.transform.localScale.x) > 0.01f)
+            {
+                Vector3 currentScale = _screenImg.transform.localScale;
+
+                float newX = Mathf.Lerp(currentScale.x, targetXScale, Time.deltaTime * speed);
+
+                _screenImg.transform.localScale = new Vector3(newX, currentScale.y, currentScale.z);
+
+                yield return null;
+            }
+
+            _screenImg.transform.localScale = new Vector3(targetXScale, _screenImg.transform.localScale.y, _screenImg.transform.localScale.z);
+
+
+        }
+
         #endregion
 
         #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
