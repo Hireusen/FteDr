@@ -52,7 +52,8 @@ public class CAimShow : AFrameable, IUpdateFrameable
         _aimImg.gameObject.SetActive(false);
         _bigAimShow.gameObject.SetActive(true);
         IsAimMode = true;
-        _flashUtility.FlashShow(0.3f, 0.3f);
+        //_flashUtility.FlashShow(0.3f, 0.3f);
+        _flashUtility.ScreenOn(true);
         CPlayerHudController.instance.HudVisibleSet(false);
 
     }
@@ -60,12 +61,15 @@ public class CAimShow : AFrameable, IUpdateFrameable
     {
         _background.gameObject.SetActive(false);
         _aimImg.gameObject.SetActive(true);
-        _bigAimShow.gameObject.SetActive(false);
+        
         IsAimMode = false;
         _aimInfo.HideTooltip();
         _currentAimObject?.HideOutline();
-        _flashUtility.FlashShow(0.3f, 0.3f);
+        //_flashUtility.FlashShow(0.3f, 0.3f);
+        _flashUtility.ScreenOn(false);
+        _bigAimShow.gameObject.SetActive(false);
         CPlayerHudController.instance.HudVisibleSet(true);
+        _currentAimObject = null;
 
     }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
@@ -175,7 +179,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    private void Awake()
+    private void Start()
     {
         SetReference();
     }
