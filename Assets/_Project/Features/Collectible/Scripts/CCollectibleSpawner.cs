@@ -245,6 +245,7 @@ public sealed class CCollectibleSpawner : AMono
 
         // 낙하용 Rigidbody 부착 (질량은 수집품 무게 반영)
         Rigidbody rb = go.GetOrAddComponent<Rigidbody>();
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.mass = Mathf.Max(0.01f, so.Weight);
         rb.useGravity = true;
 
