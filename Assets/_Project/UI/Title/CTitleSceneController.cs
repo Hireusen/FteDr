@@ -13,6 +13,7 @@ public class CTitleSceneController : AMono
     [SerializeField] private Button _btnLoad;      // 이어하기
     [SerializeField] private Button _btnOptions;   // 옵션
     [SerializeField] private Button _btnCredits;   // 크레딧
+    [SerializeField] private Button _btnQuit;   // 크레딧
 
     [Header("씬 전환 / 연출")]
     [SerializeField] private float _fadeOutDuration = 0.45f; // 페이드 아웃 시간
@@ -45,12 +46,14 @@ public class CTitleSceneController : AMono
         // 옵션/크레딧: 로컬 패널을 직접 켜지 않고 전역 UI 매니저(CUIManager)에 열기 요청
         if (_btnOptions != null) _btnOptions.onClick.AddListener(() => OnRequestOpenUI.Publish(EUI.SettingsWindow));
         if (_btnCredits != null) _btnCredits.onClick.AddListener(() => OnRequestOpenUI.Publish(EUI.CreditsWindow));
+
+        if (_btnQuit != null) _btnQuit.onClick.AddListener(OnQuitClicked);
     }
 
     // 각 버튼에 호버 확대 연출 컴포넌트를 동적으로 장착하고 파라미터를 주입한다.
     private void SetupResponsiveButtons()
     {
-        Button[] targets = { _btnNewGame, _btnLoad, _btnOptions, _btnCredits };
+        Button[] targets = { _btnNewGame, _btnLoad, _btnOptions, _btnCredits, _btnQuit };
 
         for (int i = 0; i < targets.Length; ++i)
         {
@@ -103,6 +106,17 @@ public class CTitleSceneController : AMono
         MoveToNextScene();
     }
 
+    private void OnQuitClicked()
+    {
+        if (_transitioning) return; // 새 게임/이어하기 전환 중에는 무시
+
+        // 팝업이 없으면 바로 종료한다. (팝업 부재로 종료 자체가 막히면 안 된다)
+        if (!CConfirmPopup.TryShow("게임을 종료하시겠습니까?", QuitGame, confirmLabel: "종료"))
+        {
+            QuitGame();
+        }
+    }
+
     // 다음 빌드 씬으로 페이드 전환한다.
     private void MoveToNextScene()
     {
@@ -125,5 +139,14 @@ public class CTitleSceneController : AMono
     {
         UFade.SetColor(_fadeColor);
     }
-    #endregion
+
+    private void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+#endregion
 }
