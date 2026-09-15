@@ -17,7 +17,8 @@ public class CTPPCamera : AFrameable, ILateUpdateFrameable
 
     [Header("3인칭 옵션")]
     [SerializeField] private bool _useOrbit = true;
-    [SerializeField] private float _orbitSensitivity = 0.5f;
+    [Tooltip("옵션 매니저를 아직 쓸 수 없을 때(부팅 전 등) 사용되는 폴백값 (OrbitSensitivity 프로퍼티 참고)")]
+    [SerializeField] private float _orbitSensitivity = K.DEFAULT_CAMERA_SENSITIVITY;
 
     [Header("수중 회전 제한")]
     [SerializeField] private float _swimOrbitPitchMin = -70f;
@@ -56,6 +57,16 @@ public class CTPPCamera : AFrameable, ILateUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    // 설정창에서 바꾼 감도를 매 프레임 그대로 읽어온다. (옵션 매니저가 아직 없으면 인스펙터 폴백값)
+    private float OrbitSensitivity
+    {
+        get
+        {
+            CLocalOptionManager option = CLocalOptionManager.Ins;
+            return option != null ? option.Option.cameraSensitivity : _orbitSensitivity;
+        }
+    }
+
     private float GetSmoothT(float sharpness)
     {
         return 1f - Mathf.Exp(-sharpness * Time.deltaTime);
@@ -66,7 +77,7 @@ public class CTPPCamera : AFrameable, ILateUpdateFrameable
         if (_useOrbit)
         {
             _orbitYaw = _player.eulerAngles.y;
-            _orbitPitch -= _currentLookInput.y * _orbitSensitivity;
+            _orbitPitch -= _currentLookInput.y * OrbitSensitivity;
 
             float currentMin = _groundOrbitPitchMin;
             float currentMax = _groundOrbitPitchMax;
