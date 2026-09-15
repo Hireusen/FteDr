@@ -27,4 +27,9 @@ public class OptionData
     public int targetFrameRate = K.DEFAULT_TARGET_FRAME_RATE;
     public bool vSync = K.DEFAULT_VSYNC;
     #endregion
+
+    #region ─────────────────────────▶ 조작 ◀─────────────────────────
+    // 카메라 회전 감도 (K.MIN_CAMERA_SENSITIVITY ~ K.MAX_CAMERA_SENSITIVITY, UI에는 100을 곱해 백분율로 표시)
+    public float cameraSensitivity = K.DEFAULT_CAMERA_SENSITIVITY;
+    #endregion
 }

@@ -13,4 +13,5 @@ public enum EUI
     LoadingWindow,          // 로딩창
     ResultWindow,           // 결과창
     TutorialWindow,         // 튜토리얼창
+    KeyMappingWindow,       // 조작키 변경창
 }
