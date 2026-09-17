@@ -83,6 +83,19 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     }
     #endregion
 
+    #region ─────────────────────────▶ 조작 ◀─────────────────────────
+    /// <summary>카메라 회전 감도를 설정하고 변경 이벤트를 발행합니다.</summary>
+    /// <param name="value">K.MIN_CAMERA_SENSITIVITY ~ K.MAX_CAMERA_SENSITIVITY 범위의 감도 값</param>
+    /// <param name="save">true면 파일에 즉시 저장합니다. 드래그 중 저장 지연 시 false를 넘기세요.</param>
+    public void SetCameraSensitivity(float value, bool save = true)
+    {
+        _option.cameraSensitivity = Mathf.Clamp(value, K.MIN_CAMERA_SENSITIVITY, K.MAX_CAMERA_SENSITIVITY);
+
+        if (save) Save();
+        PublishCameraSensitivity();
+    }
+    #endregion
+
     /// <summary>현재 옵션을 로컬 파일에 저장하고 성공 여부를 반환합니다.</summary>
     public bool Save()
     {
@@ -95,10 +108,12 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         _option = USaveFile.Load(FILE_NAME, new OptionData());
 
         ValidateFrameOption();
+        ValidateControlOption();
 
         ApplyResolution();
         ApplyFrameAndVSync();
         PublishVolume();
+        PublishCameraSensitivity();
     }
     #endregion
 
@@ -109,10 +124,12 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         _option = USaveFile.Load(FILE_NAME, new OptionData());
 
         ValidateFrameOption();
+        ValidateControlOption();
 
         ApplyResolution();
         ApplyFrameAndVSync();
         PublishVolume();
+        PublishCameraSensitivity();
     }
 
     private void ValidateFrameOption()
@@ -123,6 +140,15 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
             _option.vSync = K.DEFAULT_VSYNC;
             Save();
         }
+    }
+
+    // 감도 옵션이 없던 시절의 저장 파일을 불러오면 0이 들어올 수 있으므로 범위 안으로 되돌린다.
+    private void ValidateControlOption()
+    {
+        _option.cameraSensitivity = Mathf.Clamp(
+            _option.cameraSensitivity,
+            K.MIN_CAMERA_SENSITIVITY,
+            K.MAX_CAMERA_SENSITIVITY);
     }
 
     // 볼륨 변경 공통 처리: (선택적) 저장 후 이벤트 발행
@@ -140,6 +166,12 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
             _option.sfxVolume,
             _option.bgmVolume,
             _option.ambienceVolume);
+    }
+
+    // 현재 옵션의 감도 값으로 변경 이벤트를 발행
+    private void PublishCameraSensitivity()
+    {
+        OnOptionCameraSensitivityChanged.Publish(_option.cameraSensitivity);
     }
 
     // 옵션의 해상도/전체화면 값을 실제 화면에 적용

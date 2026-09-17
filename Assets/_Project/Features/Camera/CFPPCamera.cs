@@ -15,8 +15,8 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     [SerializeField] private CinemachineVirtualCamera _camera;
 
     [Header("회전 감도")]
-    [Tooltip("기본 감도값. 설정에 감도 옵션이 생기기 전까지 사용되는 폴백 (Sensitivity 프로퍼티 참고)")]
-    [SerializeField] private float _lookSensitivity = 0.5f;
+    [Tooltip("옵션 매니저를 아직 쓸 수 없을 때(부팅 전 등) 사용되는 폴백값 (Sensitivity 프로퍼티 참고)")]
+    [SerializeField] private float _lookSensitivity = K.DEFAULT_CAMERA_SENSITIVITY;
 
     [Header("수중 회전 제한")]
     [SerializeField] private float _swimPitchMin = -85f;
@@ -65,7 +65,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public ELateUpdatePriority LateUpdatePriority => ELateUpdatePriority.Lv5;
 
-    public float LookSensitivity => _lookSensitivity;
+    public float LookSensitivity => Sensitivity;
 
     public bool IsControlling => !_controlSuspended;
 
@@ -75,7 +75,15 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         set { _isCameraRotationLock = value; }
     }
 
-    private float Sensitivity => _lookSensitivity;
+    // 설정창에서 바꾼 감도를 매 프레임 그대로 읽어온다. (옵션 매니저가 아직 없으면 인스펙터 폴백값)
+    private float Sensitivity
+    {
+        get
+        {
+            CLocalOptionManager option = CLocalOptionManager.Ins;
+            return option != null ? option.Option.cameraSensitivity : _lookSensitivity;
+        }
+    }
 
     public void ExecuteLateUpdateFrame()
     {
