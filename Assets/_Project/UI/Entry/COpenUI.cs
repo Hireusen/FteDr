@@ -17,7 +17,6 @@ public class COpenUI : AFrameable, IUpdateFrameable
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
-    private bool _canInventory = true;
     private CPlayerToCockpit _cPlayerToCockpit;
     #endregion
 
@@ -56,7 +55,7 @@ public class COpenUI : AFrameable, IUpdateFrameable
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
     private void InventoryHandler(OnInputInventory ctx)
     {
-        if (_canInventory == false) return;
+        if (_cPlayerToCockpit != null && _cPlayerToCockpit.SitCockpit) return;
 
         // 무조건 열기 대신 토글: 이미 열려있으면 닫고, 닫혀있으면 연다.
         // (CInventoryToggleBridge가 하던 역할을 여기로 흡수 — 브릿지는 이제 삭제해도 됩니다)
@@ -98,9 +97,6 @@ public class COpenUI : AFrameable, IUpdateFrameable
             if (_cPlayerToCockpit.SitCockpit == true) return;
 
             _cPlayerToCockpit.MoveToCockpit();
-            _canInventory = false;
-
-
         }
     }
     private void CockpitToPlayer(OnInputMove ctx)
@@ -109,7 +105,6 @@ public class COpenUI : AFrameable, IUpdateFrameable
         if (_cPlayerToCockpit.SitCockpit == false) return;
         if (ctx.moved.sqrMagnitude < 0.0001f) return;
 
-        _canInventory = true;
         _cPlayerToCockpit.CockpitToPlayer();
     }
     #endregion
