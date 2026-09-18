@@ -4,5 +4,9 @@
 public static partial class K
 {
     // 문자열 ID 폴더 경로
+    public const string TAG_MAIN_CAMERA = "MainCamera";
+    public const string TAG_PLAYER = "Player";
     public const string TAG_GRABABLE = "Grabable";
+    public const string TAG_SUBMARINE = "Submarine";
+    public const string TAG_GAME_CONTROLLER = "GameController";
 }
