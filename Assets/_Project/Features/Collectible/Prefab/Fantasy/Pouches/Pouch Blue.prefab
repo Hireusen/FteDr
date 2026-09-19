@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 3300000}
   - component: {fileID: 2300000}
   - component: {fileID: 6661003789673880819}
+  - component: {fileID: 3737416721159665992}
+  - component: {fileID: -4682021686673922792}
   m_Layer: 9
   m_Name: Pouch Blue
   m_TagString: Grabable
@@ -97,3 +99,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _data: {fileID: 11400000, guid: 8a10d9e5a509c104fb1d4f5af0d22719, type: 2}
+--- !u!135 &3737416721159665992
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.18040378
+  m_Center: {x: 0.018024832, y: -0.007292539, z: 0.13841552}
+--- !u!114 &-4682021686673922792
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62aef181be7cce9449e7284dd89b44e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _outLineType: 0

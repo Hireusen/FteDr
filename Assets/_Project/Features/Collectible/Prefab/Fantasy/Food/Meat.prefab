@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 3300000}
   - component: {fileID: 2300000}
   - component: {fileID: 34143418898411171}
+  - component: {fileID: 9076973843885660157}
+  - component: {fileID: 544665185768832784}
   m_Layer: 9
   m_Name: Meat
   m_TagString: Grabable
@@ -97,3 +99,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _data: {fileID: 11400000, guid: 7e54a2747a2e08042b4c48fc4c2ccfe8, type: 2}
+--- !u!65 &9076973843885660157
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.52302265, y: 0.32671404, z: 0.087629594}
+  m_Center: {x: -0.0065584034, y: 0.019817963, z: 0.043814793}
+--- !u!114 &544665185768832784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62aef181be7cce9449e7284dd89b44e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _outLineType: 0

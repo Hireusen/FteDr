@@ -12,6 +12,8 @@ GameObject:
   - component: {fileID: 3300000}
   - component: {fileID: 2300000}
   - component: {fileID: 8965242594232384143}
+  - component: {fileID: 1368994925480922739}
+  - component: {fileID: 3291214635034342465}
   m_Layer: 9
   m_Name: Egg Light Blue
   m_TagString: Grabable
@@ -97,3 +99,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _data: {fileID: 11400000, guid: 8301ff976ac2c2c4f92063e48cf505f2, type: 2}
+--- !u!114 &1368994925480922739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62aef181be7cce9449e7284dd89b44e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _outLineType: 0
+--- !u!135 &3291214635034342465
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 100000}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Radius: 0.22718635
+  m_Center: {x: -0.007160455, y: -0.012281525, z: 0.22438464}
