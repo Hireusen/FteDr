@@ -55,10 +55,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2732120266483419451}
-  - component: {fileID: 4905879079965708011}
   - component: {fileID: 4884583140275063610}
   - component: {fileID: 9216571921783916974}
   - component: {fileID: 5513808846344792431}
+  - component: {fileID: 780845484353819748}
   m_Layer: 9
   m_Name: Visual
   m_TagString: Grabable
@@ -81,27 +81,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 400000}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &4905879079965708011
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3163794881878628422}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 0.6370833, y: 0.6370782, z: 0.10131699}
-  m_Center: {x: 0.0001608367, y: -0.00009118051, z: 0.0492835}
 --- !u!33 &4884583140275063610
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -165,3 +144,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _outLineType: 0
+--- !u!64 &780845484353819748
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3163794881878628422}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 4300102, guid: 723dd0e94d209ce41afcdaeec976c803, type: 3}

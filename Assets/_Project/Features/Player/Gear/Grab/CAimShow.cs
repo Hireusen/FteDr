@@ -76,7 +76,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     public void ShowOutLineInDistance()
     {
         RaycastHit hit;
-        if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 5, _collectibleLayout))
+        if(Physics.Raycast(_cam.transform.position,_cam.forward,out hit, 15, _collectibleLayout))
         {
             //아웃라인용+ 조준모드 툴팁표시
             if (IsAimMode)
