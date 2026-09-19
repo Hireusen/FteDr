@@ -1,10 +1,4 @@
 ﻿// CColliderFitterWindow.cs
-// Tools > Collider Fitter 에디터 창.
-// 회전이 필요한 콜라이더(Box/Capsule)는 회전된 자식 GameObject "_Collider"에 부착한다.
-// 회전 불필요한 Sphere는 root에 바로 붙인다.
-//
-// 반드시 Editor 폴더에 둘 것. (CColliderFitter.cs는 아무 데나 OK)
-
 #if UNITY_EDITOR
 using System.Collections.Generic;
 using UnityEditor;
@@ -14,18 +8,21 @@ namespace ColliderFitter
 {
     public class CColliderFitterWindow : EditorWindow
     {
-        private const string CHILD_NAME = "_Collider";  // 생성하는 콜라이더 자식 이름
+        private const string CHILD_NAME = "_Collider";
 
         private CFitSettings _settings = new CFitSettings();
 
-        // target -> preview results (로컬 공간, 회전 포함)
-        private readonly Dictionary<MeshFilter, List<SFitResult>> _preview
-            = new Dictionary<MeshFilter, List<SFitResult>>();
+        // 반자동 워크플로우 변수
+        private bool _isPaintMode = false;
+        private float _brushRadius = 0.5f;
+        private MeshFilter _targetFilter;
+        private Vector3[] _cachedVertices;
+        private HashSet<int> _selectedIndices = new HashSet<int>();
+        private MeshCollider _tempRaycastCollider;
 
         private Vector2 _scroll;
-        private bool _autoRecompute = true;
 
-        [MenuItem("Tools/Collider Fitter")]
+        [MenuItem("Tools/Collider Fitter (Semi-Auto)")]
         public static void Open()
         {
             var win = GetWindow<CColliderFitterWindow>("Collider Fitter");
@@ -37,327 +34,258 @@ namespace ColliderFitter
         {
             SceneView.duringSceneGui += OnSceneGUI;
             Selection.selectionChanged += OnSelectionChanged;
-            Recompute();
+            UpdateTarget();
         }
 
         private void OnDisable()
         {
             SceneView.duringSceneGui -= OnSceneGUI;
             Selection.selectionChanged -= OnSelectionChanged;
+            CleanupTempCollider();
         }
 
         private void OnSelectionChanged()
         {
-            if (_autoRecompute) { Recompute(); }
+            if (!_isPaintMode) UpdateTarget();
             Repaint();
+        }
+
+        private void UpdateTarget()
+        {
+            _targetFilter = null;
+            _cachedVertices = null;
+            _selectedIndices.Clear();
+            CleanupTempCollider();
+
+            if (Selection.activeGameObject != null)
+            {
+                _targetFilter = Selection.activeGameObject.GetComponentInChildren<MeshFilter>();
+                if (_targetFilter != null && _targetFilter.sharedMesh != null)
+                {
+                    // 메모리 할당 최소화를 위해 미리 정점 배열 캐싱
+                    _cachedVertices = _targetFilter.sharedMesh.vertices;
+                }
+            }
+        }
+
+        private void CleanupTempCollider()
+        {
+            if (_tempRaycastCollider != null)
+            {
+                DestroyImmediate(_tempRaycastCollider);
+                _tempRaycastCollider = null;
+            }
+        }
+
+        private void SetupTempCollider()
+        {
+            if (_targetFilter == null) return;
+            _tempRaycastCollider = _targetFilter.gameObject.AddComponent<MeshCollider>();
+            _tempRaycastCollider.sharedMesh = _targetFilter.sharedMesh;
+            _tempRaycastCollider.hideFlags = HideFlags.HideAndDontSave;
         }
 
         private void OnGUI()
         {
             _scroll = EditorGUILayout.BeginScrollView(_scroll);
 
-            EditorGUILayout.LabelField("자동 콜라이더 조립기", EditorStyles.boldLabel);
-            EditorGUILayout.HelpBox(
-                "회전 박스/캡슐은 자식 오브젝트 \"" + CHILD_NAME + "\"에 부착됩니다.\n" +
-                "슬라이더로 조절 후 [적용]을 누르세요.",
-                MessageType.Info);
+            EditorGUILayout.LabelField("반자동 콜라이더 조립기 (페인트 모드)", EditorStyles.boldLabel);
+            EditorGUILayout.HelpBox("Scene 뷰에서 브러시로 메시에 칠한 부위에만 콜라이더를 생성합니다.", MessageType.Info);
 
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("피팅 모드", EditorStyles.boldLabel);
-
-            EditorGUI.BeginChangeCheck();
-
-            _settings.mode = (EFitMode)EditorGUILayout.EnumPopup(
-                new GUIContent("모드", "SingleOBB: 회전 박스 하나 (책/상자류) / AutoSplit: 여러 덩어리로 분할"),
-                _settings.mode);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("핵심 슬라이더", EditorStyles.boldLabel);
-
-            _settings.accuracy = EditorGUILayout.Slider(
-                new GUIContent("정확도", "높을수록 각도 탐색 촘촘 + voxel 잘게 (부풀음 감소, 느려짐)"),
-                _settings.accuracy, 0f, 1f);
-
-            _settings.refineOBB = EditorGUILayout.ToggleLeft(
-                new GUIContent("최소부피 탐색", "박스가 부풀지 않게 PCA 축 주변 각도를 탐색. 끄면 빠르지만 부풀 수 있음."),
-                _settings.refineOBB);
-
-            _settings.economy = EditorGUILayout.Slider(
-                new GUIContent("개수 절약", "높을수록 프리미티브를 공격적으로 병합 (AutoSplit 전용)"),
-                _settings.economy, 0f, 1f);
-
-            _settings.slack = EditorGUILayout.Slider(
-                new GUIContent("여유", "+ 튀어나옴 허용(수축) / - 다 감싸기(팽창)"),
-                _settings.slack, -0.1f, 0.1f);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("형상 판정", EditorStyles.boldLabel);
-
-            _settings.capsuleAspect = EditorGUILayout.Slider(
-                new GUIContent("캡슐 종횡비", "긴축/짧은축 비율이 이보다 크면 캡슐"),
-                _settings.capsuleAspect, 1.0f, 4.0f);
-
-            _settings.sphereTolerance = EditorGUILayout.Slider(
-                new GUIContent("구 허용오차", "세 축이 이 정도로 비슷하면 구"),
-                _settings.sphereTolerance, 0f, 0.3f);
-
-            EditorGUILayout.Space();
-            EditorGUILayout.LabelField("허용 형상", EditorStyles.boldLabel);
-            EditorGUILayout.BeginHorizontal();
-            _settings.allowBox = GUILayout.Toggle(_settings.allowBox, "Box", "Button");
-            _settings.allowCapsule = GUILayout.Toggle(_settings.allowCapsule, "Capsule", "Button");
-            _settings.allowSphere = GUILayout.Toggle(_settings.allowSphere, "Sphere", "Button");
-            EditorGUILayout.EndHorizontal();
-
-            using (new EditorGUI.DisabledScope(_settings.mode == EFitMode.SingleOBB))
+            if (_targetFilter == null)
             {
-                _settings.maxColliders = EditorGUILayout.IntSlider(
-                    new GUIContent("최대 콜라이더 수", "AutoSplit 전용"),
-                    _settings.maxColliders, 1, 64);
-
-                _settings.forceSplitCount = EditorGUILayout.IntSlider(
-                    new GUIContent("수동 분할 개수", "0=자동(voxel). N=가장 큰 덩어리를 N개로 강제 분할 (안경 두 알 등)"),
-                    _settings.forceSplitCount, 0, 16);
+                EditorGUILayout.HelpBox("MeshFilter가 포함된 게임 오브젝트를 선택해주세요.", MessageType.Warning);
+                EditorGUILayout.EndScrollView();
+                return;
             }
 
-            if (EditorGUI.EndChangeCheck() && _autoRecompute)
+            EditorGUILayout.LabelField($"타겟: {_targetFilter.name} (정점: {_cachedVertices.Length}개)");
+            EditorGUILayout.Space();
+
+            GUI.backgroundColor = _isPaintMode ? new Color(0.6f, 0.9f, 0.6f) : Color.white;
+            if (GUILayout.Button(_isPaintMode ? "페인트 모드 종료" : "페인트 모드 시작", GUILayout.Height(30)))
             {
-                Recompute();
+                _isPaintMode = !_isPaintMode;
+                if (_isPaintMode) SetupTempCollider();
+                else CleanupTempCollider();
                 SceneView.RepaintAll();
             }
+            GUI.backgroundColor = Color.white;
 
-            EditorGUILayout.Space();
-            _autoRecompute = EditorGUILayout.ToggleLeft("변경 시 자동 재계산", _autoRecompute);
-
-            EditorGUILayout.Space();
-
-            int targetCount = _preview.Count;
-            int primCount = 0;
-            foreach (var kv in _preview) { primCount += kv.Value.Count; }
-            EditorGUILayout.LabelField("대상 " + targetCount + "개 · 생성될 콜라이더 " + primCount + "개");
-
-            EditorGUILayout.Space();
-
-            using (new EditorGUILayout.HorizontalScope())
+            using (new EditorGUI.DisabledScope(!_isPaintMode))
             {
-                if (GUILayout.Button("미리보기 갱신", GUILayout.Height(28)))
+                _brushRadius = EditorGUILayout.Slider("브러시 크기", _brushRadius, 0.02f, 5f);
+                EditorGUILayout.LabelField("조작: 좌클릭 드래그(칠하기), Shift+드래그(지우기)");
+
+                EditorGUILayout.Space();
+                EditorGUILayout.LabelField($"선택된 정점: {_selectedIndices.Count}개");
+
+                if (GUILayout.Button("선택 영역 초기화"))
                 {
-                    Recompute();
+                    _selectedIndices.Clear();
+                    SceneView.RepaintAll();
                 }
 
-                GUI.backgroundColor = new Color(0.6f, 0.9f, 0.6f);
-                if (GUILayout.Button("적용", GUILayout.Height(28)))
+                EditorGUILayout.Space();
+                _settings.refineOBB = EditorGUILayout.Toggle("최소부피 탐색 (박스 최적화)", _settings.refineOBB);
+                _settings.slack = EditorGUILayout.Slider("여유 (팽창/수축)", _settings.slack, -0.1f, 0.1f);
+
+                EditorGUILayout.Space();
+                GUI.backgroundColor = new Color(0.4f, 0.8f, 1f);
+                if (GUILayout.Button("선택 영역에 콜라이더 씌우기", GUILayout.Height(35)))
                 {
-                    Apply();
+                    GenerateColliderFromSelection();
                 }
                 GUI.backgroundColor = Color.white;
             }
 
+            EditorGUILayout.Space();
             GUI.backgroundColor = new Color(0.95f, 0.7f, 0.7f);
-            if (GUILayout.Button("선택 대상의 콜라이더 전부 제거", GUILayout.Height(24)))
+            if (GUILayout.Button("타겟의 모든 생성된 콜라이더 제거", GUILayout.Height(24)))
             {
-                ClearColliders();
+                ClearColliders(_targetFilter.gameObject);
             }
             GUI.backgroundColor = Color.white;
 
             EditorGUILayout.EndScrollView();
         }
 
-        // 선택 오브젝트들의 프리미티브 미리 계산
-        private void Recompute()
+        private void GenerateColliderFromSelection()
         {
-            _preview.Clear();
-
-            // 부모/자식 중복 선택 시 같은 MeshFilter가 두 번 처리되지 않게 방어
-            var seen = new HashSet<MeshFilter>();
-
-            foreach (var go in Selection.gameObjects)
+            if (_selectedIndices.Count < 3)
             {
-                // 선택 오브젝트 자신 + 모든 자식의 MeshFilter를 훑는다.
-                // 상자 프리팹처럼 root는 비어있고 자식에 메시가 있는 구조를 지원.
-                var filters = go.GetComponentsInChildren<MeshFilter>(true);
-                foreach (var mf in filters)
-                {
-                    if (mf == null || mf.sharedMesh == null) { continue; }
-                    if (!seen.Add(mf)) { continue; }
-                    _preview[mf] = CFitter.Fit(mf.sharedMesh, _settings);
-                }
+                Debug.LogWarning("선택된 정점이 너무 적습니다.");
+                return;
             }
-        }
 
-        // 실제 콜라이더 부착
-        private void Apply()
-        {
-            foreach (var kv in _preview)
-            {
-                var mf = kv.Key;
-                var root = mf.gameObject;
+            SFitResult result = CFitter.FitSelection(_cachedVertices, _selectedIndices, _settings);
+            AttachCollider(_targetFilter.gameObject, result);
 
-                Undo.RegisterFullObjectHierarchyUndo(root, "Fit Colliders");
-
-                // 기존 자동생성 자식 + root의 프리미티브 콜라이더 정리
-                RemoveGeneratedColliders(root);
-
-                foreach (var r in kv.Value)
-                {
-                    AttachCollider(root, r);
-                }
-            }
+            _selectedIndices.Clear(); // 씌운 후 초기화하여 다음 작업 준비
             SceneView.RepaintAll();
         }
 
-        // 결과 하나를 부착: 회전 필요 여부에 따라 root 또는 자식에
+        private void OnSceneGUI(SceneView view)
+        {
+            if (!_isPaintMode || _targetFilter == null || _tempRaycastCollider == null) return;
+
+            Event e = Event.current;
+            int controlID = GUIUtility.GetControlID(FocusType.Passive);
+
+            // 마우스 광선 추적
+            Ray ray = HandleUtility.GUIPointToWorldRay(e.mousePosition);
+            bool isHit = _tempRaycastCollider.Raycast(ray, out RaycastHit hit, 1000f);
+
+            if (isHit)
+            {
+                // 브러시 그리기
+                Handles.color = new Color(0f, 1f, 1f, 0.2f);
+                Handles.DrawSolidDisc(hit.point, hit.normal, _brushRadius);
+                Handles.color = Color.cyan;
+                Handles.DrawWireDisc(hit.point, hit.normal, _brushRadius);
+
+                // 페인트 로직
+                if ((e.type == EventType.MouseDrag || e.type == EventType.MouseDown) && e.button == 0 && !e.alt)
+                {
+                    GUIUtility.hotControl = controlID; // 카메라 회전 방지
+                    bool isErasing = e.shift;
+
+                    Matrix4x4 localToWorld = _targetFilter.transform.localToWorldMatrix;
+                    float sqrRadius = _brushRadius * _brushRadius;
+
+                    // 빠른 거리 계산을 위해 월드 좌표 변환 후 검사
+                    for (int i = 0; i < _cachedVertices.Length; i++)
+                    {
+                        Vector3 worldVert = localToWorld.MultiplyPoint3x4(_cachedVertices[i]);
+                        if ((worldVert - hit.point).sqrMagnitude <= sqrRadius)
+                        {
+                            if (isErasing) _selectedIndices.Remove(i);
+                            else _selectedIndices.Add(i);
+                        }
+                    }
+                    e.Use();
+                }
+            }
+
+            if (e.type == EventType.MouseUp && e.button == 0)
+            {
+                GUIUtility.hotControl = 0;
+            }
+
+            // 선택된 정점 시각화 (성능을 위해 단순 픽셀 도트로 렌더링)
+            if (_selectedIndices.Count > 0)
+            {
+                Handles.color = Color.yellow;
+                Matrix4x4 matrix = _targetFilter.transform.localToWorldMatrix;
+                foreach (int idx in _selectedIndices)
+                {
+                    Handles.DrawLine(matrix.MultiplyPoint3x4(_cachedVertices[idx]), matrix.MultiplyPoint3x4(_cachedVertices[idx]) + Vector3.up * 0.02f);
+                }
+            }
+
+            // Scene 뷰 강제 갱신으로 부드러운 브러시 이동 구현
+            if (e.type == EventType.MouseMove || e.type == EventType.MouseDrag)
+            {
+                SceneView.RepaintAll();
+            }
+        }
+
         private static void AttachCollider(GameObject root, SFitResult r)
         {
-            bool needsRotation = r.kind != EPrimitiveKind.Sphere
-                && Quaternion.Angle(r.rotation, Quaternion.identity) > 0.5f;
+            bool needsRotation = r.kind != EPrimitiveKind.Sphere && Quaternion.Angle(r.rotation, Quaternion.identity) > 0.5f;
+
+            Undo.RegisterFullObjectHierarchyUndo(root, "Fit Collider to Selection");
 
             if (!needsRotation)
             {
-                // 회전 불필요 → root에 바로 부착
                 AddColliderComponent(root, r, r.center);
                 return;
             }
 
-            // 회전 필요 → 회전된 자식 생성 후 로컬 축정렬 콜라이더 부착
             var child = new GameObject(CHILD_NAME);
             Undo.RegisterCreatedObjectUndo(child, "Create Collider Child");
 
             var ct = child.transform;
             ct.SetParent(root.transform, false);
-            ct.localPosition = r.center;   // 로컬 중심으로 이동
-            ct.localRotation = r.rotation; // PCA 회전 적용
+            ct.localPosition = r.center;
+            ct.localRotation = r.rotation;
             ct.localScale = Vector3.one;
 
-            // 자식 로컬 기준으로는 중심이 원점, 축정렬
             AddColliderComponent(child, r, Vector3.zero);
         }
 
-        // 콜라이더 컴포넌트 실제 추가
         private static void AddColliderComponent(GameObject go, SFitResult r, Vector3 localCenter)
         {
-            switch (r.kind)
+            if (r.kind == EPrimitiveKind.Box)
             {
-                case EPrimitiveKind.Box:
-                    {
-                        var c = Undo.AddComponent<BoxCollider>(go);
-                        c.center = localCenter;
-                        c.size = r.boxSize;
-                        break;
-                    }
-                case EPrimitiveKind.Sphere:
-                    {
-                        var c = Undo.AddComponent<SphereCollider>(go);
-                        c.center = localCenter;
-                        c.radius = r.radius;
-                        break;
-                    }
-                case EPrimitiveKind.Capsule:
-                    {
-                        var c = Undo.AddComponent<CapsuleCollider>(go);
-                        c.center = localCenter;
-                        c.radius = r.capRadius;
-                        c.height = r.capHeight;
-                        c.direction = r.capDirection;
-                        break;
-                    }
+                var c = Undo.AddComponent<BoxCollider>(go);
+                c.center = localCenter; c.size = r.boxSize;
+            }
+            else if (r.kind == EPrimitiveKind.Sphere)
+            {
+                var c = Undo.AddComponent<SphereCollider>(go);
+                c.center = localCenter; c.radius = r.radius;
+            }
+            else if (r.kind == EPrimitiveKind.Capsule)
+            {
+                var c = Undo.AddComponent<CapsuleCollider>(go);
+                c.center = localCenter; c.radius = r.capRadius; c.height = r.capHeight; c.direction = r.capDirection;
             }
         }
 
-        // 선택 대상 콜라이더 제거
-        private void ClearColliders()
+        private static void ClearColliders(GameObject root)
         {
-            foreach (var go in Selection.gameObjects)
-            {
-                Undo.RegisterFullObjectHierarchyUndo(go, "Clear Colliders");
-                RemoveGeneratedColliders(go);
-            }
-        }
+            Undo.RegisterFullObjectHierarchyUndo(root, "Clear Colliders");
+            foreach (var c in root.GetComponents<BoxCollider>()) Undo.DestroyObjectImmediate(c);
+            foreach (var c in root.GetComponents<SphereCollider>()) Undo.DestroyObjectImmediate(c);
+            foreach (var c in root.GetComponents<CapsuleCollider>()) Undo.DestroyObjectImmediate(c);
 
-        // root의 프리미티브 콜라이더 + 자동생성 자식 제거 (MeshCollider는 건드리지 않음)
-        private static void RemoveGeneratedColliders(GameObject root)
-        {
-            foreach (var c in root.GetComponents<BoxCollider>()) { Undo.DestroyObjectImmediate(c); }
-            foreach (var c in root.GetComponents<SphereCollider>()) { Undo.DestroyObjectImmediate(c); }
-            foreach (var c in root.GetComponents<CapsuleCollider>()) { Undo.DestroyObjectImmediate(c); }
-
-            // 자동생성 자식들 제거 (뒤에서부터 순회)
             var t = root.transform;
             for (int i = t.childCount - 1; i >= 0; i--)
             {
                 var child = t.GetChild(i);
-                if (child.name == CHILD_NAME)
-                {
-                    Undo.DestroyObjectImmediate(child.gameObject);
-                }
+                if (child.name == CHILD_NAME) Undo.DestroyObjectImmediate(child.gameObject);
             }
-        }
-
-        // Scene 뷰 미리보기 (회전 반영)
-        private void OnSceneGUI(SceneView view)
-        {
-            foreach (var kv in _preview)
-            {
-                var mf = kv.Key;
-                if (mf == null) { continue; }
-                var t = mf.transform;
-
-                Handles.color = new Color(0.3f, 1f, 0.5f, 1f);
-                foreach (var r in kv.Value)
-                {
-                    DrawPreview(t, r);
-                }
-            }
-        }
-
-        // 프리미티브 하나를 회전 반영해 그리기
-        private static void DrawPreview(Transform t, SFitResult r)
-        {
-            Matrix4x4 old = Handles.matrix;
-
-            // root 로컬→월드 × 프리미티브 회전/위치
-            Matrix4x4 local = Matrix4x4.TRS(r.center, r.rotation, Vector3.one);
-            Handles.matrix = t.localToWorldMatrix * local;
-
-            switch (r.kind)
-            {
-                case EPrimitiveKind.Box:
-                    Handles.DrawWireCube(Vector3.zero, r.boxSize);
-                    break;
-                case EPrimitiveKind.Sphere:
-                    Handles.DrawWireDisc(Vector3.zero, Vector3.up, r.radius);
-                    Handles.DrawWireDisc(Vector3.zero, Vector3.right, r.radius);
-                    Handles.DrawWireDisc(Vector3.zero, Vector3.forward, r.radius);
-                    break;
-                case EPrimitiveKind.Capsule:
-                    DrawWireCapsule(r.capRadius, r.capHeight, r.capDirection);
-                    break;
-            }
-
-            Handles.matrix = old;
-        }
-
-        // 로컬 원점 기준 캡슐 와이어프레임 (회전은 Handles.matrix가 처리)
-        private static void DrawWireCapsule(float radius, float height, int dir)
-        {
-            Vector3 axis = dir == 0 ? Vector3.right : (dir == 1 ? Vector3.up : Vector3.forward);
-            float half = Mathf.Max(0f, height * 0.5f - radius);
-            Vector3 top = axis * half;
-            Vector3 bottom = -axis * half;
-
-            Handles.DrawWireDisc(top, axis, radius);
-            Handles.DrawWireDisc(bottom, axis, radius);
-
-            Vector3 perp1 = dir == 0 ? Vector3.up : Vector3.right;
-            Vector3 perp2 = dir == 2 ? Vector3.up : Vector3.forward;
-
-            Handles.DrawLine(top + perp1 * radius, bottom + perp1 * radius);
-            Handles.DrawLine(top - perp1 * radius, bottom - perp1 * radius);
-            Handles.DrawLine(top + perp2 * radius, bottom + perp2 * radius);
-            Handles.DrawLine(top - perp2 * radius, bottom - perp2 * radius);
-
-            Handles.DrawWireDisc(top, perp1, radius);
-            Handles.DrawWireDisc(bottom, perp1, radius);
         }
     }
 }
