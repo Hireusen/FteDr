@@ -63,11 +63,13 @@ public sealed class CCollectibleSpawner : AMono
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private bool _spawned; // 최초 1회 보장
     private int _settlingCount; // 낙하 안정화 진행 중인 수집품 수. 0이 되면 컬링 복원.
+    private bool _firstSpawned; // 수집품이 하나라도 스폰되었다면
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     /// <summary>이미 스폰이 완료(또는 진행)되었는지 여부입니다.</summary>
     public bool HasSpawned => _spawned;
+    public bool SpawnComplete => (_settlingCount <= 0) || _firstSpawned;
 
     [ContextMenu("추가 생성")]
     public void AlwaysSpawn()
@@ -374,6 +376,7 @@ public sealed class CCollectibleSpawner : AMono
 
         // 이 수집품의 안정화가 끝났다. 모두 끝났으면 숨겼던 레이어를 복원한다.
         --_settlingCount;
+        _firstSpawned = true;
         if (_settlingCount <= 0)
         {
             SetLayerHidden(false);
