@@ -16,6 +16,12 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     /// <summary>현재 옵션 데이터에 대한 읽기 접근입니다.</summary>
     public OptionData Option => _option;
 
+    /// <summary>
+    /// 감도 단계(0~1)를 카메라가 곱해 쓰는 실제 회전 배율로 변환한 값입니다.
+    /// 단계가 같은 만큼 오를 때마다 배율이 같은 비율로 늘어나 체감 변화가 균일합니다. (K.CAMERA_SENSITIVITY_* 참고)
+    /// </summary>
+    public float CameraSensitivity => LevelToCameraSensitivity(_option.cameraSensitivityLevel);
+
     #region ─────────────────────────▶ 볼륨 ◀─────────────────────────
     /// <summary>마스터 볼륨을 설정하고 변경 이벤트를 발행합니다.</summary>
     /// <param name="value">0~1 범위의 볼륨 값</param>
@@ -84,12 +90,12 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     #endregion
 
     #region ─────────────────────────▶ 조작 ◀─────────────────────────
-    /// <summary>카메라 회전 감도를 설정하고 변경 이벤트를 발행합니다.</summary>
-    /// <param name="value">K.MIN_CAMERA_SENSITIVITY ~ K.MAX_CAMERA_SENSITIVITY 범위의 감도 값</param>
+    /// <summary>카메라 감도 단계를 설정하고 변경 이벤트를 발행합니다.</summary>
+    /// <param name="level">0~1 범위의 감도 단계 (슬라이더 값)</param>
     /// <param name="save">true면 파일에 즉시 저장합니다. 드래그 중 저장 지연 시 false를 넘기세요.</param>
-    public void SetCameraSensitivity(float value, bool save = true)
+    public void SetCameraSensitivityLevel(float level, bool save = true)
     {
-        _option.cameraSensitivity = Mathf.Clamp(value, K.MIN_CAMERA_SENSITIVITY, K.MAX_CAMERA_SENSITIVITY);
+        _option.cameraSensitivityLevel = Mathf.Clamp01(level);
 
         if (save) Save();
         PublishCameraSensitivity();
@@ -142,13 +148,16 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         }
     }
 
-    // 감도 옵션이 없던 시절의 저장 파일을 불러오면 0이 들어올 수 있으므로 범위 안으로 되돌린다.
+    // 손으로 고친 저장 파일 등으로 범위를 벗어난 값이 들어와도 0~1 안으로 되돌린다.
     private void ValidateControlOption()
     {
-        _option.cameraSensitivity = Mathf.Clamp(
-            _option.cameraSensitivity,
-            K.MIN_CAMERA_SENSITIVITY,
-            K.MAX_CAMERA_SENSITIVITY);
+        _option.cameraSensitivityLevel = Mathf.Clamp01(_option.cameraSensitivityLevel);
+    }
+
+    // 단계 0 → BASE / RANGE, 0.5 → BASE, 1 → BASE * RANGE 로 지수 보간한다.
+    private static float LevelToCameraSensitivity(float level)
+    {
+        return K.CAMERA_SENSITIVITY_BASE * Mathf.Pow(K.CAMERA_SENSITIVITY_RANGE, level * 2.0f - 1.0f);
     }
 
     // 볼륨 변경 공통 처리: (선택적) 저장 후 이벤트 발행
@@ -168,10 +177,10 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
             _option.ambienceVolume);
     }
 
-    // 현재 옵션의 감도 값으로 변경 이벤트를 발행
+    // 현재 옵션의 감도로 변경 이벤트를 발행 (구독자가 바로 곱해 쓸 수 있도록 변환된 배율을 싣는다)
     private void PublishCameraSensitivity()
     {
-        OnOptionCameraSensitivityChanged.Publish(_option.cameraSensitivity);
+        OnOptionCameraSensitivityChanged.Publish(CameraSensitivity);
     }
 
     // 옵션의 해상도/전체화면 값을 실제 화면에 적용
