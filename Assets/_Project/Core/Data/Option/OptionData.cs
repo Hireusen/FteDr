@@ -29,7 +29,8 @@ public class OptionData
     #endregion
 
     #region ─────────────────────────▶ 조작 ◀─────────────────────────
-    // 카메라 회전 감도 (K.MIN_CAMERA_SENSITIVITY ~ K.MAX_CAMERA_SENSITIVITY, UI에는 100을 곱해 백분율로 표시)
-    public float cameraSensitivity = K.DEFAULT_CAMERA_SENSITIVITY;
+    // 카메라 감도 단계 (0~1, 슬라이더 값 그대로. UI에는 100을 곱해 백분율로 표시)
+    // 실제 회전 배율은 CLocalOptionManager.CameraSensitivity로 변환해서 쓴다.
+    public float cameraSensitivityLevel = K.DEFAULT_CAMERA_SENSITIVITY_LEVEL;
     #endregion
 }

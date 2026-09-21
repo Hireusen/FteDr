@@ -9,6 +9,8 @@ public sealed class CRebindManager : ASingleton<CRebindManager>
 {
     #region ─────────────────────────▶ 상수 ◀─────────────────────────
     private const string FILE_NAME = "rebind";
+    private const string ESC_ACTION_NAME = "Esc";
+    private const string CANCEL_CONTROL = "<Keyboard>/escape";
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -66,7 +68,12 @@ public sealed class CRebindManager : ASingleton<CRebindManager>
         // 리바인딩 중에는 해당 액션을 비활성화해야 함(입력이 즉시 소비되는 것 방지)
         action.Disable();
 
-        _op = action.PerformInteractiveRebinding(bindingIndex);
+        InputAction escAction = _asset.FindAction(ESC_ACTION_NAME);
+        bool restoreEsc = escAction != null && escAction != action && escAction.enabled;
+        if (restoreEsc) escAction.Disable();
+
+        _op = action.PerformInteractiveRebinding(bindingIndex)
+                    .WithCancelingThrough(CANCEL_CONTROL);
         if (excludeMouse)
         {
             _op = _op.WithControlsExcluding("<Mouse>/position")
@@ -76,6 +83,7 @@ public sealed class CRebindManager : ASingleton<CRebindManager>
         _op = _op.OnComplete(operation =>
         {
             action.Enable();
+            if (restoreEsc) escAction.Enable();
             DisposeOp();
             Save();
             onComplete?.Invoke();
@@ -83,6 +91,7 @@ public sealed class CRebindManager : ASingleton<CRebindManager>
                  .OnCancel(operation =>
                  {
                      action.Enable();
+                     if (restoreEsc) escAction.Enable();
                      DisposeOp();
                      onComplete?.Invoke();
                  });

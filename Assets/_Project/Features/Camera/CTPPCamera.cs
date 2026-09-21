@@ -18,7 +18,7 @@ public class CTPPCamera : AFrameable, ILateUpdateFrameable
     [Header("3인칭 옵션")]
     [SerializeField] private bool _useOrbit = true;
     [Tooltip("옵션 매니저를 아직 쓸 수 없을 때(부팅 전 등) 사용되는 폴백값 (OrbitSensitivity 프로퍼티 참고)")]
-    [SerializeField] private float _orbitSensitivity = K.DEFAULT_CAMERA_SENSITIVITY;
+    [SerializeField] private float _orbitSensitivity = K.CAMERA_SENSITIVITY_BASE;
 
     [Header("수중 회전 제한")]
     [SerializeField] private float _swimOrbitPitchMin = -70f;
@@ -63,7 +63,7 @@ public class CTPPCamera : AFrameable, ILateUpdateFrameable
         get
         {
             CLocalOptionManager option = CLocalOptionManager.Ins;
-            return option != null ? option.Option.cameraSensitivity : _orbitSensitivity;
+            return option != null ? option.CameraSensitivity : _orbitSensitivity;
         }
     }
 
