@@ -10,7 +10,7 @@ public readonly struct OnOptionCameraSensitivityChanged
         this.sensitivity = sensitivity;
     }
 
-    /// <param name="sensitivity">카메라 회전 감도 (K.MIN_CAMERA_SENSITIVITY ~ K.MAX_CAMERA_SENSITIVITY)</param>
+    /// <param name="sensitivity">카메라가 입력에 곱해 쓰는 실제 회전 배율 (CLocalOptionManager.CameraSensitivity와 같음)</param>
     public static void Publish(float sensitivity)
     {
         CEventBus<OnOptionCameraSensitivityChanged>.Publish(new OnOptionCameraSensitivityChanged(sensitivity));

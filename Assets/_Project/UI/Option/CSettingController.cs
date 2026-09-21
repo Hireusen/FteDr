@@ -53,9 +53,9 @@ public sealed class CSettingController : AMono
     [SerializeField] private Toggle _vsyncToggle;
 
     [Header("조작 - 카메라 감도")]
-    [Tooltip("감도 슬라이더. 범위는 K.MIN/MAX_CAMERA_SENSITIVITY로 런타임에 맞춰집니다.")]
+    [Tooltip("감도 단계 슬라이더. 범위는 런타임에 0~1로 맞춰집니다. (실제 회전 배율 변환은 CLocalOptionManager.CameraSensitivity)")]
     [SerializeField] private Slider _cameraSensitivitySlider;
-    [Tooltip("감도를 백분율(슬라이더 값 × 100)로 표시/입력하는 인풋 필드")]
+    [Tooltip("감도 단계를 백분율(슬라이더 값 × 100)로 표시/입력하는 인풋 필드")]
     [SerializeField] private TMP_InputField _cameraSensitivityInput;
 
     [Header("조작 - 조작키 변경")]
@@ -147,8 +147,8 @@ public sealed class CSettingController : AMono
         if (_cameraSensitivitySlider == null) return;
 
         // 슬라이더 범위를 상수와 강제로 일치시켜, 프리팹 값이 달라도 인풋 필드의 백분율과 어긋나지 않게 한다.
-        _cameraSensitivitySlider.minValue = K.MIN_CAMERA_SENSITIVITY;
-        _cameraSensitivitySlider.maxValue = K.MAX_CAMERA_SENSITIVITY;
+        _cameraSensitivitySlider.minValue = 0.0f;
+        _cameraSensitivitySlider.maxValue = 1.0f;
         _cameraSensitivitySlider.wholeNumbers = false;
     }
 
@@ -193,21 +193,21 @@ public sealed class CSettingController : AMono
             _frameLimitDropdown.SetValueWithoutNotify(Mathf.Max(0, index));
         }
 
-        RefreshCameraSensitivityUI(option.cameraSensitivity);
+        RefreshCameraSensitivityUI(option.cameraSensitivityLevel);
     }
 
     // 슬라이더와 인풋 필드를 같은 값으로 동시에 맞춘다. (서로의 리스너를 다시 깨우지 않도록 WithoutNotify 사용)
-    private void RefreshCameraSensitivityUI(float sensitivity)
+    private void RefreshCameraSensitivityUI(float level)
     {
         if (_cameraSensitivitySlider != null)
         {
-            _cameraSensitivitySlider.SetValueWithoutNotify(sensitivity);
+            _cameraSensitivitySlider.SetValueWithoutNotify(level);
         }
 
         if (_cameraSensitivityInput != null)
         {
             _cameraSensitivityInput.SetTextWithoutNotify(
-                ToPercent(sensitivity).ToString(PERCENT_FORMAT, CultureInfo.InvariantCulture));
+                ToPercent(level).ToString(PERCENT_FORMAT, CultureInfo.InvariantCulture));
         }
     }
     #endregion
@@ -273,7 +273,7 @@ public sealed class CSettingController : AMono
         if (!TryParsePercent(text, out float percent))
         {
             // 숫자로 해석할 수 없으면 입력을 버리고 현재 설정값을 다시 보여준다.
-            RefreshCameraSensitivityUI(CLocalOptionManager.Ins.Option.cameraSensitivity);
+            RefreshCameraSensitivityUI(CLocalOptionManager.Ins.Option.cameraSensitivityLevel);
             return;
         }
 
@@ -290,13 +290,13 @@ public sealed class CSettingController : AMono
     #region ─────────────────────────▶ 내부 메서드 - 카메라 감도 ◀─────────────────────────
     // 감도를 옵션에 반영한 뒤, 클램프된 최종값으로 두 위젯을 다시 맞춘다.
     // (범위를 벗어난 입력이 들어와도 UI가 실제 저장값과 달라지지 않게 하기 위함)
-    private void ApplyCameraSensitivity(float sensitivity)
+    private void ApplyCameraSensitivity(float level)
     {
-        CLocalOptionManager.Ins.SetCameraSensitivity(sensitivity);
-        RefreshCameraSensitivityUI(CLocalOptionManager.Ins.Option.cameraSensitivity);
+        CLocalOptionManager.Ins.SetCameraSensitivityLevel(level);
+        RefreshCameraSensitivityUI(CLocalOptionManager.Ins.Option.cameraSensitivityLevel);
     }
 
-    private static float ToPercent(float sensitivity) => RoundPercent(sensitivity * PERCENT_SCALE);
+    private static float ToPercent(float level) => RoundPercent(level * PERCENT_SCALE);
 
     private static float FromPercent(float percent) => percent / PERCENT_SCALE;
 

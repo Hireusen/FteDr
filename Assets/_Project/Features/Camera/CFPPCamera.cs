@@ -16,7 +16,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
     [Header("회전 감도")]
     [Tooltip("옵션 매니저를 아직 쓸 수 없을 때(부팅 전 등) 사용되는 폴백값 (Sensitivity 프로퍼티 참고)")]
-    [SerializeField] private float _lookSensitivity = K.DEFAULT_CAMERA_SENSITIVITY;
+    [SerializeField] private float _lookSensitivity = K.CAMERA_SENSITIVITY_BASE;
 
     [Header("수중 회전 제한")]
     [SerializeField] private float _swimPitchMin = -85f;
@@ -81,7 +81,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         get
         {
             CLocalOptionManager option = CLocalOptionManager.Ins;
-            return option != null ? option.Option.cameraSensitivity : _lookSensitivity;
+            return option != null ? option.CameraSensitivity : _lookSensitivity;
         }
     }
 
