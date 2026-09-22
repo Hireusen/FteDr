@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using TMPro;
@@ -18,7 +19,7 @@ public sealed class CKeyMappingController : AMono
     [Header("행 생성")]
     [Tooltip("행이 쌓일 부모 (보통 Scroll View/Viewport/Content)")]
     [SerializeField] private RectTransform _rowParent;
-    [Tooltip("복제해서 쓸 행 템플릿. 씬에서는 비활성으로 두세요. (복제본만 켜집니다)")]
+    [Tooltip("복제해서 쓸 행 템플릿. 캔버스 안의 오브젝트(비활성 권장)와 프리팹 에셋 모두 연결할 수 있습니다.")]
     [SerializeField] private CKeyMappingRow _rowTemplate;
 
     [Header("안내 / 전체 초기화")]
@@ -59,6 +60,7 @@ public sealed class CKeyMappingController : AMono
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private readonly List<CKeyMappingRow> _rows = new();
+    private readonly Dictionary<string, int> _keyUseCounts = new(); // 중복 검사용 (키 표시 문자열 → 사용 행 수)
     private bool _isBuilt;
     #endregion
 
@@ -106,7 +108,12 @@ public sealed class CKeyMappingController : AMono
             return;
         }
 
-        _rowTemplate.gameObject.SetActive(false);
+        // 템플릿이 캔버스 안에 배치된 오브젝트일 때만 숨긴다.
+        // 프리팹 에셋을 연결한 경우 SetActive를 부르면 에디터에서 에셋 원본이 꺼진 채로 저장되어 버린다.
+        if (_rowTemplate.gameObject.scene.IsValid())
+        {
+            _rowTemplate.gameObject.SetActive(false);
+        }
 
         for (int i = 0; i < _actionEntries.Count; ++i)
         {
@@ -167,11 +174,41 @@ public sealed class CKeyMappingController : AMono
         {
             RefreshKeyDisplay(_rows[i]);
         }
+        RefreshDuplicateWarnings();
+    }
+
+    // 행 하나의 키가 바뀌면 다른 행의 중복 여부도 달라지므로(겹침이 생기거나 풀림) 경고는 항상 전체를 다시 계산한다.
+    private void RefreshRowAndWarnings(CKeyMappingRow row)
+    {
+        RefreshKeyDisplay(row);
+        RefreshDuplicateWarnings();
     }
 
     private void RefreshKeyDisplay(CKeyMappingRow row)
     {
         row.SetKeyDisplay(CRebindManager.Ins.GetBindingDisplay(row.ActionName, row.BindingIndex));
+    }
+
+    // 같은 키가 두 행 이상에 지정되어 있으면 해당 행들의 라벨을 경고 색으로 바꾼다. (막지는 않는다)
+    // 같은 물리 키는 표시 문자열도 같으므로 표시 문자열로 비교한다.
+    private void RefreshDuplicateWarnings()
+    {
+        _keyUseCounts.Clear();
+        for (int i = 0; i < _rows.Count; ++i)
+        {
+            string key = _rows[i].KeyDisplay;
+            if (string.IsNullOrEmpty(key)) continue;
+
+            _keyUseCounts.TryGetValue(key, out int count);
+            _keyUseCounts[key] = count + 1;
+        }
+
+        for (int i = 0; i < _rows.Count; ++i)
+        {
+            string key = _rows[i].KeyDisplay;
+            bool isDuplicated = !string.IsNullOrEmpty(key) && _keyUseCounts[key] > 1;
+            _rows[i].SetDuplicated(isDuplicated);
+        }
     }
 
     // 리바인딩 중에는 다른 행을 건드리지 못하게 막는다. (오퍼레이션이 겹치면 앞의 것이 취소된다)
@@ -196,13 +233,18 @@ public sealed class CKeyMappingController : AMono
     {
         if (CRebindManager.Ins.IsRebinding) return;
 
+        // 클릭한 버튼이 선택 상태로 남아 있으면, 새 키로 Space/Enter를 누르는 순간 UI의 Submit으로도 처리되어
+        // 리바인딩이 끝나자마자 같은 버튼이 다시 눌리고 입력 대기가 또 시작된다. 선택을 풀어서 막는다.
+        if (EventSystem.current != null) EventSystem.current.SetSelectedGameObject(null);
+
         SetRowsInteractable(false);
         SetGuide(_waitingGuide);
+        row.SetWaiting();
 
         // 완료 콜백은 성공/취소 양쪽 모두에서 불리므로, 여기서 잠금을 풀고 표시를 다시 맞춘다.
         CRebindManager.Ins.StartRebind(row.ActionName, row.BindingIndex, () =>
         {
-            RefreshKeyDisplay(row);
+            RefreshRowAndWarnings(row);
             SetRowsInteractable(true);
             SetGuide(_idleGuide);
         });
@@ -213,7 +255,7 @@ public sealed class CKeyMappingController : AMono
         if (CRebindManager.Ins.IsRebinding) return;
 
         CRebindManager.Ins.ResetBinding(row.ActionName, row.BindingIndex);
-        RefreshKeyDisplay(row);
+        RefreshRowAndWarnings(row);
     }
 
     private void OnResetAllClicked()
