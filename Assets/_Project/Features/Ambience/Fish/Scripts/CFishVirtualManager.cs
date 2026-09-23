@@ -251,13 +251,14 @@ public sealed class CFishVirtualManager : AFrameable, IUpdateFrameable
 
         JobHandle.CompleteAll(_jobHandles);
 
+        ShadowCastingMode shadowCastingMode = CLocalOptionManager.Ins.Option.useShadow ? ShadowCastingMode.On : ShadowCastingMode.Off;
         for (int i = 0; i < _batches.Count; i++)
         {
             VirtualBatch batch = _batches[i];
 
             // 모든 연산이 끝난 위치/회전/크기 행렬을 통째로 복사 및 렌더링
             batch.matricesNative.CopyTo(batch.matricesManaged);
-            Graphics.DrawMeshInstanced(batch.mesh, 0, batch.material, batch.matricesManaged, batch.count, batch.mpb, ShadowCastingMode.On, true, _layerIndex, null, LightProbeUsage.BlendProbes);
+            Graphics.DrawMeshInstanced(batch.mesh, 0, batch.material, batch.matricesManaged, batch.count, batch.mpb, shadowCastingMode, true, _layerIndex, null, LightProbeUsage.BlendProbes);
         }
 
         GeometryUtility.CalculateFrustumPlanes(_mainCam, _cameraPlanes);
