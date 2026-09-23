@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// 사용자 옵션을 메모리에 보유하는 매니저입니다.
@@ -86,6 +87,41 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         _option.vSync = vSync;
         ApplyFrameAndVSync();
         Save();
+    }
+
+    /// <summary>
+    /// 그림자 사용 여부 설정
+    /// </summary>
+    public void SetShadow(bool useShadow, bool save = true)
+    {
+        _option.useShadow = useShadow;
+        ShadowCastingMode mode = useShadow ? ShadowCastingMode.On : ShadowCastingMode.Off;
+        OnOptionShadowChanged.Publish(mode);
+
+        if (save) Save();
+    }
+
+    /// <summary>
+    /// 텍스처 품질 제한 설정
+    /// </summary>
+    public void SetTextureQuality(int limit, bool save = true)
+    {
+        _option.textureQualityLimit = Mathf.Clamp(limit, 0, 3);
+        ApplyTextureQuality(limit);
+
+        if (save) Save();
+    }
+
+    /// <summary>
+    /// 카메라 시야 설정
+    /// </summary>
+    public void SetCameraSettings(float fov, float clipPlane, bool save = true)
+    {
+        _option.verticalFOV = fov;
+        _option.farClipPlane = clipPlane;
+        OnOptionCameraChanged.Publish(fov, clipPlane);
+
+        if (save) Save();
     }
     #endregion
 
@@ -202,6 +238,12 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         Application.targetFrameRate = _option.targetFrameRate;
 
         OnOptionFrameSyncChanged.Publish(_option.targetFrameRate, _option.vSync);
+    }
+
+    private void ApplyTextureQuality(int limit)
+    {
+        QualitySettings.globalTextureMipmapLimit = _option.textureQualityLimit;
+        OnOptionTextureQualityChanged.Publish(_option.textureQualityLimit);
     }
     #endregion
 }

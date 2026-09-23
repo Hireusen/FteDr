@@ -1,6 +1,7 @@
 ﻿#pragma warning disable IDE0052
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// 연결된 오브젝트의 메시를 코드로 렌더링합니다.
@@ -56,6 +57,7 @@ public class GPUInstancingRenderer : AFrameable, IUpdateFrameable
         GeometryUtility.CalculateFrustumPlanes(mainCam, _frustumPlanes);
 
         // 렌더링
+        ShadowCastingMode shadowCastingMode = CLocalOptionManager.Ins.Option.useShadow ? ShadowCastingMode.On : ShadowCastingMode.Off;
         int count = _matrixBatches.Count;
         for (int i = 0; i < count; ++i)
         {
@@ -65,8 +67,8 @@ public class GPUInstancingRenderer : AFrameable, IUpdateFrameable
             Matrix4x4[] batch = _matrixBatches[i];
 
             Graphics.DrawMeshInstanced(_instanceMesh, 0, _instanceMaterial, batch, batch.Length,
-                _mpbBatches[i], UnityEngine.Rendering.ShadowCastingMode.Off, true, _renderLayer, // 빛 정보
-                null, UnityEngine.Rendering.LightProbeUsage.CustomProvided); // 모든 카메라 대상, MPB 강제 적용
+                _mpbBatches[i], shadowCastingMode, false, _renderLayer, // 빛 정보
+                null, LightProbeUsage.CustomProvided); // 모든 카메라 대상, MPB 강제 적용
         }
     }
     #endregion

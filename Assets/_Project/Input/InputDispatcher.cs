@@ -165,15 +165,6 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""Net"",
-                    ""type"": ""Button"",
-                    ""id"": ""a3821e83-08c0-4304-97f8-018ee4f7936e"",
-                    ""expectedControlType"": """",
-                    ""processors"": """",
-                    ""interactions"": """",
-                    ""initialStateCheck"": false
-                },
-                {
                     ""name"": ""Inventory"",
                     ""type"": ""Button"",
                     ""id"": ""4c0a2cf9-6c7f-4f00-bb95-57e31d44bbfb"",
@@ -411,17 +402,6 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
                 },
                 {
                     ""name"": """",
-                    ""id"": ""c6c6fc56-e563-4761-91bc-d8dbabca6dd9"",
-                    ""path"": ""<Keyboard>/c"",
-                    ""interactions"": """",
-                    ""processors"": """",
-                    ""groups"": "";PC"",
-                    ""action"": ""Net"",
-                    ""isComposite"": false,
-                    ""isPartOfComposite"": false
-                },
-                {
-                    ""name"": """",
                     ""id"": ""373d342a-7a04-446d-920b-2a9e5e04351a"",
                     ""path"": ""<Keyboard>/tab"",
                     ""interactions"": """",
@@ -512,7 +492,6 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         m_GameMap_Cheat = m_GameMap.FindAction("Cheat", throwIfNotFound: true);
         m_GameMap_Collect = m_GameMap.FindAction("Collect", throwIfNotFound: true);
         m_GameMap_Descent = m_GameMap.FindAction("Descent", throwIfNotFound: true);
-        m_GameMap_Net = m_GameMap.FindAction("Net", throwIfNotFound: true);
         m_GameMap_Inventory = m_GameMap.FindAction("Inventory", throwIfNotFound: true);
         m_GameMap_RotateTwizerLeft = m_GameMap.FindAction("RotateTwizerLeft", throwIfNotFound: true);
         m_GameMap_RotateTwizerRight = m_GameMap.FindAction("RotateTwizerRight", throwIfNotFound: true);
@@ -605,7 +584,6 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
     private readonly InputAction m_GameMap_Cheat;
     private readonly InputAction m_GameMap_Collect;
     private readonly InputAction m_GameMap_Descent;
-    private readonly InputAction m_GameMap_Net;
     private readonly InputAction m_GameMap_Inventory;
     private readonly InputAction m_GameMap_RotateTwizerLeft;
     private readonly InputAction m_GameMap_RotateTwizerRight;
@@ -653,10 +631,6 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "GameMap/Descent".
         /// </summary>
         public InputAction @Descent => m_Wrapper.m_GameMap_Descent;
-        /// <summary>
-        /// Provides access to the underlying input action "GameMap/Net".
-        /// </summary>
-        public InputAction @Net => m_Wrapper.m_GameMap_Net;
         /// <summary>
         /// Provides access to the underlying input action "GameMap/Inventory".
         /// </summary>
@@ -723,9 +697,6 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Descent.started += instance.OnDescent;
             @Descent.performed += instance.OnDescent;
             @Descent.canceled += instance.OnDescent;
-            @Net.started += instance.OnNet;
-            @Net.performed += instance.OnNet;
-            @Net.canceled += instance.OnNet;
             @Inventory.started += instance.OnInventory;
             @Inventory.performed += instance.OnInventory;
             @Inventory.canceled += instance.OnInventory;
@@ -773,9 +744,6 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
             @Descent.started -= instance.OnDescent;
             @Descent.performed -= instance.OnDescent;
             @Descent.canceled -= instance.OnDescent;
-            @Net.started -= instance.OnNet;
-            @Net.performed -= instance.OnNet;
-            @Net.canceled -= instance.OnNet;
             @Inventory.started -= instance.OnInventory;
             @Inventory.performed -= instance.OnInventory;
             @Inventory.canceled -= instance.OnInventory;
@@ -923,13 +891,6 @@ public partial class @InputDispatcher: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnDescent(InputAction.CallbackContext context);
-        /// <summary>
-        /// Method invoked when associated input action "Net" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
-        /// </summary>
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
-        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnNet(InputAction.CallbackContext context);
         /// <summary>
         /// Method invoked when associated input action "Inventory" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>

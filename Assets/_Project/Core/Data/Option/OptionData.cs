@@ -15,7 +15,7 @@ public class OptionData
     public float ambienceVolume = 0.7f;
     #endregion
 
-    #region ─────────────────────────▶ 화면 및 그래픽 ◀─────────────────────────
+    #region ─────────────────────────▶ 화면 ◀─────────────────────────
     // 해상도
     public int resolutionWidth = K.SCREEN_WIDTH;
     public int resolutionHeight = K.SCREEN_HEIGHT;
@@ -26,6 +26,13 @@ public class OptionData
     // 프레임 및 수직동기화
     public int targetFrameRate = K.DEFAULT_TARGET_FRAME_RATE;
     public bool vSync = K.DEFAULT_VSYNC;
+    #endregion
+
+    #region ─────────────────────────▷ 그래픽 ◁─────────────────────────
+    public bool useShadow = true;
+    public int textureQualityLimit = 0; // 0 : 원본 / 1 : 절반 해상도 / 2 : 절절반 해상도
+    public float verticalFOV = 60f;
+    public float farClipPlane = 95f;
     #endregion
 
     #region ─────────────────────────▶ 조작 ◀─────────────────────────
