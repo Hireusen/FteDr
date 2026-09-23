@@ -32,13 +32,6 @@ public sealed class CUnderwaterFog : AMono
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
-    private void OnEnable()
-    {
-        // 이 이펙트는 깊이 정보가 필요하므로 카메라의 Depth Texture 생성을 켠다.
-        _camera = GetComponent<Camera>();
-        _camera.depthTextureMode |= DepthTextureMode.Depth;
-    }
-
     private void OnRenderImage(RenderTexture src, RenderTexture dest)
     {
         if (!EnsureMaterial())
@@ -55,8 +48,19 @@ public sealed class CUnderwaterFog : AMono
         Graphics.Blit(src, dest, _material);
     }
 
+    private void OnEnable()
+    {
+        CEventBus<OnOptionCameraChanged>.Subscribe(OptionCameraChangeHandle);
+
+        // 이 이펙트는 깊이 정보가 필요하므로 카메라의 Depth Texture 생성을 켠다.
+        _camera = GetComponent<Camera>();
+        _camera.depthTextureMode |= DepthTextureMode.Depth;
+    }
+
     private void OnDisable()
     {
+        CEventBus<OnOptionCameraChanged>.Unsubscribe(OptionCameraChangeHandle);
+
         if (_material != null)
         {
             if (Application.isPlaying) Destroy(_material);
@@ -80,6 +84,12 @@ public sealed class CUnderwaterFog : AMono
 
         _material = new Material(shader) { hideFlags = HideFlags.HideAndDontSave };
         return true;
+    }
+
+    private void OptionCameraChangeHandle(OnOptionCameraChanged ctx)
+    {
+        _fogStart = ctx.clipPlane / 2;
+        _fogEnd = ctx.clipPlane + 1;
     }
     #endregion
 }
