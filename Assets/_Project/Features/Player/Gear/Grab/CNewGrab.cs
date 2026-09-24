@@ -294,6 +294,8 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
                 _controller.MoveLockOFF();
                 break;
             case EGrabStatus.WaittoReady:
+                _rotateLeftHeld = false;
+                _rotateRightHeld = false;
                 if (grabStatus == EGrabStatus.Wait)
                 {
                     grabStatus = EGrabStatus.WaittoReady;
