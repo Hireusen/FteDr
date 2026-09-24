@@ -9,8 +9,10 @@ public sealed class CCollectibleSpawner : AMono
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [Header("스폰 데이터")]
-    [Tooltip("이 스테이지에서 스폰할 수집품 목록 SO")]
+    [Tooltip("이 스테이지에서 스폰할 수집품 SO")]
     [SerializeField] private CStageSpawnSO _spawnData;
+    [SerializeField] private CCollectibleSO _specialData;
+    [SerializeField] private Transform _specialPosition;
 
     [Header("스폰 범위")]
     [SerializeField] private ESpawnShape _shape = ESpawnShape.Box;
@@ -61,11 +63,13 @@ public sealed class CCollectibleSpawner : AMono
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private bool _spawned; // 최초 1회 보장
     private int _settlingCount; // 낙하 안정화 진행 중인 수집품 수. 0이 되면 컬링 복원.
+    private bool _firstSpawned; // 수집품이 하나라도 스폰되었다면
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     /// <summary>이미 스폰이 완료(또는 진행)되었는지 여부입니다.</summary>
     public bool HasSpawned => _spawned;
+    public bool SpawnComplete => (_settlingCount <= 0) || _firstSpawned;
 
     [ContextMenu("추가 생성")]
     public void AlwaysSpawn()
@@ -79,22 +83,35 @@ public sealed class CCollectibleSpawner : AMono
     {
         if (_spawned)
         {
-            UDebug.Print("CCollectibleSpawner: 이미 스폰되어 재실행을 무시합니다.", LogType.Warning);
+            UDebug.Print("이미 스폰되어 재실행을 무시합니다.", LogType.Warning);
             return;
         }
         if (_spawnData == null)
         {
-            UDebug.Print("CCollectibleSpawner: 스폰 데이터(CStageSpawnSO)가 없습니다.", LogType.Error);
+            UDebug.Print("스폰 데이터(CStageSpawnSO)가 없습니다.", LogType.Error);
             return;
         }
         // 개수 설정이 논리적으로 만족 불가능하면 스폰하지 않는다.
         if (!_spawnData.IsSatisfiable(out string reason))
         {
-            UDebug.Print($"CCollectibleSpawner: 개수 설정 충돌로 스폰을 중단합니다. ({reason})", LogType.Error);
+            UDebug.Print($"개수 설정 충돌로 스폰을 중단합니다. ({reason})", LogType.Error);
+            return;
+        }
+        // 특수 수집품 없음
+        if (_specialData == null)
+        {
+            UDebug.Print("특수 수집품 SO가 등록되지 않음", LogType.Error, this);
+            return;
+        }
+        // 특수 수집품 위치 없음
+        if (_specialPosition == null)
+        {
+            UDebug.Print("특수 수집품 위치가 등록되지 않음", LogType.Error, this);
             return;
         }
 
         _spawned = true;
+        SpawnSpecial();
         SpawnAll();
     }
 
@@ -127,6 +144,11 @@ public sealed class CCollectibleSpawner : AMono
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
+    private void SpawnSpecial()
+    {
+        SpawnFalling(_specialData, _specialPosition.position, _specialPosition.rotation);
+    }
+
     // 엔트리별 개수를 결정한 뒤 그 수만큼 생성한다.
     private void SpawnAll()
     {
@@ -235,12 +257,16 @@ public sealed class CCollectibleSpawner : AMono
     // 일반 수집품: 공중에서 생성해 중력으로 낙하시킨 뒤 안정화되면 Rigidbody를 제거한다.
     private void SpawnFalling(CCollectibleSO so)
     {
-        Vector3 pos = GetSpawnPosition();
-        pos.y += _dropHeight + Random.Range(-_dropHeightJitter, _dropHeightJitter);
+        Vector3 position = GetSpawnPosition();
+        position.y += _dropHeight + Random.Range(-_dropHeightJitter, _dropHeightJitter);
+        Quaternion rotation = _fullRandomRotation ? URandom.Rotation() : URandom.RotationYaw();
 
-        Quaternion rot = _fullRandomRotation ? URandom.Rotation() : URandom.RotationYaw();
+        SpawnFalling(so, position, rotation);
+    }
 
-        GameObject go = Instantiate(so.Prefab, pos, rot);
+    private void SpawnFalling(CCollectibleSO so, Vector3 position, Quaternion rotation)
+    {
+        GameObject go = Instantiate(so.Prefab, position, rotation);
         go.transform.localScale *= so.GetRandomScale(); // SO의 min~max 범위 랜덤 크기
 
         // 낙하용 Rigidbody 부착 (질량은 수집품 무게 반영)
@@ -350,6 +376,7 @@ public sealed class CCollectibleSpawner : AMono
 
         // 이 수집품의 안정화가 끝났다. 모두 끝났으면 숨겼던 레이어를 복원한다.
         --_settlingCount;
+        _firstSpawned = true;
         if (_settlingCount <= 0)
         {
             SetLayerHidden(false);
