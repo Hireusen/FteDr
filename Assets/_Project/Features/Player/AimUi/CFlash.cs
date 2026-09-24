@@ -1,5 +1,4 @@
-﻿using Codice.CM.Common;
-using System.Collections;
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
