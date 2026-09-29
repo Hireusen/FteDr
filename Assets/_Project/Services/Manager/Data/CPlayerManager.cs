@@ -199,9 +199,26 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     #endregion
 
     #region ─────────────────────────▶ 사망 / 드롭 처리 ◀─────────────────────────
+    // 잠수함 내부 거르기
+    private Vector3 GetSafePosition(Vector3 targetPos)
+    {
+        var sub = CGameManager.Submarine;
+        MeshCollider collider = sub.GetComponent<MeshCollider>();
+        if (collider == null) return targetPos;
+
+        if (collider.bounds.Contains(targetPos))
+        {
+            UDebug.Print($"잠수함 내부에서 스폰 인식 → 10m 밑으로 처리");
+            return sub.transform.position - Vector3.down * 10f;
+        }
+
+        return targetPos;
+    }
+
     public void DropAllBagItems(Vector3 dropCenter, CPlayerDropConfig config = null)
     {
         if (_runtime.bagItems.Count == 0) return;
+        dropCenter = GetSafePosition(dropCenter);
 
         float radius = config != null ? config.ScatterRadius : 3f;
         float upForce = config != null ? config.ScatterUpForce : 5f;
