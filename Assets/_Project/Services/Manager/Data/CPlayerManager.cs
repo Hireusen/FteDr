@@ -257,10 +257,8 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
                 else
                 {
                     go.transform.position = targetPos;
-                    if (go.TryGetComponent(out CCollectibleBob bob))
-                    {
-                        bob.Initialize();
-                    }
+                    var bob = go.GetOrAddComponent<CCollectibleBob>();
+                    bob.Initialize();
                 }
             }
         }
