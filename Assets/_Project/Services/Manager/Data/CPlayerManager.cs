@@ -204,12 +204,15 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
     {
         var sub = CGameManager.Submarine;
         MeshCollider collider = sub.GetComponent<MeshCollider>();
+        UDebug.Print($"잠수함 위치 : {targetPos}");
         if (collider == null) return targetPos;
 
-        if (collider.bounds.Contains(targetPos))
+        Bounds bound = collider.bounds;
+        bound.size *= 1.1f;
+        if (bound.Contains(targetPos))
         {
-            UDebug.Print($"잠수함 내부에서 스폰 인식 → 10m 밑으로 처리");
-            return sub.transform.position - Vector3.down * 10f;
+            UDebug.Print($"잠수함 내부에서 스폰 인식 → 15m 밑으로 처리");
+            return sub.transform.position + Vector3.down * 15f;
         }
 
         return targetPos;
