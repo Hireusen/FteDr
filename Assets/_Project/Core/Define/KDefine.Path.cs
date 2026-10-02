@@ -7,7 +7,7 @@ public static partial class K
     public const string STRING_ID_EXPORT_PATH = "Assets/_Project/Core/Define";
 
     // 아이템 아이콘 스프라이트 경로
-    public const string ITEM_ICON_EXPORT_PATH = "Assets/_Project/ShareArt/Sprites";
+    public const string ITEM_ICON_EXPORT_PATH = "Assets/_Project/Extracted/Sprite";
 
     // 오디오 에셋 폴더 경로
     public const string SOUND_IMPORT_PATH = "Assets/_Project/Audios";

@@ -23,6 +23,8 @@ public class CStageLoader : AMono
     public bool SaveCollectible()
     {
         CCollectible[] collectibles = UObject.FindComponents<CCollectible>(false);
+        if (collectibles == null || collectibles.Length == 0) return false;
+
         return USaveFile.Save(StageID, BuildStageCollectibleData(collectibles));
     }
     #endregion
