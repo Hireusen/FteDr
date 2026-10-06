@@ -12,25 +12,14 @@ public sealed class CInventoryTester : AMono
 
     [Header("랜덤 획득 풀")]
     [Tooltip("'랜덤 획득' 버튼을 누르면 이 중 하나를 무작위로 뽑아 가방에 넣습니다.")]
-    [SerializeField]
-    private string[] _testCollectibleIds =
-    {
-        Id.Collectible_Armguard_Silver_Black,
-        Id.Collectible_Book_Norm_Brown,
-        Id.Collectible_Cross1_Fine_Gold,
-        Id.Collectible_CrystalBall_Green,
-        Id.Collectible_Egg_Dark_Orange,
-        Id.Collectible_Log_Dark,
-        Id.Collectible_Log_Light,
-        Id.Collectible_Wand_Fine_Gold,
-        Id.Collectible_Wand_Fine_Mixed2,
-    };
+    [SerializeField] private string[] _testCollectibleIds;
+    [SerializeField] private string[] _testUniqueIds;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private const int WINDOW_ID = 998811; // 인벤토리 테스터용 고유 ID
     private Vector2 _scroll;
-    private Rect _window = new Rect(20, 20, 420, 320); // 컴팩트한 창 크기
+    private Rect _window = new Rect(20, 20, 640, 500); // 컴팩트한 창 크기
 
     private GUISkin _skin;
     private int _appliedFontSize = -1;
@@ -92,7 +81,7 @@ public sealed class CInventoryTester : AMono
     {
         if (_testCollectibleIds == null || _testCollectibleIds.Length == 0)
         {
-            UDebug.Print("[인벤토리 테스터] 등록된 테스트 ID 풀이 비어있습니다.", LogType.Warning);
+            UDebug.Print("등록된 테스트 ID 풀이 비어있습니다.", LogType.Warning);
             return;
         }
 
@@ -102,7 +91,25 @@ public sealed class CInventoryTester : AMono
 
         if (!_lastPickSucceeded)
         {
-            UDebug.Print($"[인벤토리 테스터] '{id}' 획득 실패 (슬롯 부족 또는 무게 초과)", LogType.Warning);
+            UDebug.Print($"'{id}' 획득 실패 (슬롯 부족 또는 무게 초과)", LogType.Warning);
+        }
+    }
+
+    private void PickRandomUnique()
+    {
+        if (_testUniqueIds == null || _testUniqueIds.Length == 0)
+        {
+            UDebug.Print("등록된 테스트 ID 풀이 비어있습니다.", LogType.Warning);
+            return;
+        }
+
+        string id = _testUniqueIds[Random.Range(0, _testUniqueIds.Length)];
+        _lastPicked = UData.Collectible(id);
+        _lastPickSucceeded = UPlayer.TryAddToBag(id);
+
+        if (!_lastPickSucceeded)
+        {
+            UDebug.Print($"'{id}' 획득 실패 (슬롯 부족 또는 무게 초과)", LogType.Warning);
         }
     }
 
@@ -117,6 +124,7 @@ public sealed class CInventoryTester : AMono
         // 2. 조작 버튼
         GUILayout.BeginHorizontal();
         if (GUILayout.Button("랜덤 획득")) PickRandomAndAcquire();
+        if (GUILayout.Button("랜덤 획득 (유니크)")) PickRandomUnique();
         if (GUILayout.Button("가방 비우기")) ClearBagDebug();
         GUILayout.EndHorizontal();
         GUILayout.Space(10);
