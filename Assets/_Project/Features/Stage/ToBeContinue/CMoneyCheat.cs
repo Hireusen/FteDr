@@ -5,6 +5,6 @@ public class CMoneyCheat : AMono
 {
     private void Start()
     {
-        UPlayer.AddMoney(99999);
+        UPlayer.AddMoney(99999999);
     }
 }
