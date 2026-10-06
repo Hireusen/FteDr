@@ -14,4 +14,5 @@ public enum EUI
     ResultWindow,           // 결과창
     TutorialWindow,         // 튜토리얼창
     KeyMappingWindow,       // 조작키 변경창
+    ResearchWindow,         // 연구창 (특수 수집품으로 다음 스테이지 해금)
 }

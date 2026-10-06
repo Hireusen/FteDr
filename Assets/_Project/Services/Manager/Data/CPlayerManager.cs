@@ -196,6 +196,36 @@ public sealed class CPlayerManager : ASingleton<CPlayerManager>
         _runtime.heldSpecialItem = specialId;
         return true;
     }
+
+    /// <summary>
+    /// 가방에 담겨 있는 특수 수집품 ID입니다. 없으면 null입니다.
+    /// 특수 수집품도 일반 수집품과 같은 경로(TryAddToBag)로 가방에 들어오므로, 담긴 ID의 SO를 보고 가려냅니다.
+    /// </summary>
+    public string SpecialInBag
+    {
+        get
+        {
+            int itemCount = _runtime.bagItems.Count;
+            for (int i = 0; i < itemCount; ++i)
+            {
+                CCollectibleSO so = UData.Collectible(_runtime.bagItems[i]);
+                if (so != null && so.IsSpecial) return _runtime.bagItems[i];
+            }
+            return null;
+        }
+    }
+
+    /// <summary>가방의 특수 수집품 하나를 연구 재료로 소모(제거)합니다. 없으면 False</summary>
+    /// <param name="specialId">소모된 특수 수집품 ID (실패 시 null)</param>
+    public bool TryConsumeSpecialInBag(out string specialId)
+    {
+        specialId = SpecialInBag;
+        if (specialId == null) return false;
+
+        _runtime.bagItems.Remove(specialId);
+        PublishBag();
+        return true;
+    }
     #endregion
 
     #region ─────────────────────────▶ 사망 / 드롭 처리 ◀─────────────────────────

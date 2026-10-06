@@ -60,6 +60,13 @@ public static class UPlayer
     /// <summary>특수 수집품을 손에 듭니다. 이미 들고 있으면 False</summary>
     /// <param name="specialId">특수 수집품 ID</param>
     public static bool TryHoldSpecial(string specialId) => Player.TryHoldSpecial(specialId);
+
+    /// <summary>가방에 담겨 있는 특수 수집품 ID입니다. 없으면 null입니다.</summary>
+    public static string SpecialInBag => Player.SpecialInBag;
+
+    /// <summary>가방의 특수 수집품 하나를 연구 재료로 소모(제거)합니다. 없으면 False</summary>
+    /// <param name="specialId">소모된 특수 수집품 ID (실패 시 null)</param>
+    public static bool TryConsumeSpecialInBag(out string specialId) => Player.TryConsumeSpecialInBag(out specialId);
     #endregion
 
     #region ─────────────────────────▶ 재화 (영속) ◀─────────────────────────
@@ -95,7 +102,7 @@ public static class UPlayer
     #endregion
 
     #region ─────────────────────────▶ 진행 상황 (영속) ◀─────────────────────────
-    /// <summary>돈으로 해금한 최대 스테이지입니다. (이동 가능 범위의 상한)</summary>
+    /// <summary>연구로 해금한 최대 스테이지입니다. (이동 가능 범위의 상한)</summary>
     public static int UnlockedStage => Progress.UnlockedStage;
 
     /// <summary>현재 위치한 스테이지입니다.</summary>
@@ -105,7 +112,7 @@ public static class UPlayer
     /// <param name="stage">대상 스테이지</param>
     public static bool IsStageUnlocked(int stage) => Progress.IsStageUnlocked(stage);
 
-    /// <summary>다음 스테이지를 해금합니다. (해금 비용 차감은 호출부 책임)</summary>
+    /// <summary>다음 스테이지를 해금합니다. (특수 수집품 소모와 상한 검사는 UStageResearch 책임)</summary>
     public static void UnlockNextStage() => Progress.UnlockNextStage();
     #endregion
 }
