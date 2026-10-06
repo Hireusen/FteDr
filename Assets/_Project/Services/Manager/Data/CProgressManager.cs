@@ -112,7 +112,7 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
     #endregion
 
     #region 진행 상황
-    /// <summary>돈으로 해금한 최대 스테이지입니다. (이동 가능 범위의 상한)</summary>
+    /// <summary>연구로 해금한 최대 스테이지입니다. (이동 가능 범위의 상한)</summary>
     public int UnlockedStage => _progress.unlockedStage;
 
     /// <summary>현재 위치한 스테이지입니다.</summary>
@@ -130,7 +130,7 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
         Save();
     }
 
-    /// <summary>다음 스테이지를 해금하고 저장합니다. (해금 비용 차감은 호출부 책임)</summary>
+    /// <summary>다음 스테이지를 해금하고 저장합니다. (특수 수집품 소모와 상한 검사는 UStageResearch 책임)</summary>
     public void UnlockNextStage()
     {
         ++_progress.unlockedStage;
