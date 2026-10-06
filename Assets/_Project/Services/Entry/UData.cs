@@ -76,6 +76,12 @@ public static class UData
         => Address.Get<CBagSO>(Id.Bag);
 
     /// <summary>
+    /// 문자열 ID로 잠수함 SO를 반환받습니다. (스테이지 연구 상한 조회용)
+    /// </summary>
+    public static CSubmarineSO Submarine()
+        => Address.Get<CSubmarineSO>(Id.Submarine);
+
+    /// <summary>
     /// 오디오 ID로 사운드 SO를 반환받습니다.
     /// </summary>
     /// <param name="id">오디오 ID</param>

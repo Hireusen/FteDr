@@ -10,4 +10,5 @@ public enum ECursorReason
     None = 0,
     Menu = 1 << 0,         // 일시정지/설정 등 메뉴 열림
     FuelDepleted = 1 << 1, // 연료 고갈로 조작 불가
+    Cockpit = 1 << 2,      // 조종석 착석 (지역 이동 UI 버튼 조작)
 }
