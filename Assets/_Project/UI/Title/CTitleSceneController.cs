@@ -103,7 +103,8 @@ public class CTitleSceneController : AMono
         UPlayer.ResetForNew();       // 연료는 저장 대상이 아니므로 만탱크로 시작 (장비 레벨 반영을 위해 Load 뒤에 호출)
         UDebug.Print("이어하기 → 진행도 로드 완료");
 
-        MoveToNextScene();
+        ApplyFadeColor();
+        UScene.LoadWithFade((EScene)CProgressManager.Ins.CurrentStage + 2, 0f, _fadeOutDuration, _fadeInDuration, onProgress: p => OnSceneLoadProgress.Publish(p));
     }
 
     private void OnQuitClicked()
