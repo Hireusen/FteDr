@@ -38,7 +38,8 @@ public class COpenUI : AFrameable, IUpdateFrameable
             {
                 if (hit.collider.TryGetComponent(out CShopEntry comp))
                 {
-                    _interectPopup.title.text = "Shop";
+                    // 특수 수집품을 담아온 상태면 클릭 시 연구가 시작되므로, 팝업 문구도 바꿔준다.
+                    _interectPopup.title.text = UStageResearch.State == EStageResearchState.Ready ? "Research" : "Shop";
                     _interectPopup.gameObject.SetActive(true);
                 }
                 if (hit.collider.TryGetComponent(out CPlayerToCockpit cock))
@@ -76,7 +77,16 @@ public class COpenUI : AFrameable, IUpdateFrameable
         if (Physics.Raycast(_cam.position, _cam.forward, out RaycastHit hit, _rayMaxDistance, _interactorMask))
         {
             if (CUIManager.Ins.IsOpen(EUI.ShopWindow)) return;
+            if (CUIManager.Ins.IsOpen(EUI.ResearchWindow)) return;
             if (!hit.collider.TryGetComponent(out CShopEntry comp)) return;
+
+            // 특수 수집품을 가방에 담아왔다면 상점창 대신 연구창을 연다. (연구 실행은 연구창 버튼이 담당)
+            if (UStageResearch.State == EStageResearchState.Ready)
+            {
+                OnRequestOpenUI.Publish(EUI.ResearchWindow);
+                UDebug.Print("특수 수집품을 소지한 상태라 연구창을 엽니다.");
+                return;
+            }
 
             OnRequestOpenUI.Publish(EUI.ShopWindow);
             UDebug.Print("상점이 레이캐스트에 잡혔습니다~");

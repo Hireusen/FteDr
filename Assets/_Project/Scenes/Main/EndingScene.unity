@@ -1236,6 +1236,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4310054616697831809, guid: 6facd790ae8b1db4b8f88595bacb5674,
+        type: 3}
+      propertyPath: m_Materials.Array.size
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5175946868848973684, guid: 6facd790ae8b1db4b8f88595bacb5674,
         type: 3}
       propertyPath: m_Name
@@ -2505,6 +2510,7 @@ GameObject:
   m_Component:
   - component: {fileID: 502337103}
   - component: {fileID: 502337102}
+  - component: {fileID: 502337104}
   m_Layer: 0
   m_Name: Video Player
   m_TagString: Untagged
@@ -2563,6 +2569,19 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2085628385}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &502337104
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 502337101}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efa6034435acc1343b313a8aab29c993, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _vedioRef: {fileID: 502337102}
 --- !u!1001 &510704462
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4384,7 +4403,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _submarine: {fileID: 8614958705335803384}
-  upspeed: 10
+  _upspeed: 10
   _arm: {fileID: 6352592586519171018}
   _armEndpivot: {fileID: 7311421889059481340}
   _twizers: {fileID: 8279604532527692278}
@@ -8348,7 +8367,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 80c003848b5559a41aeb4d90eb98f432, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _bgmId: SFX_Underwater Engine
+  _playing: 1
 --- !u!4 &1901197632
 Transform:
   m_ObjectHideFlags: 0

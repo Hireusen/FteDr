@@ -5,9 +5,9 @@ using TMPro;
 
 /// <summary>
 /// 상점 목록의 장비 로우 하나를 표현하는 컴포넌트입니다.
-/// (최대 산소량/가방/추진기/유물탐지기/잠수함 5종 전부 공용, EDataType만 다르게 지정해서 5번 배치)
+/// (최대 산소량/가방/추진기/유물탐지기 등 공용, EDataType만 다르게 지정해서 배치)
 /// 타입별 분기(레벨 조회 방식, 구매 성공 처리 방식, 상세 스탯 텍스트)는 전부 UShopGearData가 담당합니다.
-/// 잠수함처럼 UData로 조회되지 않는 타입만 예외적으로 _directGearOverride에 SO를 직접 연결합니다.
+/// 스테이지 해금은 특수 수집품 연구로 바뀌어 상점 로우에서 빠졌습니다. (연구 창: CResearchController)
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class CShopUpgradeRow : AMono, IPointerEnterHandler
@@ -18,8 +18,6 @@ public sealed class CShopUpgradeRow : AMono, IPointerEnterHandler
     [SerializeField] private EDataType _gearType;
     [Tooltip("화면에 표시할 이름 (예: 최대 산소량 증가)")]
     [SerializeField] private string _displayName;
-    [Tooltip("UData로 조회할 수 없는 타입(예: 잠수함/Submarine)일 때만 직접 연결하는 SO. 다른 타입은 비워두세요.")]
-    [SerializeField] private AGearSO _directGearOverride;
 
     [Header("필수 연결")]
     [SerializeField] private TMP_Text _nameLevelText;
@@ -114,15 +112,14 @@ public sealed class CShopUpgradeRow : AMono, IPointerEnterHandler
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    // UData로 조회되는 4종 + 잠수함(_directGearOverride)까지 한 곳에서 처리하는 헬퍼.
-    private AGearSO ResolveGear() => UShopGearData.ResolveGear(_gearType, _directGearOverride);
+    private AGearSO ResolveGear() => UShopGearData.ResolveGear(_gearType);
 
     private void Refresh()
     {
         AGearSO gear = ResolveGear();
         if (gear == null)
         {
-            UDebug.Print($"CShopUpgradeRow: EDataType '{_gearType}'에 해당하는 장비 SO를 찾을 수 없습니다. (잠수함이라면 _directGearOverride 연결을 확인하세요)", LogType.Error, gameObject);
+            UDebug.Print($"CShopUpgradeRow: EDataType '{_gearType}'에 해당하는 장비 SO를 찾을 수 없습니다.", LogType.Error, gameObject);
             return;
         }
 
