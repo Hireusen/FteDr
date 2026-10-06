@@ -48,6 +48,12 @@ public sealed class CUnderwaterFog : AMono
         Graphics.Blit(src, dest, _material);
     }
 
+    private void Start()
+    {
+        var option = CLocalOptionManager.Ins.Option;
+        OptionCameraChangeHandle(new OnOptionCameraChanged(option.verticalFOV, option.farClipPlane));
+    }
+
     private void OnEnable()
     {
         CEventBus<OnOptionCameraChanged>.Subscribe(OptionCameraChangeHandle);
@@ -88,8 +94,8 @@ public sealed class CUnderwaterFog : AMono
 
     private void OptionCameraChangeHandle(OnOptionCameraChanged ctx)
     {
-        _fogStart = ctx.clipPlane / 2;
-        _fogEnd = ctx.clipPlane + 1;
+        _fogStart = ctx.clipPlane / 3;
+        _fogEnd = ctx.clipPlane * 4 / 5;
     }
     #endregion
 }

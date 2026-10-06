@@ -25,6 +25,12 @@ public class CApplyCameraOption : MonoBehaviour
         CEventBus<OnOptionCameraChanged>.Unsubscribe(OptionCameraChangeHandle);
     }
 
+    private void Start()
+    {
+        var option = CLocalOptionManager.Ins.Option;
+        OptionCameraChangeHandle(new OnOptionCameraChanged(option.verticalFOV, option.farClipPlane));
+    }
+
 #if UNITY_EDITOR
     [ContextMenu("카메라 거리 증가 테스트")]
     private void TestCameraOptionUp()
