@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 /// <summary>
 /// 카메라에 부착해 깊이(카메라로부터의 거리) 기반 수중 안개를 화면 전체에 적용합니다.
@@ -50,7 +51,18 @@ public sealed class CUnderwaterFog : AMono
 
     private void Start()
     {
+        if (!Application.isPlaying) return;
+
+        StartCoroutine(FirstOption());
+    }
+
+    private IEnumerator FirstOption()
+    {
         var option = CLocalOptionManager.Ins.Option;
+        while(option == null)
+        {
+            yield return null;
+        }
         OptionCameraChangeHandle(new OnOptionCameraChanged(option.verticalFOV, option.farClipPlane));
     }
 
@@ -94,6 +106,11 @@ public sealed class CUnderwaterFog : AMono
 
     private void OptionCameraChangeHandle(OnOptionCameraChanged ctx)
     {
+        if (CGameManager.Ins.Scene == EScene.Ending)
+        {
+            UDebug.Print($"엔딩 씬이므로 카메라 설정 변경을 무시합니다.");
+            return;
+        }
         _fogStart = ctx.clipPlane / 3;
         _fogEnd = ctx.clipPlane * 4 / 5;
     }

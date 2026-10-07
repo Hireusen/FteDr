@@ -33,7 +33,11 @@ public class CBGMChange : AMono
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Start()
     {
-        if (!_playing) return;
+        if (!_playing)
+        {
+            USound.StopBgm();
+            return;
+        }
 
         int sceneIndex = (int)UScene.Current;
         USound.PlayBgm(_playlist[sceneIndex]);

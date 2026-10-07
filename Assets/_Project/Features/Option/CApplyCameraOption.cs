@@ -11,6 +11,11 @@ public class CApplyCameraOption : MonoBehaviour
 
     private void OptionCameraChangeHandle(OnOptionCameraChanged ctx)
     {
+        if(CGameManager.Ins.Scene == EScene.Ending)
+        {
+            UDebug.Print($"엔딩 씬이므로 카메라 설정 변경을 무시합니다.");
+            return;
+        }
         _camera.m_Lens.FarClipPlane = ctx.clipPlane;
         _camera.m_Lens.FieldOfView = ctx.fov;
     }
