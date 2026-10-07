@@ -45,6 +45,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     public bool IsAimMode { get; private set; } = false;
     public void AimModeOn()
     {
+        _aimInfo.ActiveTooltip();
         _background.gameObject.SetActive(true);
         _aimImg.gameObject.SetActive(false);
         _bigAimShow.gameObject.SetActive(true);
@@ -56,6 +57,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     }
     public void WaitModeOn()
     {
+        _aimInfo.InActiveTooltip();
         _background.gameObject.SetActive(false);
         _aimImg.gameObject.SetActive(true);
         
