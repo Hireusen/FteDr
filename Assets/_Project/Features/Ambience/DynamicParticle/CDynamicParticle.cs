@@ -7,8 +7,12 @@
 public class CDynamicParticle : AFrameable, ILateUpdateFrameable
 {
     #region ─────────────────────────▷ 내부 변수 ◁─────────────────────────
+    [Header("추적 대상")]
+    [SerializeField] private Transform _targetTr;
+
     [Header("파티클 재생 불가 영역")]
     [SerializeField] private LayerMask _norWaterLayer;
+    [SerializeField] private bool _alwaysPlay = false;
 
     [Header("파티클 연결")]
     [SerializeField] private ParticleSystem _particle;
@@ -22,10 +26,18 @@ public class CDynamicParticle : AFrameable, ILateUpdateFrameable
 
     public void ExecuteLateUpdateFrame()
     {
-        GameObject player = CGameManager.Player;
-        if (player == null) return;
+        if (_targetTr == null)
+        {
+            GameObject player = CGameManager.Player;
+            if (player == null) return;
 
-        transform.position = player.transform.position + _offset;
+            transform.position = player.transform.position + _offset;
+        }
+        else
+        {
+            transform.position = _targetTr.position + _offset;
+        }
+
     }
     #endregion
 
@@ -34,7 +46,7 @@ public class CDynamicParticle : AFrameable, ILateUpdateFrameable
     {
         if (other.gameObject.layer.IsInLayerMask(_norWaterLayer))
         {
-            if(_particle == null) return;
+            if (_particle == null) return;
             _particle.Stop(true, ParticleSystemStopBehavior.StopEmitting);
             UDebug.Print("스테이지 파티클을 비활성화했습니다.", LogType.Log, this);
         }
@@ -55,7 +67,15 @@ public class CDynamicParticle : AFrameable, ILateUpdateFrameable
         if (UDebug.IsNull(_particle)) return;
         if (_particle == null) return;
 
-        _particle.Stop();
-        UDebug.Print("초기 스테이지 파티클을 비활성화했습니다.", LogType.Log, this);
+        if (_alwaysPlay)
+        {
+            _particle.Play();
+            UDebug.Print("초기 스테이지 파티클을 활성화했습니다.", LogType.Log, this);
+        }
+        else
+        {
+            _particle.Stop();
+            UDebug.Print("초기 스테이지 파티클을 비활성화했습니다.", LogType.Log, this);
+        }
     }
 }

@@ -106,6 +106,11 @@ public sealed class CUnderwaterFog : AMono
 
     private void OptionCameraChangeHandle(OnOptionCameraChanged ctx)
     {
+        if (CGameManager.Ins.Scene == EScene.Ending)
+        {
+            UDebug.Print($"엔딩 씬이므로 카메라 설정 변경을 무시합니다.");
+            return;
+        }
         _fogStart = ctx.clipPlane / 3;
         _fogEnd = ctx.clipPlane * 4 / 5;
     }
