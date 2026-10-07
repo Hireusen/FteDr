@@ -225,6 +225,8 @@ public class CEnemyController : AFrameable, IUpdateFrameable
         {
             _animator.SetTrigger(_attackTriggerHash);
         }
+
+        USound.PlaySfx(Id.SFX_Warning);
     }
 
     private void TickDash(float dt)
