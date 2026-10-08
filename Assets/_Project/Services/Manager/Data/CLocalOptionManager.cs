@@ -75,6 +75,38 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         Save();
     }
 
+    /// <summary>저장된 해상도는 그대로 두고 전체화면 모드만 설정한 뒤 화면에 적용하고 저장합니다.</summary>
+    /// <remarks>
+    /// 테두리 없는 창모드처럼 해상도를 모니터에 맞춰 강제하는 모드로 갈 때 쓴다.
+    /// 이 모드에서 SetResolution으로 모니터 해상도를 덮어쓰면, 창모드로 돌아왔을 때
+    /// 사용자가 고른 해상도가 사라지고 창이 모니터 크기로 열린다.
+    /// </remarks>
+    /// <param name="fullScreenMode">전체화면 모드</param>
+    public void SetScreenMode(FullScreenMode fullScreenMode)
+    {
+        _option.screenMode = fullScreenMode;
+        ApplyResolution();
+        Save();
+    }
+
+    /// <summary>창이 올라가 있는 모니터의 해상도를 가져옵니다.</summary>
+    /// <remarks>
+    /// Screen.currentResolution은 에디터에서 Game 뷰 크기를 돌려주므로 모니터 해상도로는 쓸 수 없다.
+    /// 디스플레이 정보를 지원하지 않는 플랫폼에서는 Screen.currentResolution으로 대체한다.
+    /// </remarks>
+    public static void GetDisplayResolution(out int width, out int height)
+    {
+        DisplayInfo displayInfo = Screen.mainWindowDisplayInfo;
+        width = displayInfo.width;
+        height = displayInfo.height;
+
+        if (width <= 0 || height <= 0)
+        {
+            width = Screen.currentResolution.width;
+            height = Screen.currentResolution.height;
+        }
+    }
+
     public void SetTargetFrameRate(int frameRate)
     {
         _option.targetFrameRate = frameRate;
@@ -95,8 +127,7 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     public void SetShadow(bool useShadow, bool save = true)
     {
         _option.useShadow = useShadow;
-        ShadowCastingMode mode = useShadow ? ShadowCastingMode.On : ShadowCastingMode.Off;
-        OnOptionShadowChanged.Publish(mode);
+        PublishShadow();
 
         if (save) Save();
     }
@@ -119,7 +150,7 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
     {
         _option.verticalFOV = fov;
         _option.farClipPlane = clipPlane;
-        OnOptionCameraChanged.Publish(fov, clipPlane);
+        PublishCamera();
 
         if (save) Save();
     }
@@ -154,8 +185,13 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
 
         ApplyResolution();
         ApplyFrameAndVSync();
+        ApplyTextureQuality(_option.textureQualityLimit);
         PublishVolume();
         PublishCameraSensitivity();
+        // 그림자 · 시야각 · 렌더링 거리는 씬의 적용 스크립트가 받아 처리한다.
+        // 구독보다 이 호출이 먼저일 수 있어, 적용 스크립트도 자기 Start에서 현재 옵션을 직접 한 번 읽는다.
+        PublishShadow();
+        PublishCamera();
     }
     #endregion
 
@@ -170,8 +206,13 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
 
         ApplyResolution();
         ApplyFrameAndVSync();
+        ApplyTextureQuality(_option.textureQualityLimit);
         PublishVolume();
         PublishCameraSensitivity();
+        // 그림자 · 시야각 · 렌더링 거리는 씬의 적용 스크립트가 받아 처리한다.
+        // 구독보다 이 호출이 먼저일 수 있어, 적용 스크립트도 자기 Start에서 현재 옵션을 직접 한 번 읽는다.
+        PublishShadow();
+        PublishCamera();
     }
 
     private void ValidateFrameOption()
@@ -219,17 +260,35 @@ public sealed class CLocalOptionManager : ASingleton<CLocalOptionManager>
         OnOptionCameraSensitivityChanged.Publish(CameraSensitivity);
     }
 
+    // 현재 옵션의 그림자 사용 여부로 변경 이벤트를 발행
+    private void PublishShadow()
+    {
+        ShadowCastingMode mode = _option.useShadow ? ShadowCastingMode.On : ShadowCastingMode.Off;
+        OnOptionShadowChanged.Publish(mode);
+    }
+
+    // 현재 옵션의 시야각 · 렌더링 거리로 변경 이벤트를 발행
+    private void PublishCamera()
+    {
+        OnOptionCameraChanged.Publish(_option.verticalFOV, _option.farClipPlane);
+    }
+
     // 옵션의 해상도/전체화면 값을 실제 화면에 적용
     private void ApplyResolution()
     {
-        Screen.SetResolution(
-            _option.resolutionWidth,
-            _option.resolutionHeight,
-            _option.screenMode);
-        OnOptionResolutionChanged.Publish(
-            _option.resolutionWidth,
-            _option.resolutionHeight,
-            _option.screenMode);
+        int width = _option.resolutionWidth;
+        int height = _option.resolutionHeight;
+
+        // 테두리 없는 창모드는 모니터 해상도로 띄운다.
+        // 더 낮은 해상도를 넘기면 그만큼만 렌더해서 화면에 늘려 보여주기 때문에 흐려진다.
+        if (_option.screenMode == FullScreenMode.FullScreenWindow)
+        {
+            GetDisplayResolution(out width, out height);
+        }
+
+        Screen.SetResolution(width, height, _option.screenMode);
+        // 구독자가 실제 화면 크기를 기준으로 계산할 수 있도록, 저장값이 아니라 적용한 값을 싣는다.
+        OnOptionResolutionChanged.Publish(width, height, _option.screenMode);
     }
 
     private void ApplyFrameAndVSync()
