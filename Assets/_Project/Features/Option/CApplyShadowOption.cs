@@ -45,6 +45,11 @@ public class CApplyShadowOption : AMono
     private void Start()
     {
         _rendererObjects = UObject.FindComponents<Renderer>(true, FindObjectsSortMode.None);
+
+        // 옵션 매니저는 씬보다 먼저 초기화될 수 있고 이벤트 버스는 지난 발행을 다시 주지 않는다.
+        // 그래서 수집을 끝낸 직후, 저장된 설정을 직접 한 번 읽어 반영한다.
+        bool useShadow = CLocalOptionManager.Ins.Option.useShadow;
+        SetShadowCastingMode(useShadow ? ShadowCastingMode.On : ShadowCastingMode.Off);
     }
 
     private void OnEnable()
