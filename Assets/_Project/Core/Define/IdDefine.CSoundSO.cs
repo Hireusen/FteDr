@@ -19,6 +19,8 @@ public static partial class Id
     public const string SFX_Clank1 = "SFX_Clank1";
     public const string SFX_Dive_02 = "SFX_Dive 02";
     public const string SFX_Jump_03 = "SFX_Jump 03";
+    public const string SFX_Research_Complete = "SFX_Research Complete";
+    public const string SFX_Research_Continue = "SFX_Research Continue";
     public const string SFX_robotics2 = "SFX_robotics2";
     public const string SFX_Sonar_Ping = "SFX_Sonar Ping";
     public const string SFX_spacestationhum02seamless = "SFX_spacestationhum02seamless";
@@ -26,4 +28,5 @@ public static partial class Id
     public const string SFX_Teleport_02 = "SFX_Teleport 02";
     public const string SFX_Underwater_Engine = "SFX_Underwater Engine";
     public const string SFX_v2_metal_02 = "SFX_v2_metal_02";
+    public const string SFX_Warning = "SFX_Warning";
 }

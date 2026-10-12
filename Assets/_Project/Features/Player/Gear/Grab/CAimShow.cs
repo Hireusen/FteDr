@@ -43,7 +43,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     public TransitionInfo transitionInfo;
     public EAimStatus currentStatus;
     public bool IsAimMode { get; private set; } = false;
-    public void AimModeOn()
+    public void AimModeOn() // 조준하고 있는 상태
     {
         _background.gameObject.SetActive(true);
         _aimImg.gameObject.SetActive(false);
@@ -51,10 +51,10 @@ public class CAimShow : AFrameable, IUpdateFrameable
         IsAimMode = true;
         //_flashUtility.FlashShow(0.3f, 0.3f);
         _flashUtility.ScreenOn(true);
-        CPlayerHudController.instance.HudVisibleSet(false);
+        CPlayerHudController.instance.HudVisibleSet(true);
 
     }
-    public void WaitModeOn()
+    public void WaitModeOn() // 평소 상태
     {
         _background.gameObject.SetActive(false);
         _aimImg.gameObject.SetActive(true);
@@ -65,7 +65,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
         //_flashUtility.FlashShow(0.3f, 0.3f);
         _flashUtility.ScreenOn(false);
         _bigAimShow.gameObject.SetActive(false);
-        CPlayerHudController.instance.HudVisibleSet(true);
+        CPlayerHudController.instance.HudVisibleSet(false);
         _currentAimObject = null;
 
     }

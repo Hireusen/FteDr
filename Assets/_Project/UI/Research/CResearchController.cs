@@ -53,6 +53,7 @@ public sealed class CResearchController : AMono
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private Coroutine _analysisRoutine;
     private Coroutine _blinkRoutine;
+    private CSoundEmitter _researchEmitter;
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
@@ -69,6 +70,7 @@ public sealed class CResearchController : AMono
         SetCompleteMessageVisible(false);
 
         _analysisRoutine = StartCoroutine(AnalysisCo());
+        _researchEmitter = USound.PlaySfx(Id.SFX_Research_Continue);
     }
 
     private void OnDisable()
@@ -127,6 +129,9 @@ public sealed class CResearchController : AMono
         SetConfirmInteractable(true);
 
         _blinkRoutine = StartCoroutine(BlinkCompleteMessageCo());
+
+        _researchEmitter?.StopImmediate();
+        USound.PlaySfx(Id.SFX_Research_Complete);
     }
 
     // 완료 문구를 몇 번 깜빡인 뒤 켜진 상태로 남긴다.

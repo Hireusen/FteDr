@@ -61,7 +61,7 @@ public sealed class CPlayerHudController : AMono
     public void HudVisibleSet(bool v)
     {
         _isAimMode = v;
-        _elementsVisible = v;
+        _elementsVisible = !v;
         ApplyElementsVisibility();
         OnRequestHudElementsVisibility.Publish(_elementsVisible); // 잠수함 레이더 마커 등 다른 HUD 요소도 같이 반영
     }
