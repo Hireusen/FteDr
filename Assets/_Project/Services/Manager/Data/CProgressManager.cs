@@ -49,7 +49,6 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
         switch (gearType)
         {
             case EDataType.FuelTank: return _progress.fuelTankLevel;
-            case EDataType.Radar: return _progress.radarLevel;
             case EDataType.Thruster: return _progress.thrusterLevel;
             case EDataType.GrabTool: return _progress.grabToolLevel;
             case EDataType.Bag: return _progress.bagLevel;
@@ -77,7 +76,6 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
         switch (gearType)
         {
             case EDataType.FuelTank: ++_progress.fuelTankLevel; break;
-            case EDataType.Radar: ++_progress.radarLevel; break;
             case EDataType.Thruster: ++_progress.thrusterLevel; break;
             case EDataType.GrabTool: ++_progress.grabToolLevel; break;
             case EDataType.Bag: ++_progress.bagLevel; break;
@@ -99,7 +97,6 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
         switch (gearType)
         {
             case EDataType.FuelTank: return UData.FuelTank();
-            case EDataType.Radar: return UData.Radar();
             case EDataType.Thruster: return UData.Thruster();
             case EDataType.GrabTool: return UData.GrabTool();
             case EDataType.Bag: return UData.Bag();

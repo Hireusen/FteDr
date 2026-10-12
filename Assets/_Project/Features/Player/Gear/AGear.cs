@@ -34,10 +34,6 @@ public abstract class AGear : AFrameable
 
         _isActive = false;
         OnDeactivated();
-
-        int grabLevel = CProgressManager.Ins.GetGearLevel(EDataType.GrabTool);
-        var so = UData.GrabTool();
-        float grabSpeed = so.GrabSpeed(grabLevel);
     }
     #endregion
 
@@ -46,6 +42,12 @@ public abstract class AGear : AFrameable
     /// 현재 장비 레벨 입니다.
     /// </summary>
     protected int Level { get; private set; }
+
+    /// <summary>
+    /// 이 장비가 상점 업그레이드 대상인지 여부입니다.
+    /// False면 진행도에서 레벨을 조회하지 않습니다. (고정 스펙 장비 ─ 레이더 등)
+    /// </summary>
+    protected virtual bool IsUpgradeable => true;
 
     /// <summary>
     /// 기준 트랜스폼입니다.
@@ -71,7 +73,11 @@ public abstract class AGear : AFrameable
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
     private void RefreshLevel()
     {
-        Level = UPlayer.GetGearLevel(GearType);
+        // 고정 스펙 장비는 진행도에 레벨이 없으므로 조회를 건너뜁니다.
+        if (IsUpgradeable)
+        {
+            Level = UPlayer.GetGearLevel(GearType);
+        }
         OnStatsRefreshed();
     }
 

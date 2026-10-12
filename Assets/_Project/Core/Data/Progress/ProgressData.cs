@@ -13,7 +13,6 @@ public class ProgressData
     #region ─────────────────────────▶ 업그레이드 레벨 ◀─────────────────────────
     // 각 장비의 현재 레벨
     public int fuelTankLevel = 1;
-    public int radarLevel = 1;
     public int bagLevel = 1;
     public int thrusterLevel = 1;
     public int grabToolLevel = 1;

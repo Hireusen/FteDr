@@ -4,6 +4,7 @@
 /// 케이스만 추가하면 됩니다.
 /// 스테이지 해금(구 잠수함 로우)은 골드 구매가 아니라 특수 수집품 연구로 바뀌어 상점에서 빠졌습니다.
 /// 해당 규칙은 UStageResearch와 연구 창(CResearchController)이 담당합니다.
+/// 레이더도 업그레이드가 폐지되고 고정 스펙(CRadarSO)으로 바뀌어 상점에서 빠졌습니다.
 /// </summary>
 public static class UShopGearData
 {
@@ -17,7 +18,6 @@ public static class UShopGearData
         {
             case EDataType.FuelTank: return UData.FuelTank();
             case EDataType.Thruster: return UData.Thruster();
-            case EDataType.Radar: return UData.Radar();
             case EDataType.GrabTool: return UData.GrabTool();
             case EDataType.Bag: return UData.Bag();
             default: return null;
@@ -54,8 +54,6 @@ public static class UShopGearData
                 return $"칸 수: {bag.Capacity(level)} / 최대 무게: {bag.MaxWeight(level):0}KG";
             case CThrusterSO thruster:
                 return $"최고 속도: {thruster.MaxSpeed(level):0.#}";
-            case CRadarSO radar:
-                return $"감지 거리: {radar.MaxDetectDistance(level):0}M";
             case CGrabToolSO grabTool:
                 return $"사거리: {grabTool.ReachDistance(level):0.#}M";
             default:
