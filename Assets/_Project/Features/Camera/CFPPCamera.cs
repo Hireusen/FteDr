@@ -1,22 +1,27 @@
 ﻿using Cinemachine;
 using UnityEngine;
 
-/// <summary>
-/// 1인칭 카메라입니다.
-/// </summary>
+// 1인칭 카메라
 public class CFPPCamera : AFrameable, ILateUpdateFrameable
 {
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
     [SerializeField] private LayerMask _groundLayer;
+
     [Header("필수 연결")]
     [SerializeField] private CPlayerController _playerController;
-    [Tooltip("컨트롤러가 회전을 넣는 눈높이 앵커. 평상시 카메라가 이 트랜스폼의 위치·회전을 복사")]
+    [Tooltip("평상시 카메라가 위치/회전을 동기화할 눈높이 앵커")]
     [SerializeField] private Transform _cameraRoot;
     [SerializeField] private CinemachineVirtualCamera _camera;
 
     [Header("회전 감도")]
-    [Tooltip("옵션 매니저를 아직 쓸 수 없을 때(부팅 전 등) 사용되는 폴백값 (Sensitivity 프로퍼티 참고)")]
+    [Tooltip("옵션 매니저 로드 전 기본 감도")]
     [SerializeField] private float _lookSensitivity = K.CAMERA_SENSITIVITY_BASE;
+
+    [Header("카메라 스무딩")]
+    [Tooltip("부드러운 카메라 회전 적용 여부")]
+    [SerializeField] private bool _useSmoothLook = true;
+    [Tooltip("스무딩 지연 시간")]
+    [SerializeField] private float _smoothLookTime = 0.05f;
 
     [Header("수중 회전 제한")]
     [SerializeField] private float _swimPitchMin = -85f;
@@ -27,17 +32,17 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     [SerializeField] private float _groundPitchMax = 60f;
 
     [Header("집게 중 둘러보기 제한(쏜 시점 기준 상대각)")]
-    [Tooltip("집게 사용 중 좌우로 둘러볼 수 있는 최대 각(±)")]
+    [Tooltip("집게 사용 중 좌우 최대 시야각(±)")]
     [SerializeField] private float _grabYawRange = 60f;
-    [Tooltip("집게 사용 중 상하로 둘러볼 수 있는 최대 각(±)")]
+    [Tooltip("집게 사용 중 상하 최대 시야각(±)")]
     [SerializeField] private float _grabPitchRange = 50f;
-    [Tooltip("집게 종료 후 원래(몸) 시점으로 되돌아오는 속도. 클수록 빨리 복귀")]
+    [Tooltip("집게 종료 시 카메라 복귀 속도")]
     [SerializeField] private float _grabReturnSharpness = 10f;
-    [Tooltip("복귀가 이 각도(도) 이내로 붙으면 완료 처리")]
+    [Tooltip("카메라 복귀 완료 판정 허용 오차 각도")]
     [SerializeField] private float _grabReturnDoneAngle = 0.5f;
 
     [Header("연결")]
-    [Tooltip("집게 컴포넌트")]
+    [Tooltip("집게 컴포넌트 참조")]
     [SerializeField] private CNewGrab _grabTool;
 
     [Header("디버그 옵션")]
@@ -46,27 +51,31 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private Transform _camTransform;
-
     private Vector2 _currentLookInput;
+
+    // 현재 및 목표 카메라 회전 각도
     private float _yaw;
     private float _pitch;
+    private float _targetYaw;
+    private float _targetPitch;
 
-    // 집게 사용 중 여부와, 진입 시점의 기준 각도(이 각을 중심으로 둘러봄)
+    // 스무딩 연산용 현재 속도
+    private float _yawVelocity;
+    private float _pitchVelocity;
+
+    // 집게 시점 제어 상태
     private bool _grabLook;
     private float _grabBaseYaw;
     private float _grabBasePitch;
-
-    // 집게 종료 후 몸 시점으로 되돌아오는 중인지 여부
     private bool _grabReturning;
 
+    // 외부 시점 제어 여부
     private bool _controlSuspended;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public ELateUpdatePriority LateUpdatePriority => ELateUpdatePriority.Lv5;
-
     public float LookSensitivity => Sensitivity;
-
     public bool IsControlling => !_controlSuspended;
 
     public bool IsCameraRotationLock
@@ -75,7 +84,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         set { _isCameraRotationLock = value; }
     }
 
-    // 설정창에서 바꾼 감도를 매 프레임 그대로 읽어온다. (옵션 매니저가 아직 없으면 인스펙터 폴백값)
+    // 현재 적용할 카메라 회전 감도
     private float Sensitivity
     {
         get
@@ -89,13 +98,11 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     {
         if (_playerController == null || _cameraRoot == null || _camTransform == null) return;
 
-        // 연출 등 외부가 카메라를 제어 중이면 손대지 않음 (시네머신과 충돌 방지)
         if (_controlSuspended) return;
 
-        // 집게 상태에 따라 둘러보기 모드 진입/해제 판정
         UpdateGrabLook();
 
-        // 게임플레이 입력이 아닐 때(메뉴 등)는 회전 입력을 버리고 위치만 유지
+        // 비 게임플레이 상태 시 입력 무시 및 위치 고정
         if (!CInputManager.Ins.IsGameplayInput)
         {
             _currentLookInput = Vector2.zero;
@@ -119,19 +126,18 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         _currentLookInput = Vector2.zero;
     }
 
-    /// <summary>
-    /// 시선을 지정한 좌우 각도로 즉시 맞춥니다. (스폰 직후처럼 바라보는 방향을 강제해야 할 때)
-    /// 시선 각도를 실제로 들고 있는 건 이 카메라이므로, 컨트롤러 쪽만 바꾸면
-    /// 다음 LateUpdate에 다시 덮어써집니다. 방향을 강제하려면 반드시 이 메서드를 거쳐야 합니다.
-    /// </summary>
-    /// <param name="yaw">맞출 좌우 각도(월드 기준 Y)</param>
+    // 지정한 각도로 시선 즉시 동기화
     public void SyncLookYaw(float yaw)
     {
         _yaw = yaw;
+        _targetYaw = yaw;
         _pitch = 0f;
+        _targetPitch = 0f;
+
+        _yawVelocity = 0f;
+        _pitchVelocity = 0f;
         _currentLookInput = Vector2.zero;
 
-        // 집게 둘러보기 중이었다면 옛 기준각으로 되돌아가지 않도록 함께 정리한다.
         _grabLook = false;
         _grabReturning = false;
         _grabBaseYaw = yaw;
@@ -141,99 +147,111 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         if (_camTransform != null && _cameraRoot != null) SnapToRoot();
     }
 
-    /// <summary>
-    /// 카메라 제어권을 외부(시네머신 연출 등)에 넘기거나 되돌립니다.
-    /// </summary>
+    // 외부 제어 상태 전환 및 시점 재동기화
     public void SetControlSuspended(bool controlSuspended)
     {
         if (_controlSuspended == controlSuspended) return;
 
         _controlSuspended = controlSuspended;
 
-        // 스크립트 제어로 복귀할 때, 연출이 옮겨놓은 카메라 방향으로 각도 재동기화
         if (!controlSuspended && _camTransform != null)
         {
             Vector3 e = _camTransform.eulerAngles;
             _yaw = e.y;
+            _targetYaw = e.y;
             _pitch = NormalizePitch(e.x);
+            _targetPitch = _pitch;
+
+            _yawVelocity = 0f;
+            _pitchVelocity = 0f;
             _currentLookInput = Vector2.zero;
         }
     }
     #endregion
 
     #region ─────────────────────────▶ 내부 메서드 ◀─────────────────────────
-    /// <summary>
-    /// 평상시: 입력을 누적해 상태별 범위로 clamp 하고, 컨트롤러에 각도를 넘긴 뒤
-    /// 카메라는 CameraRoot(몸)를 복사합니다.
-    /// </summary>
+    // 평상시 시점 회전 및 위치 동기화 처리
     private void NormalLookTick()
     {
-        _yaw += _currentLookInput.x * Sensitivity;
+        _targetYaw += _currentLookInput.x * Sensitivity;
         float lookY = _currentLookInput.y;
-        
-        if (IsArmCrashedGround() && lookY<0)
+
+        if (IsArmCrashedGround() && lookY < 0)
         {
             lookY = 0;
         }
-        
-        _pitch -= lookY * Sensitivity;
+
+        _targetPitch -= lookY * Sensitivity;
 
         bool swimming = _playerController.CurrentState == EPlayerState.Swimming;
         float min = swimming ? _swimPitchMin : _groundPitchMin;
         float max = swimming ? _swimPitchMax : _groundPitchMax;
-        _pitch = Mathf.Clamp(_pitch, min, max);
+        _targetPitch = Mathf.Clamp(_targetPitch, min, max);
+
+        if (_useSmoothLook)
+        {
+            _yaw = Mathf.SmoothDampAngle(_yaw, _targetYaw, ref _yawVelocity, _smoothLookTime);
+            _pitch = Mathf.SmoothDampAngle(_pitch, _targetPitch, ref _pitchVelocity, _smoothLookTime);
+        }
+        else
+        {
+            _yaw = _targetYaw;
+            _pitch = _targetPitch;
+        }
 
         _playerController.SetLookAngles(_yaw, _pitch);
-
         SnapToRoot();
     }
 
-    /// <summary>
-    /// 집게 중: 컨트롤러에 각도를 넘기지 않아 몸은 고정. 카메라만 쏜 시점(_grabBase*)을
-    /// 중심으로 상대 범위 내에서 상하좌우 자유 회전합니다.
-    /// </summary>
+    // 집게 사용 중 상태의 상대적 시점 회전 처리
     private void GrabLookTick()
     {
-        _yaw += _currentLookInput.x * Sensitivity;
-        _pitch -= _currentLookInput.y * Sensitivity;
+        _targetYaw += _currentLookInput.x * Sensitivity;
+        _targetPitch -= _currentLookInput.y * Sensitivity;
 
-        // 쏜 시점을 중심으로 한 상대 각도 제한
-        _yaw = _grabBaseYaw + Mathf.Clamp(_yaw - _grabBaseYaw, -_grabYawRange, _grabYawRange);
-        _pitch = _grabBasePitch + Mathf.Clamp(_pitch - _grabBasePitch, -_grabPitchRange, _grabPitchRange);
+        _targetYaw = _grabBaseYaw + Mathf.Clamp(_targetYaw - _grabBaseYaw, -_grabYawRange, _grabYawRange);
+        _targetPitch = _grabBasePitch + Mathf.Clamp(_targetPitch - _grabBasePitch, -_grabPitchRange, _grabPitchRange);
 
-        // 위치는 여전히 몸(CameraRoot)에 붙이되, 회전만 카메라 자체 각도로
+        if (_useSmoothLook)
+        {
+            _yaw = Mathf.SmoothDampAngle(_yaw, _targetYaw, ref _yawVelocity, _smoothLookTime);
+            _pitch = Mathf.SmoothDampAngle(_pitch, _targetPitch, ref _pitchVelocity, _smoothLookTime);
+        }
+        else
+        {
+            _yaw = _targetYaw;
+            _pitch = _targetPitch;
+        }
+
         _camTransform.SetPositionAndRotation(_cameraRoot.position, Quaternion.Euler(_pitch, _yaw, 0f));
     }
 
-    /// <summary>
-    /// 집게 상태를 보고 둘러보기 모드 진입/해제를 처리합니다.
-    /// 진입 순간의 현재 각도를 기준(_grabBase*)으로 저장합니다.
-    /// </summary>
+    // 집게 사용 상태에 따른 시점 모드 전환 판정
     private void UpdateGrabLook()
     {
-        bool grabbing = _grabTool != null && _grabTool.grabStatus != CNewGrab.EGrabStatus.Wait && _grabTool.grabStatus != CNewGrab.EGrabStatus.ReadyShoot && _grabTool.grabStatus!=CNewGrab.EGrabStatus.WaittoReady;
+        bool grabbing = _grabTool != null && _grabTool.grabStatus != CNewGrab.EGrabStatus.Wait && _grabTool.grabStatus != CNewGrab.EGrabStatus.ReadyShoot && _grabTool.grabStatus != CNewGrab.EGrabStatus.WaittoReady;
 
         if (grabbing && !_grabLook)
         {
-            // 진입: 현재 시선을 중심으로 둘러보기 시작
             _grabBaseYaw = _yaw;
             _grabBasePitch = _pitch;
+
+            _targetYaw = _yaw;
+            _targetPitch = _pitch;
+            _yawVelocity = 0f;
+            _pitchVelocity = 0f;
+
             _grabLook = true;
             _grabReturning = false;
         }
         else if (!grabbing && _grabLook)
         {
-            // 해제: 즉시 끊지 않고, 몸 시점으로 부드럽게 되돌아오는 복귀 단계로 진입
             _grabLook = false;
             _grabReturning = true;
         }
     }
 
-    /// <summary>
-    /// 집게 종료 후, 카메라 회전을 현재 각도에서 몸(CameraRoot) 각도로 Slerp 해 부드럽게 복귀합니다.
-    /// 충분히 붙으면 _yaw/_pitch 를 몸 각도로 확정하고 평상시 모드로 넘깁니다.
-    /// 복귀 중에는 컨트롤러에 각도를 넘기지 않아 몸은 고정된 채 카메라만 따라옵니다.
-    /// </summary>
+    // 집게 사용 종료 후 원래 시점으로의 복귀 보간 처리
     private void GrabReturnTick()
     {
         Quaternion current = Quaternion.Euler(_pitch, _yaw, 0f);
@@ -244,16 +262,24 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
         _camTransform.SetPositionAndRotation(_cameraRoot.position, next);
 
-        // 카메라가 쓰는 각도도 보간 결과로 갱신 (다음 프레임 기준)
         Vector3 e = next.eulerAngles;
         _yaw = e.y;
         _pitch = NormalizePitch(e.x);
 
-        // 충분히 붙으면 복귀 완료 → 몸 각도로 확정하고 평상시 제어로 전환
+        _targetYaw = _yaw;
+        _targetPitch = _pitch;
+
+        // 허용 오차 내 진입 시 복귀 완료 처리
         if (Quaternion.Angle(next, targetRot) <= _grabReturnDoneAngle)
         {
             _yaw = _cameraRoot.eulerAngles.y;
+            _targetYaw = _yaw;
             _pitch = NormalizePitch(_cameraRoot.eulerAngles.x);
+            _targetPitch = _pitch;
+
+            _yawVelocity = 0f;
+            _pitchVelocity = 0f;
+
             _grabReturning = false;
         }
     }
@@ -273,7 +299,7 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     {
         bool result = true;
         int mask = ~LayerMask.GetMask("Player");
-        result = Physics.CheckSphere(_cameraRoot.transform.position, 0.1f,mask);
+        result = Physics.CheckSphere(_cameraRoot.transform.position, 0.1f, mask);
 
         return false;
     }
@@ -301,10 +327,9 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
     private void Start()
     {
-
         if (_playerController == null || _cameraRoot == null || _camera == null)
         {
-            UDebug.Log(true, "필수 참조 확인", LogType.Warning);
+            UDebug.Log(true, "필수 참조 누락", LogType.Warning);
             enabled = false;
             return;
         }
@@ -312,7 +337,9 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
         _camTransform = _camera.transform;
 
         _yaw = _playerController.transform.eulerAngles.y;
+        _targetYaw = _yaw;
         _pitch = 0f;
+        _targetPitch = 0f;
 
         SnapToRoot();
     }
