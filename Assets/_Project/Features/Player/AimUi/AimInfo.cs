@@ -9,7 +9,14 @@ public class AimInfo : AFrameable, IUpdateFrameable
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private Vector3 _pos;
     #endregion
-
+    public void ActiveTooltip()
+    {
+        _tooltip.SetActive(true);
+    }
+    public void InActiveTooltip()
+    {
+        _tooltip.SetActive(false);
+    }
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public void ShowTooltip(CCollectible currentCollectible)
     {
