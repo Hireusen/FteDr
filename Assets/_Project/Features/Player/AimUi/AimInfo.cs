@@ -8,6 +8,15 @@ public class AimInfo : AFrameable
     [SerializeField] private GameObject _tooltip;
     private Vector3 _pos;
 
+    public void ActiveTooltip()
+    {
+        _tooltip.SetActive(true);
+    }
+    public void InActiveTooltip()
+    {
+        _tooltip.SetActive(false);
+    }
+
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     public void ShowTooltip(CCollectible currentCollectible)
     {

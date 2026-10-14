@@ -42,6 +42,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     public bool IsAimMode { get; private set; } = false;
     public void AimModeOn() // 조준하고 있는 상태
     {
+        _aimInfo.ActiveTooltip();
         _background.gameObject.SetActive(true);
         _aimImg.gameObject.SetActive(false);
         _bigAimShow.gameObject.SetActive(true);
@@ -52,6 +53,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     }
     public void WaitModeOn() // 평소 상태
     {
+        _aimInfo.InActiveTooltip();
         _background.gameObject.SetActive(false);
         _aimImg.gameObject.SetActive(true);
         
