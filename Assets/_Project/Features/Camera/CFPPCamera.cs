@@ -100,6 +100,20 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
 
         if (_controlSuspended) return;
 
+        // 일시정지(Time.timeScale = 0) 중에는 deltaTime이 0이 되고, 그 프레임에 SmoothDamp를 돌리면
+        // 내부의 오버슈트 보정이 속도를 0으로 나눠 NaN을 만든다. 프레임 매니저는 timeScale과 무관하게
+        // 돌기 때문에 여기서 직접 걸러낸다.
+        // 이때 들어와 있던 입력은 버린다. 남겨두면 정지가 풀리는 첫 프레임에 한꺼번에 적용되어 시점이 튄다.
+        if (Time.deltaTime <= 0f)
+        {
+            _currentLookInput = Vector2.zero;
+            return;
+        }
+
+        // 어떤 경로로든 각도나 속도가 NaN이 되면 다음 프레임의 입력으로 다시 들어가 영구히 남으므로,
+        // 계산을 시작하기 전에 되돌려 놓는다.
+        RecoverLookIfBroken();
+
         UpdateGrabLook();
 
         // 비 게임플레이 상태 시 입력 무시 및 위치 고정
@@ -293,6 +307,33 @@ public class CFPPCamera : AFrameable, ILateUpdateFrameable
     {
         if (euler > 180f) euler -= 360f;
         return euler;
+    }
+
+    // 시선 각도와 스무딩 속도가 NaN/Infinity가 됐으면 성한 값으로 되돌린다.
+    // NaN은 SmoothDamp에 다시 들어가면 그대로 NaN을 내놓기 때문에, 한 번 들어오면 저절로 낫지 않는다.
+    // 속도만 0으로 돌려도 각도가 NaN이면 복구되지 않으므로 둘 다 본다.
+    private void RecoverLookIfBroken()
+    {
+        if (!IsFinite(_yawVelocity)) _yawVelocity = 0f;
+        if (!IsFinite(_pitchVelocity)) _pitchVelocity = 0f;
+
+        // 목표 각도를 먼저 세운다. 현재 각도가 성하면 그 값을, 둘 다 망가졌으면 몸이 보는 방향을 기준으로 삼는다.
+        if (!IsFinite(_targetYaw))
+        {
+            _targetYaw = IsFinite(_yaw) ? _yaw : _playerController.transform.eulerAngles.y;
+        }
+        if (!IsFinite(_targetPitch))
+        {
+            _targetPitch = IsFinite(_pitch) ? _pitch : 0f;
+        }
+
+        if (!IsFinite(_yaw)) _yaw = _targetYaw;
+        if (!IsFinite(_pitch)) _pitch = _targetPitch;
+    }
+
+    private static bool IsFinite(float value)
+    {
+        return !float.IsNaN(value) && !float.IsInfinity(value);
     }
 
     private bool IsArmCrashedGround()
