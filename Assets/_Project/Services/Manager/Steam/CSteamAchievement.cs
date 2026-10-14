@@ -63,6 +63,7 @@ public sealed class CSteamAchievement
         // GetAppID()는 Init 성공 이후에만 유효하다.
         _gameId = new CGameID(SteamUtils.GetAppID()).m_GameID;
 
+
         // Init 직후 스팀이 현재 사용자의 통계를 자동으로 보내준다. 수동 요청 API는 SDK 1.64에서 제거되었다.
         _onUserStatsReceived = Callback<UserStatsReceived_t>.Create(OnUserStatsReceived);
         _onAchievementStored = Callback<UserAchievementStored_t>.Create(OnAchievementStored);
@@ -75,7 +76,14 @@ public sealed class CSteamAchievement
         CEventBus<OnItemsSold>.Subscribe(HandleItemsSold);
 
         _isInitialized = true;
-        UDebug.Print("도전과제 모듈을 초기화했습니다. 통계 수신을 대기합니다.");
+
+        // SDK 1.61+부터 스팀 클라이언트가 게임 실행 전에 통계·도전과제를 미리 로드해둔다.
+        // 그래서 요청이 발생하지 않고 UserStatsReceived_t도 오지 않는 것이 정상이다.
+        // (수동 요청 API인 RequestCurrentStats는 SDK에서 제거되었다)
+        // 콜백만 기다리면 영영 준비되지 않으므로, Init 성공 시점에 사용 가능으로 본다.
+        _isStatsReady = true;
+
+        UDebug.Print("도전과제 모듈을 초기화했습니다. 도전과제를 사용할 수 있습니다.");
 #endif
     }
 
@@ -154,7 +162,10 @@ public sealed class CSteamAchievement
         // 중복 StoreStats(네트워크 쓰기)와 팝업 재표시를 막는다.
         if (!SteamUserStats.GetAchievement(apiName, out bool achieved))
         {
-            UDebug.Print($"도전과제({apiName})를 찾을 수 없습니다. API Name이 파트너 사이트와 일치하는지 확인하세요.", LogType.Error);
+            // 파트너 사이트에 미게시이거나 API Name이 틀린 경우다.
+            // 스키마가 뒤늦게 내려올 가능성에 대비해 보류 큐에 남겨 둔다.
+            _pendingUnlocks.Add(apiName);
+            UDebug.Print($"도전과제({apiName})를 찾을 수 없습니다. 파트너 사이트에 게시했는지, API Name이 일치하는지 확인하세요.", LogType.Error);
             return;
         }
         if (achieved) return;
@@ -262,8 +273,10 @@ public sealed class CSteamAchievement
             return;
         }
 
+        // 보통은 오지 않지만, 스키마 갱신 등으로 뒤늦게 도착하는 경우가 있다.
+        // 그때 보류분이 남아 있으면 여기서 처리한다.
         _isStatsReady = true;
-        UDebug.Print("통계를 수신했습니다. 도전과제를 사용할 수 있습니다.");
+        UDebug.Print("통계를 수신했습니다.");
 
         FlushPending();
     }
