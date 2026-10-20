@@ -21,6 +21,21 @@ public sealed class CRadar : AGear, IUpdateFrameable
 
     // 기준점이 플레이어 루트에서 이만큼 떨어져 있으면 측정이 틀어진 것으로 보고 경고합니다.
     private const float ORIGIN_OFFSET_TOLERANCE = 5f;
+
+    // 경계에서 들락날락할 때 "첫 진입 핑"이 연속으로 터지지 않도록 주는 여유입니다.
+    // 한 번 잡은 뒤에는 감지 거리의 이 배율만큼 멀어져야 놓친 것으로 판정합니다.
+    private const float BOUNDARY_HYSTERESIS = 1.05f;
+
+    // 스테이지별 감지 거리를 읽어올 스폰 SO의 ID입니다. (EScene.Stage_1부터 순서대로)
+    private static readonly string[] STAGE_SPAWNER_IDS =
+    {
+        Id.StageSpawner_1,
+        Id.StageSpawner_2,
+        Id.StageSpawner_3,
+        Id.StageSpawner_4,
+        Id.StageSpawner_5,
+        Id.StageSpawner_6,
+    };
     #endregion
 
     #region ─────────────────────────▶ 인스펙터 ◀─────────────────────────
@@ -37,6 +52,10 @@ public sealed class CRadar : AGear, IUpdateFrameable
     [SerializeField, Min(0.1f)] private float _targetRefreshInterval = 1f;
     [Tooltip("재생할 핑 사운드 ID입니다.")]
     [SerializeField] private string _pingSoundId = Id.SFX_Sonar_Ping;
+
+    [Header("기즈모")]
+    [Tooltip("켜면 이 오브젝트를 선택하지 않아도 감지 범위 기즈모를 항상 표시합니다.")]
+    [SerializeField] private bool _drawGizmoAlways = false;
     #endregion
 
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
@@ -47,6 +66,7 @@ public sealed class CRadar : AGear, IUpdateFrameable
 
     private CCollectible[] _cache;    // 수집품 목록 캐시 (주기적으로 갱신)
     private float _nextRefreshTime;   // 다음 캐시 갱신 시점
+    private bool _hadTarget;          // 지난 프레임에 감지 범위 안에 대상이 있었는지 (첫 진입 판정용)
 
     // 시작 시 잠수함 안이라고 가정합니다. (CSubmarineRadarHud와 동일한 규칙)
     // 센서가 "밖으로 나감"을 알려주기 전까지는 울리지 않습니다.
@@ -68,6 +88,7 @@ public sealed class CRadar : AGear, IUpdateFrameable
         if (_isInsideSubmarine)
         {
             _phase = 1f;
+            _hadTarget = false;
             return;
         }
 
@@ -75,6 +96,12 @@ public sealed class CRadar : AGear, IUpdateFrameable
         // 주기 중간에 가까워지면 진행률이 그만큼 빨리 차서 다음 핑이 앞당겨집니다.
         float interval = ComputeInterval(out bool hasTarget);
         if (interval <= 0f) return; // 방어
+
+        // 대상이 감지 범위에 처음 들어온 순간에는 주기를 기다리지 않고 바로 첫 핑을 울립니다.
+        // 그냥 두면 경계에서의 주기(최대 _farInterval)만큼 흘려보내므로, 헤엄쳐 들어가는 동안
+        // 경계를 한참 지난 뒤에야 소리가 나기 시작합니다. 경계를 또렷한 "발견 지점"으로 만듭니다.
+        if (hasTarget && !_hadTarget) _phase = 1f;
+        _hadTarget = hasTarget;
 
         _phase += Time.deltaTime / interval;
         if (_phase < 1f) return;
@@ -116,7 +143,11 @@ public sealed class CRadar : AGear, IUpdateFrameable
         if (_cache == null) return false;
 
         Vector3 origin = Origin.position;
-        float maxSqr = _maxDetectDistance * _maxDetectDistance;
+
+        // 경계에 딱 걸쳐 있으면 감지가 매 프레임 켜졌다 꺼지면서 "첫 진입 핑"이 연달아 터집니다.
+        // 한 번 잡은 뒤에는 조금 더 멀어져야 놓친 것으로 보도록 여유를 줍니다.
+        float effectiveMax = _hadTarget ? _maxDetectDistance * BOUNDARY_HYSTERESIS : _maxDetectDistance;
+        float maxSqr = effectiveMax * effectiveMax;
         float bestSqr = float.PositiveInfinity;
         bool found = false;
 
@@ -183,6 +214,13 @@ public sealed class CRadar : AGear, IUpdateFrameable
         _farInterval = so.FarScanInterval;
         _nearInterval = so.NearScanInterval;
 
+        // 현재 스테이지에 감지 거리가 지정되어 있으면 그 값을 씁니다.
+        // 지정하지 않은(0 이하) 스테이지는 위에서 읽은 RadarSO의 기본 감지 거리를 그대로 유지합니다.
+        if (TryGetStageDetectDistance(out float stageDistance))
+        {
+            _maxDetectDistance = stageDistance;
+        }
+
         // SO 값 미설정 등으로 유효하지 않은 값 방어.
         // 하나라도 0 이하면 레이더가 영구 무음이 되므로 기본 스펙으로 되돌립니다.
         if (_maxDetectDistance <= 0f || _farInterval <= 0f || _nearInterval <= 0f)
@@ -192,13 +230,27 @@ public sealed class CRadar : AGear, IUpdateFrameable
         }
     }
 
+    // 스테이지가 바뀌면 그 스테이지의 감지 거리를 다시 읽습니다.
+    private void SceneLoadEndHandler(OnSceneLoadEnd ctx)
+    {
+        OnStatsRefreshed();
+
+        // 이전 씬의 수집품 목록은 버립니다.
+        _cache = null;
+        _hadTarget = false;
+    }
+
     // 잠수함 안/밖 상태를 받아둡니다. 안에 있는 동안에는 핑을 울리지 않습니다.
     private void SubmarineAreaHandler(OnPlayerSubmarineAreaChanged ctx)
     {
         _isInsideSubmarine = ctx.isInsideSubmarine;
 
         // 밖으로 나온 순간에는 목록을 새로 수집해 즉시 반응하게 합니다.
-        if (!_isInsideSubmarine) _cache = null;
+        if (!_isInsideSubmarine)
+        {
+            _cache = null;
+            _hadTarget = false;
+        }
     }
 
     // 잠수함 안/밖을 알려줄 센서가 실제로 붙어 있는지 확인합니다.
@@ -230,6 +282,22 @@ public sealed class CRadar : AGear, IUpdateFrameable
                      LogType.Warning, gameObject);
     }
 
+    // 현재 스테이지의 스폰 SO에서 감지 거리를 읽어옵니다.
+    // 게임플레이 씬이 아니거나 스테이지가 값을 지정하지 않았으면 false를 돌려줍니다.
+    private bool TryGetStageDetectDistance(out float distance)
+    {
+        distance = 0f;
+
+        int index = (int)UScene.Current - (int)EScene.Stage_1;
+        if (!UArray.InBounds(STAGE_SPAWNER_IDS, index)) return false; // 스테이지 씬이 아님
+
+        CStageSpawnSO so = UData.Get<CStageSpawnSO>(STAGE_SPAWNER_IDS[index]);
+        if (so == null) return false;
+
+        distance = so.RadarDetectDistance;
+        return distance > 0f;
+    }
+
     // SO를 신뢰할 수 없을 때 쓰는 기본 스펙입니다.
     private void ApplyFallbackStats()
     {
@@ -243,6 +311,7 @@ public sealed class CRadar : AGear, IUpdateFrameable
     {
         _phase = 1f;
         _cache = null;
+        _hadTarget = false;
     }
     #endregion
 
@@ -252,6 +321,7 @@ public sealed class CRadar : AGear, IUpdateFrameable
         base.OnEnable(); // 프레임 등록 + 이벤트 구독 + 스탯 갱신
 
         CEventBus<OnPlayerSubmarineAreaChanged>.Subscribe(SubmarineAreaHandler);
+        CEventBus<OnSceneLoadEnd>.Subscribe(SceneLoadEndHandler);
 
         ValidateOrigin();
         ValidateSubmarineSensor();
@@ -259,6 +329,7 @@ public sealed class CRadar : AGear, IUpdateFrameable
         // 활성화 직후 즉시 첫 핑을 울리고 목록을 새로 수집합니다.
         _phase = 1f;
         _cache = null;
+        _hadTarget = false;
     }
 
     protected override void OnDisable()
@@ -266,6 +337,166 @@ public sealed class CRadar : AGear, IUpdateFrameable
         base.OnDisable();
 
         CEventBus<OnPlayerSubmarineAreaChanged>.Unsubscribe(SubmarineAreaHandler);
+        CEventBus<OnSceneLoadEnd>.Unsubscribe(SceneLoadEndHandler);
     }
+    #endregion
+
+    #region ─────────────────────────▶ 기즈모 ◀─────────────────────────
+#if UNITY_EDITOR
+    // 기즈모용 캐시. 에디트 모드에서는 런타임 스탯이 비어 있어 SO를 직접 읽어옵니다.
+    // CDatabaseManager.Ins를 쓰면 에디터 씬에 싱글톤 오브젝트가 생겨버리므로 Resources에서 직접 찾습니다.
+    private CRadarSO _gizmoSo;
+
+    private void OnDrawGizmos()
+    {
+        if (_drawGizmoAlways) DrawRadarGizmo();
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!_drawGizmoAlways) DrawRadarGizmo();
+    }
+
+    private void DrawRadarGizmo()
+    {
+        if (!TryGetGizmoStats(out float maxDistance, out float nearInterval, out float farInterval)) return;
+
+        Vector3 center = Origin.position;
+
+        // 감지 한계: 수평 원 + 와이어 스피어. 원은 위에서 볼 때, 스피어는 입체감을 주기 위함입니다.
+        Gizmos.color = new Color(0.2f, 0.9f, 1f, 0.9f);
+        DrawWireCircle(center, maxDistance);
+        Gizmos.color = new Color(0.2f, 0.9f, 1f, 0.25f);
+        Gizmos.DrawWireSphere(center, maxDistance);
+
+        // 핑 주기 그라디언트. 25% 간격의 고리마다 그 거리에서의 실제 주기를 적어줍니다.
+        // "어디서부터 빨라지는지"를 눈으로 확인하는 것이 이 기즈모의 핵심입니다.
+        for (int i = 1; i <= 4; ++i)
+        {
+            float f = i * 0.25f;
+            float ringDistance = maxDistance * f;
+            float interval = EvaluateInterval(f, nearInterval, farInterval);
+
+            // 가까울수록(빠를수록) 따뜻한 색, 멀수록 차가운 색
+            Gizmos.color = Color.Lerp(new Color(1f, 0.35f, 0.1f, 0.8f), new Color(0.2f, 0.6f, 1f, 0.5f), f);
+            DrawWireCircle(center, ringDistance);
+
+            UnityEditor.Handles.color = Gizmos.color;
+            UnityEditor.Handles.Label(center + new Vector3(0f, 0f, ringDistance), $"{ringDistance:0.#}m / {interval:0.00}초");
+        }
+
+        // 실제로 탐지 중인 특수 수집품까지 선을 그어 측정 대상과 거리를 확인합니다.
+        // TryGetNearestDistance는 캐시를 갱신하는 부수효과가 있어, 기즈모에서는 쓰지 않습니다.
+        CCollectible target = Application.isPlaying ? FindNearestSpecial() : null;
+        if (target != null)
+        {
+            float targetDistance = Vector3.Distance(center, target.transform.position);
+            float t = maxDistance > 0f ? Mathf.Clamp01(targetDistance / maxDistance) : 1f;
+
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(center, target.transform.position);
+            Gizmos.DrawWireSphere(target.transform.position, 1f);
+
+            UnityEditor.Handles.color = Color.yellow;
+            UnityEditor.Handles.Label(target.transform.position + Vector3.up * 1.5f,
+                $"{target.Data.name}\n{targetDistance:0.#}m / {EvaluateInterval(t, nearInterval, farInterval):0.00}초");
+        }
+
+        // 요약 라벨.
+        // 에디트 모드에서는 스테이지별 값을 알 수 없으므로(UScene.Current가 런타임 매니저를 깨움)
+        // RadarSO의 기본값을 보여주고 있다는 점을 명시합니다.
+        string source = Application.isPlaying
+            ? (_isInsideSubmarine ? " (잠수함 안 ─ 정지)" : string.Empty)
+            : " (RadarSO 기본값 ─ 스테이지별 값은 플레이 중 확인)";
+        UnityEditor.Handles.color = Color.white;
+        UnityEditor.Handles.Label(center + Vector3.up * 2f,
+            $"레이더 {maxDistance:0.#}m\n{nearInterval:0.00}초 ~ {farInterval:0.00}초{source}");
+    }
+
+    // 런타임이면 적용 중인 값을, 에디트 모드면 SO의 값을 돌려줍니다.
+    private bool TryGetGizmoStats(out float maxDistance, out float nearInterval, out float farInterval)
+    {
+        if (Application.isPlaying && _maxDetectDistance > 0f)
+        {
+            maxDistance = _maxDetectDistance;
+            nearInterval = _nearInterval;
+            farInterval = _farInterval;
+            return true;
+        }
+
+        if (_gizmoSo == null)
+        {
+            CRadarSO[] all = Resources.LoadAll<CRadarSO>(K.RESOURCE_SO_PATH);
+            for (int i = 0; i < all.Length; ++i)
+            {
+                if (all[i] != null && all[i].Id == Id.Radar)
+                {
+                    _gizmoSo = all[i];
+                    break;
+                }
+            }
+        }
+
+        if (_gizmoSo == null)
+        {
+            maxDistance = nearInterval = farInterval = 0f;
+            return false;
+        }
+
+        maxDistance = _gizmoSo.MaxDetectDistance;
+        nearInterval = _gizmoSo.NearScanInterval;
+        farInterval = _gizmoSo.FarScanInterval;
+        return maxDistance > 0f;
+    }
+
+    // 정규화 거리(0=최근접, 1=감지 한계)에서의 핑 주기를 계산합니다. ComputeInterval과 같은 식입니다.
+    private float EvaluateInterval(float normalizedDistance, float nearInterval, float farInterval)
+    {
+        float t = Mathf.Clamp01(normalizedDistance);
+        if (_proximityCurve != null) t = Mathf.Clamp01(_proximityCurve.Evaluate(t));
+
+        return Mathf.Lerp(Mathf.Min(nearInterval, farInterval), farInterval, t);
+    }
+
+    // 기즈모 표시용으로 현재 탐지 대상을 한 번 더 찾습니다. (런타임에서만 호출)
+    private CCollectible FindNearestSpecial()
+    {
+        if (_cache == null) return null;
+
+        Vector3 origin = Origin.position;
+        float bestSqr = _maxDetectDistance * _maxDetectDistance;
+        CCollectible best = null;
+
+        for (int i = 0; i < _cache.Length; ++i)
+        {
+            CCollectible collectible = _cache[i];
+            if (collectible == null) continue;
+            if (!collectible.IsSpecial) continue;
+            if (_ignoreHeld && collectible.IsHeld) continue;
+
+            float sqr = (collectible.transform.position - origin).sqrMagnitude;
+            if (sqr > bestSqr) continue;
+
+            bestSqr = sqr;
+            best = collectible;
+        }
+
+        return best;
+    }
+
+    // CCollectibleSpawner와 같은 방식의 수평 원 그리기입니다.
+    private void DrawWireCircle(Vector3 center, float radius)
+    {
+        const int SEG = 48;
+        Vector3 prev = center + new Vector3(radius, 0f, 0f);
+        for (int i = 1; i <= SEG; ++i)
+        {
+            float a = (i / (float)SEG) * Mathf.PI * 2f;
+            Vector3 next = center + new Vector3(Mathf.Cos(a) * radius, 0f, Mathf.Sin(a) * radius);
+            Gizmos.DrawLine(prev, next);
+            prev = next;
+        }
+    }
+#endif
     #endregion
 }
