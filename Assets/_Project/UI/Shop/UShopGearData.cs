@@ -49,7 +49,7 @@ public static class UShopGearData
         switch (gear)
         {
             case CFuelTankSO fuelTank:
-                return $"최대 산소량: {fuelTank.MaxFuel(level):0}";
+                return $"최대 연료량: {fuelTank.MaxFuel(level):0}";
             case CBagSO bag:
                 return $"칸 수: {bag.Capacity(level)} / 최대 무게: {bag.MaxWeight(level):0}KG";
             case CThrusterSO thruster:

@@ -15,6 +15,10 @@ public class CStageSpawnSO : ABaseSO
     [SerializeField, Min(0)] protected int _minTotal;
     [SerializeField, Min(0)] protected int _maxTotal;
 
+    [Header("레이더")]
+    [Tooltip("이 스테이지에서의 레이더 감지 거리(m)입니다. 0이면 RadarSO의 기본 감지 거리를 사용합니다.")]
+    [SerializeField, Min(0f)] protected float _radarDetectDistance = 0f;
+
     [Header("일괄 적용 (아래 값을 컨텍스트 메뉴로 모든 항목에 복사)")]
     [SerializeField, Min(0)] protected int _bulkMinCount;
     [SerializeField, Min(0)] protected int _bulkMaxCount;
@@ -23,6 +27,12 @@ public class CStageSpawnSO : ABaseSO
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
     /// <summary>이 스테이지의 스폰 항목 배열입니다.</summary>
     public IReadOnlyList<SpawnEntry> Entries => _entries;
+
+    /// <summary>
+    /// 이 스테이지에서의 레이더 감지 거리입니다.
+    /// 0 이하면 "지정하지 않음"이며, 레이더가 CRadarSO의 기본 감지 거리를 사용합니다.
+    /// </summary>
+    public float RadarDetectDistance => _radarDetectDistance;
 
     /// <summary>스테이지 총량 최소치입니다.</summary>
     public int MinTotal => _minTotal;
