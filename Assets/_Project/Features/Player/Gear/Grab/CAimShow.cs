@@ -2,9 +2,6 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// 프레임에이블 클래스의 설계 의도입니다.
-/// </summary>
 public class CAimShow : AFrameable, IUpdateFrameable
 {
     
@@ -23,7 +20,7 @@ public class CAimShow : AFrameable, IUpdateFrameable
     [SerializeField] private CFlash _flashUtility;
     #region ─────────────────────────▶ 내부 변수 ◀─────────────────────────
     private CCollectible _currentAimObject;
-    
+    private bool _visibleAim = true;
     #endregion
 
     #region ─────────────────────────▶ 공개 멤버 ◀─────────────────────────
@@ -53,7 +50,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
         //_flashUtility.FlashShow(0.3f, 0.3f);
         _flashUtility.ScreenOn(true);
         CPlayerHudController.instance.HudVisibleSet(true);
-
     }
     public void WaitModeOn() // 평소 상태
     {
@@ -69,7 +65,6 @@ public class CAimShow : AFrameable, IUpdateFrameable
         _bigAimShow.gameObject.SetActive(false);
         CPlayerHudController.instance.HudVisibleSet(false);
         _currentAimObject = null;
-
     }
     //카메라의 일정범위에 있는 물건 에임에 오면 아웃라인표시
     public void ShowOutLineInDistance()
@@ -175,12 +170,30 @@ public class CAimShow : AFrameable, IUpdateFrameable
         WaitModeOn();
 
     }
+
+    private void HandleVisibleHUD(OnInputToggleHud ctx)
+    {
+        if (UDebug.IsNull(_aimImg)) return;
+
+        _visibleAim = !_visibleAim;
+        _aimImg.enabled = _visibleAim;
+    }
     #endregion
 
     #region ─────────────────────────▶ 메시지 함수 ◀─────────────────────────
     private void Start()
     {
         SetReference();
+    }
+    protected override void OnEnable()
+    {
+        base.OnEnable();
+        CEventBus<OnInputToggleHud>.Subscribe(HandleVisibleHUD);
+    }
+    protected override void OnDisable()
+    {
+        base.OnDisable();
+        CEventBus<OnInputToggleHud>.Unsubscribe(HandleVisibleHUD);
     }
     #endregion
 }

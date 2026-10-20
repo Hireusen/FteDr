@@ -150,11 +150,17 @@ public sealed class CProgressManager : ASingleton<CProgressManager>
         _progress = USaveFile.Load(FILE_NAME, new ProgressData());
     }
 
-    /// <summary>진행도를 초기화하고 저장 파일을 삭제합니다.</summary>
+    /// <summary>게임 진행 상황을 초기화하고 저장 파일을 삭제합니다.</summary>
     public void ResetProgress()
     {
         _progress = new ProgressData();
         USaveFile.Delete(FILE_NAME);
+        USaveFile.Delete("Stage_1");
+        USaveFile.Delete("Stage_2");
+        USaveFile.Delete("Stage_3");
+        USaveFile.Delete("Stage_4");
+        USaveFile.Delete("Stage_5");
+        USaveFile.Delete("Stage_6");
     }
     #endregion
 

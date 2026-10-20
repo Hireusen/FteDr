@@ -99,7 +99,11 @@ public static class USaveFile
     /// <returns>삭제 성공 여부(파일이 없으면 false)</returns>
     public static bool Delete(string fileName)
     {
-        if (!Exists(fileName)) return false;
+        if (!Exists(fileName))
+        {
+            UDebug.Print($"파일({fileName}이 존재하지 않으므로 삭제하지 못했습니다.", LogType.Warning);
+            return false;
+        }
 
         try
         {
