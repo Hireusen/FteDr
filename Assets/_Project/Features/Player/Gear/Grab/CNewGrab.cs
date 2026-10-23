@@ -261,7 +261,7 @@ public class CNewGrab : AFrameable, IUpdateFrameable, IFixedUpdateFrameable
     private void ShrinkArm()
     {
         Vector3 scale = _arm.transform.localScale;
-        scale.z -= _shrinkSpeed * Time.deltaTime;
+        scale.z -= GetMaxGrabSpeed()*1.5f * Time.deltaTime;
         _arm.transform.localScale = scale;
 
         //팔이 줄어드는 힘을 따로 구현하고 싶으면 이런식으로 구현해야 함.
